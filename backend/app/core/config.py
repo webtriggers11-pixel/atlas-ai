@@ -1,0 +1,22 @@
+from pydantic_settings import BaseSettings
+from pathlib import Path
+
+
+class Settings(BaseSettings):
+    """Reads all values from the .env file in the backend directory."""
+
+    DATABASE_URL: str
+    REDIS_URL: str = "redis://localhost:6379"
+    LLM_PROVIDER: str = "ollama"
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
+    OLLAMA_MODEL: str = "llama3.1:8b"
+    GROQ_API_KEY: str = ""
+    GROQ_MODEL: str = "llama3-8b-8192"
+    CORS_ORIGINS: str = "http://localhost:5173"
+    PORT: int = 8000
+    AUTO_MIGRATE: bool = False
+
+    model_config = {"env_file": Path(__file__).parents[2] / ".env", "extra": "ignore"}
+
+
+settings = Settings()

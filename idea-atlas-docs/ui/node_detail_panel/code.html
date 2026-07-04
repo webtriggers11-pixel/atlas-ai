@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Idea Atlas - Quantum Computing</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#c5e7ff",
+                        "on-secondary-container": "#b4b7d0",
+                        "surface-container-low": "#191b22",
+                        "on-background": "#e2e2eb",
+                        "inverse-primary": "#855300",
+                        "inverse-on-surface": "#2e3037",
+                        "inverse-surface": "#e2e2eb",
+                        "secondary-container": "#44485d",
+                        "surface-container": "#1e1f26",
+                        "on-secondary-fixed-variant": "#42465a",
+                        "surface-container-high": "#282a30",
+                        "on-error": "#690005",
+                        "on-primary": "#472a00",
+                        "primary-fixed-dim": "#ffb95f",
+                        "surface": "#111319",
+                        "secondary": "#c2c5de",
+                        "on-error-container": "#ffdad6",
+                        "on-surface-variant": "#d8c3ad",
+                        "surface-variant": "#33343b",
+                        "on-primary-fixed-variant": "#653e00",
+                        "primary-container": "#f59e0b",
+                        "on-primary-container": "#613b00",
+                        "outline": "#a08e7a",
+                        "surface-dim": "#111319",
+                        "tertiary": "#8fd5ff",
+                        "on-tertiary-fixed": "#001e2d",
+                        "surface-container-highest": "#33343b",
+                        "secondary-fixed-dim": "#c2c5de",
+                        "error-container": "#93000a",
+                        "on-primary-fixed": "#2a1700",
+                        "surface-container-lowest": "#0c0e14",
+                        "on-surface": "#e2e2eb",
+                        "primary": "#ffc174",
+                        "error": "#ffb4ab",
+                        "outline-variant": "#534434",
+                        "secondary-fixed": "#dee1fb",
+                        "on-secondary-fixed": "#161b2d",
+                        "on-tertiary": "#00344a",
+                        "surface-tint": "#ffb95f",
+                        "on-tertiary-container": "#004966",
+                        "surface-bright": "#373940",
+                        "on-secondary": "#2b2f43",
+                        "background": "#111319",
+                        "tertiary-fixed-dim": "#7fd0ff",
+                        "primary-fixed": "#ffddb8",
+                        "on-tertiary-fixed-variant": "#004c6a",
+                        "tertiary-container": "#1abdff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-margin": "24px",
+                        "2xl": "48px",
+                        "sm": "8px",
+                        "unit": "4px",
+                        "xl": "32px",
+                        "gutter": "16px",
+                        "xs": "4px",
+                        "lg": "24px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "display": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "display": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #0F1117;
+            color: #e2e2eb;
+            overflow: hidden;
+        }
+        .canvas-bg {
+            background-color: #0F1117;
+            background-image: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        .node {
+            background-color: #1E2235;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+        .node.active {
+            border-color: #F59E0B;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);
+        }
+        .node:hover:not(.active) {
+            border-color: rgba(245, 158, 11, 0.5);
+        }
+        .line {
+            stroke: rgba(255, 255, 255, 0.1);
+            stroke-width: 2;
+        }
+        .panel {
+            background-color: #1A1D2E;
+            border-left: 1px solid rgba(255,255,255,0.08);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="flex h-screen w-full canvas-bg">
+<!-- TopNavBar (Shared Component) -->
+<header class="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-lg h-16 bg-surface-container dark:bg-surface-container border-b border-outline-variant dark:border-outline-variant">
+<div class="flex items-center gap-md">
+<span class="font-display text-headline-md font-bold text-primary dark:text-primary tracking-tight">Idea Atlas</span>
+</div>
+<!-- Search - Assuming on_left logic translates to being next to brand or centered -->
+<div class="flex-1 flex justify-center max-w-md mx-auto hidden md:flex">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-label-md">search</span>
+<input class="w-full bg-[#1A1D2E] border border-[rgba(255,255,255,0.08)] rounded-lg py-2 pl-10 pr-4 text-body-md text-on-surface focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-colors placeholder:text-[#64748B]" placeholder="Search knowledge graph..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<!-- Navigation items from TopNavBar instructions (though side nav handles primary nav, keeping top clean) -->
+<button class="bg-primary-container text-[#0F1117] font-label-md text-label-md px-4 py-2 rounded-lg hover:bg-primary-fixed-dim transition-colors">
+                Generate
+            </button>
+</div>
+</header>
+<!-- SideNavBar (Shared Component) -->
+<nav class="fixed left-0 top-16 bottom-0 w-[250px] z-40 flex flex-col py-lg bg-surface-container-low dark:bg-surface-container-low border-r border-outline-variant dark:border-outline-variant">
+<div class="px-lg mb-lg">
+<h2 class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest mb-1">Recent Maps</h2>
+<p class="font-label-sm text-label-sm text-[#64748B]">Last 7 days</p>
+</div>
+<div class="flex-1 overflow-y-auto flex flex-col gap-sm px-sm">
+<!-- Artificial Intelligence (Inactive) -->
+<a class="flex items-center gap-3 px-md py-sm rounded-md text-on-surface-variant hover:bg-surface-variant transition-all font-label-md text-label-md group" href="#">
+<span class="material-symbols-outlined text-label-md group-hover:text-primary-fixed-dim transition-colors">psychology</span>
+<span>Artificial Intelligence</span>
+</a>
+<!-- Quantum Computing (Active) -->
+<a class="flex items-center gap-3 px-md py-sm rounded-md text-primary bg-surface-container-highest border-l-4 border-primary font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-label-md">science</span>
+<span class="font-bold">Quantum Computing</span>
+</a>
+<!-- Neuroscience (Inactive) -->
+<a class="flex items-center gap-3 px-md py-sm rounded-md text-on-surface-variant hover:bg-surface-variant transition-all font-label-md text-label-md group" href="#">
+<span class="material-symbols-outlined text-label-md group-hover:text-primary-fixed-dim transition-colors">neurology</span>
+<span>Neuroscience</span>
+</a>
+<!-- Space Exploration (Inactive) -->
+<a class="flex items-center gap-3 px-md py-sm rounded-md text-on-surface-variant hover:bg-surface-variant transition-all font-label-md text-label-md group" href="#">
+<span class="material-symbols-outlined text-label-md group-hover:text-primary-fixed-dim transition-colors">rocket_launch</span>
+<span>Space Exploration</span>
+</a>
+</div>
+<div class="px-lg mt-auto pt-md border-t border-[rgba(255,255,255,0.08)]">
+<button class="w-full bg-transparent border border-[rgba(255,255,255,0.08)] text-[#F1F5F9] font-label-md text-label-md py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-[rgba(255,255,255,0.04)] transition-colors">
+<span class="material-symbols-outlined text-label-md">add</span>
+                New Atlas
+            </button>
+</div>
+</nav>
+<!-- Main Canvas Area -->
+<main class="flex-1 relative mt-16 ml-[250px] overflow-hidden mr-[320px]"> <!-- Added right margin for panel -->
+<!-- Controls overlay -->
+<div class="absolute bottom-container-margin left-container-margin z-10 flex gap-2">
+<button class="bg-[#1A1D2E] border border-[rgba(255,255,255,0.08)] rounded-lg p-2 text-on-surface-variant hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined text-headline-md">zoom_in</span>
+</button>
+<button class="bg-[#1A1D2E] border border-[rgba(255,255,255,0.08)] rounded-lg p-2 text-on-surface-variant hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined text-headline-md">zoom_out</span>
+</button>
+<button class="bg-[#1A1D2E] border border-[rgba(255,255,255,0.08)] rounded-lg p-2 text-on-surface-variant hover:text-primary-container transition-colors ml-2">
+<span class="material-symbols-outlined text-headline-md">filter_center_focus</span>
+</button>
+</div>
+<!-- Simulated SVG Canvas for Nodes -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none" style="z-index: 1;">
+<!-- Lines connecting nodes -->
+<path class="line" d="M 400 250 L 550 150" fill="none"></path>
+<path class="line" d="M 400 250 L 550 350" fill="none"></path>
+<path class="line" d="M 400 250 L 250 200" fill="none"></path>
+<path class="line" d="M 550 150 L 700 100" fill="none"></path>
+<path class="line" d="M 550 150 L 750 200" fill="none"></path>
+</svg>
+<!-- Nodes Container -->
+<div class="absolute inset-0 z-10">
+<!-- Central Node -->
+<div class="absolute node flex flex-col items-center justify-center cursor-pointer px-4 py-3 min-w-[140px]" style="left: 330px; top: 225px;">
+<span class="font-label-md text-label-md text-on-surface mb-1">Quantum Computing</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant opacity-70">Core Concept</span>
+</div>
+<!-- Branch Node 1 -->
+<div class="absolute node flex flex-col items-center justify-center cursor-pointer px-4 py-3 min-w-[120px]" style="left: 190px; top: 175px;">
+<span class="font-label-md text-label-md text-on-surface">Qubits</span>
+</div>
+<!-- Branch Node 2 (Active - Superposition) -->
+<div class="absolute node active flex flex-col items-center justify-center cursor-pointer px-4 py-3 min-w-[120px]" style="left: 490px; top: 125px;">
+<span class="font-label-md text-label-md text-primary-container font-bold">Superposition</span>
+<div class="flex gap-1 mt-2">
+<span class="bg-[rgba(255,255,255,0.04)] px-2 py-0.5 rounded text-label-sm font-label-sm text-on-surface-variant">Principle</span>
+</div>
+</div>
+<!-- Leaf Node 1 -->
+<div class="absolute node flex flex-col items-center justify-center cursor-pointer px-4 py-3 min-w-[100px]" style="left: 650px; top: 75px;">
+<span class="font-label-md text-label-md text-on-surface">States</span>
+</div>
+<!-- Leaf Node 2 -->
+<div class="absolute node flex flex-col items-center justify-center cursor-pointer px-4 py-3 min-w-[100px]" style="left: 690px; top: 175px;">
+<span class="font-label-md text-label-md text-on-surface">Measurement</span>
+</div>
+<!-- Branch Node 3 -->
+<div class="absolute node flex flex-col items-center justify-center cursor-pointer px-4 py-3 min-w-[120px]" style="left: 490px; top: 325px;">
+<span class="font-label-md text-label-md text-on-surface">Entanglement</span>
+</div>
+</div>
+</main>
+<!-- Right Side Panel (Selected Node Details) -->
+<aside class="fixed right-0 top-16 bottom-0 w-[320px] panel z-50 flex flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.5)] transform translate-x-0 transition-transform duration-300">
+<!-- Panel Header -->
+<div class="flex items-center justify-between p-lg border-b border-[rgba(255,255,255,0.08)]">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-primary-container uppercase tracking-widest mb-1">Concept Node</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">Superposition</h3>
+</div>
+<button class="text-on-surface-variant hover:text-primary-container transition-colors p-1 rounded-md hover:bg-[rgba(255,255,255,0.04)]">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Panel Content -->
+<div class="flex-1 overflow-y-auto p-lg flex flex-col gap-lg">
+<!-- Depth Toggle -->
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant mb-3 block uppercase tracking-wider">Comprehension Depth</label>
+<div class="flex bg-[rgba(255,255,255,0.04)] rounded-lg p-1 border border-[rgba(255,255,255,0.08)]">
+<button class="flex-1 py-1.5 font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors rounded-md text-center">Gist</button>
+<button class="flex-1 py-1.5 font-label-sm text-label-sm text-[#0F1117] bg-primary-container rounded-md shadow-sm text-center font-bold">Standard</button>
+<button class="flex-1 py-1.5 font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors rounded-md text-center">Expert</button>
+</div>
+</div>
+<!-- Explanation Content -->
+<div>
+<p class="font-body-md text-body-md text-[#CBD5E1] leading-[1.7]">
+                    Quantum superposition is a fundamental principle of quantum mechanics. It states that, much like waves in classical physics, any two (or more) quantum states can be added together ("superposed") and the result will be another valid quantum state.
+                </p>
+<p class="font-body-md text-body-md text-[#CBD5E1] leading-[1.7] mt-4">
+                    Conversely, every quantum state can be represented as a sum of two or more other distinct states. Mathematically, it refers to a property of solutions to the Schrödinger equation; since the Schrödinger equation is linear, any linear combination of solutions will also be a solution.
+                </p>
+</div>
+<!-- Metadata/Tags (Bento style hint) -->
+<div class="bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.08)] rounded-xl p-4 mt-2">
+<h4 class="font-label-sm text-label-sm text-on-surface-variant mb-2">Related Entities</h4>
+<div class="flex flex-wrap gap-2">
+<span class="bg-[rgba(255,255,255,0.04)] px-2.5 py-1 rounded-md text-label-sm font-label-sm text-on-surface border border-[rgba(255,255,255,0.05)] hover:border-primary-container cursor-pointer transition-colors">Schrödinger's cat</span>
+<span class="bg-[rgba(255,255,255,0.04)] px-2.5 py-1 rounded-md text-label-sm font-label-sm text-on-surface border border-[rgba(255,255,255,0.05)] hover:border-primary-container cursor-pointer transition-colors">Wave function</span>
+<span class="bg-[rgba(255,255,255,0.04)] px-2.5 py-1 rounded-md text-label-sm font-label-sm text-on-surface border border-[rgba(255,255,255,0.05)] hover:border-primary-container cursor-pointer transition-colors">Interference</span>
+</div>
+</div>
+</div>
+<!-- Panel Footer / Action -->
+<div class="p-lg border-t border-[rgba(255,255,255,0.08)] bg-[#1A1D2E]">
+<button class="w-full border border-primary-container text-primary-container font-label-md text-label-md py-3 rounded-lg hover:bg-[rgba(245,158,11,0.1)] transition-colors flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-label-md">account_tree</span>
+                Expand this concept
+            </button>
+</div>
+</aside>
+</body></html>

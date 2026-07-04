@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Idea Atlas - Generating</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary-fixed": "#c5e7ff",
+                      "on-secondary-container": "#b4b7d0",
+                      "surface-container-low": "#191b22",
+                      "on-background": "#e2e2eb",
+                      "inverse-primary": "#855300",
+                      "inverse-on-surface": "#2e3037",
+                      "inverse-surface": "#e2e2eb",
+                      "secondary-container": "#44485d",
+                      "surface-container": "#1e1f26",
+                      "on-secondary-fixed-variant": "#42465a",
+                      "surface-container-high": "#282a30",
+                      "on-error": "#690005",
+                      "on-primary": "#472a00",
+                      "primary-fixed-dim": "#ffb95f",
+                      "surface": "#111319",
+                      "secondary": "#c2c5de",
+                      "on-error-container": "#ffdad6",
+                      "on-surface-variant": "#d8c3ad",
+                      "surface-variant": "#33343b",
+                      "on-primary-fixed-variant": "#653e00",
+                      "primary-container": "#f59e0b",
+                      "on-primary-container": "#613b00",
+                      "outline": "#a08e7a",
+                      "surface-dim": "#111319",
+                      "tertiary": "#8fd5ff",
+                      "on-tertiary-fixed": "#001e2d",
+                      "surface-container-highest": "#33343b",
+                      "secondary-fixed-dim": "#c2c5de",
+                      "error-container": "#93000a",
+                      "on-primary-fixed": "#2a1700",
+                      "surface-container-lowest": "#0c0e14",
+                      "on-surface": "#e2e2eb",
+                      "primary": "#ffc174",
+                      "error": "#ffb4ab",
+                      "outline-variant": "#534434",
+                      "secondary-fixed": "#dee1fb",
+                      "on-secondary-fixed": "#161b2d",
+                      "on-tertiary": "#00344a",
+                      "surface-tint": "#ffb95f",
+                      "on-tertiary-container": "#004966",
+                      "surface-bright": "#373940",
+                      "on-secondary": "#2b2f43",
+                      "background": "#111319",
+                      "tertiary-fixed-dim": "#7fd0ff",
+                      "primary-fixed": "#ffddb8",
+                      "on-tertiary-fixed-variant": "#004c6a",
+                      "tertiary-container": "#1abdff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "container-margin": "24px",
+                      "2xl": "48px",
+                      "sm": "8px",
+                      "unit": "4px",
+                      "xl": "32px",
+                      "gutter": "16px",
+                      "xs": "4px",
+                      "lg": "24px",
+                      "md": "16px"
+              },
+              "fontFamily": {
+                      "label-sm": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "headline-lg-mobile": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "label-md": ["Inter"],
+                      "display": ["Inter"],
+                      "body-md": ["Inter"]
+              },
+              "fontSize": {
+                      "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                      "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                      "display": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .pulse-slow {
+            animation: pulse-op 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-op {
+            0%, 100% { opacity: 0.3; border-color: rgba(160, 142, 122, 0.2); }
+            50% { opacity: 0.8; border-color: rgba(245, 158, 11, 0.6); }
+        }
+        .draw-line {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: draw 2s ease-in-out forwards infinite alternate;
+        }
+        @keyframes draw {
+            to { stroke-dashoffset: 0; }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen font-body-md selection:bg-primary-container selection:text-on-primary-container overflow-hidden">
+<!-- TopNavBar -->
+<nav class="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-lg h-16 bg-surface-container dark:bg-surface-container border-b border-outline-variant dark:border-outline-variant shadow-none">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary text-[24px]">public</span>
+<span class="font-display text-headline-md font-bold text-primary dark:text-primary">Idea Atlas</span>
+</div>
+<div class="flex items-center gap-md">
+<button class="bg-primary-container text-on-primary-container px-md py-sm rounded-lg font-label-md hover:opacity-90 transition-opacity flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                Generate
+            </button>
+</div>
+</nav>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-16 bottom-0 w-[250px] z-40 flex flex-col py-lg bg-surface-container-low dark:bg-surface-container-low border-r border-outline-variant dark:border-outline-variant">
+<div class="px-md mb-md">
+<h2 class="font-label-md text-on-surface-variant opacity-70 uppercase tracking-wider mb-xs">Recent Maps</h2>
+<p class="font-label-sm text-on-surface-variant opacity-50">Last 7 days</p>
+</div>
+<nav class="flex flex-col gap-xs px-sm">
+<!-- Tabs (Inactive during loading for focus) -->
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-variant px-md py-sm rounded-md transition-all group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary-fixed-dim transition-colors">psychology</span>
+<span class="font-label-md">Artificial Intelligence</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-variant px-md py-sm rounded-md transition-all group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary-fixed-dim transition-colors">science</span>
+<span class="font-label-md">Quantum Computing</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-variant px-md py-sm rounded-md transition-all group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary-fixed-dim transition-colors">neurology</span>
+<span class="font-label-md">Neuroscience</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-variant px-md py-sm rounded-md transition-all group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary-fixed-dim transition-colors">rocket_launch</span>
+<span class="font-label-md">Space Exploration</span>
+</a>
+</nav>
+<div class="mt-auto px-md">
+<button class="w-full border border-outline-variant text-on-surface-variant hover:text-primary hover:border-primary-fixed-dim rounded-lg py-sm font-label-md transition-colors flex items-center justify-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+                New Atlas
+            </button>
+</div>
+</aside>
+<!-- Main Canvas Area -->
+<main class="ml-[250px] mt-16 h-[calc(100vh-64px)] relative flex flex-col items-center justify-center bg-[#0F1117]">
+<!-- Ambient Glow -->
+<div class="absolute w-[600px] h-[600px] bg-primary-container/5 rounded-full blur-[120px] pointer-events-none"></div>
+<!-- Top Input Floating -->
+<div class="absolute top-xl w-full max-w-lg z-10">
+<div class="relative bg-surface-container border border-outline-variant rounded-lg overflow-hidden shadow-2xl flex items-center px-md h-12">
+<span class="material-symbols-outlined text-on-surface-variant opacity-70 mr-sm">search</span>
+<input class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md p-0 opacity-70" disabled="" type="text" value="Mapping the future of cognitive architecture..."/>
+<!-- Small Amber Loading Spinner -->
+<div class="ml-auto pl-sm">
+<svg class="animate-spin h-5 w-5 text-primary-container" fill="none" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+<path class="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor"></path>
+</svg>
+</div>
+</div>
+</div>
+<!-- Ghost Nodes Setup -->
+<div class="relative w-[400px] h-[400px] flex items-center justify-center pointer-events-none">
+<!-- Connecting SVG Lines -->
+<svg class="absolute inset-0 w-full h-full" viewbox="0 0 400 400">
+<g class="draw-line" fill="none" stroke="rgba(245, 158, 11, 0.15)" stroke-width="1.5">
+<line x1="200" x2="200" y1="200" y2="40"></line>
+<line x1="200" x2="338" y1="200" y2="120"></line>
+<line x1="200" x2="338" y1="200" y2="280"></line>
+<line x1="200" x2="200" y1="200" y2="360"></line>
+<line x1="200" x2="62" y1="200" y2="280"></line>
+<line x1="200" x2="62" y1="200" y2="120"></line>
+</g>
+</svg>
+<!-- Center Node (Pulsing Skeleton) -->
+<div class="absolute w-24 h-24 bg-[#1E2235] border border-primary-container/40 rounded-xl flex items-center justify-center z-10 shadow-[0_0_30px_rgba(245,158,11,0.1)] pulse-slow" style="animation-delay: 0ms;">
+<span class="material-symbols-outlined text-primary-container opacity-50 text-[32px]">hub</span>
+</div>
+<!-- Orbiting Ghost Nodes (6 arranged in a circle, r=160px) -->
+<!-- Top (0 deg) -->
+<div class="absolute w-16 h-16 bg-[#1A1D2E] border border-outline-variant rounded-xl flex items-center justify-center pulse-slow" style="transform: translate(0, -160px); animation-delay: 200ms;">
+<div class="w-6 h-1.5 bg-outline-variant/30 rounded-full"></div>
+</div>
+<!-- Top Right (60 deg: x=138, y=-80) -->
+<div class="absolute w-16 h-16 bg-[#1A1D2E] border border-outline-variant rounded-xl flex items-center justify-center pulse-slow" style="transform: translate(138px, -80px); animation-delay: 400ms;">
+<div class="w-8 h-1.5 bg-outline-variant/30 rounded-full"></div>
+</div>
+<!-- Bottom Right (120 deg: x=138, y=80) -->
+<div class="absolute w-16 h-16 bg-[#1A1D2E] border border-outline-variant rounded-xl flex items-center justify-center pulse-slow" style="transform: translate(138px, 80px); animation-delay: 600ms;">
+<div class="w-5 h-1.5 bg-outline-variant/30 rounded-full"></div>
+</div>
+<!-- Bottom (180 deg) -->
+<div class="absolute w-16 h-16 bg-[#1A1D2E] border border-outline-variant rounded-xl flex items-center justify-center pulse-slow" style="transform: translate(0, 160px); animation-delay: 800ms;">
+<div class="w-7 h-1.5 bg-outline-variant/30 rounded-full"></div>
+</div>
+<!-- Bottom Left (240 deg: x=-138, y=80) -->
+<div class="absolute w-16 h-16 bg-[#1A1D2E] border border-outline-variant rounded-xl flex items-center justify-center pulse-slow" style="transform: translate(-138px, 80px); animation-delay: 1000ms;">
+<div class="w-6 h-1.5 bg-outline-variant/30 rounded-full"></div>
+</div>
+<!-- Top Left (300 deg: x=-138, y=-80) -->
+<div class="absolute w-16 h-16 bg-[#1A1D2E] border border-outline-variant rounded-xl flex items-center justify-center pulse-slow" style="transform: translate(-138px, -80px); animation-delay: 1200ms;">
+<div class="w-8 h-1.5 bg-outline-variant/30 rounded-full"></div>
+</div>
+</div>
+<!-- Status Text -->
+<div class="absolute bottom-xl text-center">
+<p class="font-label-md text-primary-container tracking-widest uppercase opacity-80 animate-pulse">Constructing Neural Pathways</p>
+</div>
+</main>
+</body></html>

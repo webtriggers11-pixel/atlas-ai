@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Expanded Node - Idea Atlas</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#c5e7ff",
+                        "on-secondary-container": "#b4b7d0",
+                        "surface-container-low": "#191b22",
+                        "on-background": "#e2e2eb",
+                        "inverse-primary": "#855300",
+                        "inverse-on-surface": "#2e3037",
+                        "inverse-surface": "#e2e2eb",
+                        "secondary-container": "#44485d",
+                        "surface-container": "#1e1f26",
+                        "on-secondary-fixed-variant": "#42465a",
+                        "surface-container-high": "#282a30",
+                        "on-error": "#690005",
+                        "on-primary": "#472a00",
+                        "primary-fixed-dim": "#ffb95f",
+                        "surface": "#111319",
+                        "secondary": "#c2c5de",
+                        "on-error-container": "#ffdad6",
+                        "on-surface-variant": "#d8c3ad",
+                        "surface-variant": "#33343b",
+                        "on-primary-fixed-variant": "#653e00",
+                        "primary-container": "#f59e0b",
+                        "on-primary-container": "#613b00",
+                        "outline": "#a08e7a",
+                        "surface-dim": "#111319",
+                        "tertiary": "#8fd5ff",
+                        "on-tertiary-fixed": "#001e2d",
+                        "surface-container-highest": "#33343b",
+                        "secondary-fixed-dim": "#c2c5de",
+                        "error-container": "#93000a",
+                        "on-primary-fixed": "#2a1700",
+                        "surface-container-lowest": "#0c0e14",
+                        "on-surface": "#e2e2eb",
+                        "primary": "#ffc174",
+                        "error": "#ffb4ab",
+                        "outline-variant": "#534434",
+                        "secondary-fixed": "#dee1fb",
+                        "on-secondary-fixed": "#161b2d",
+                        "on-tertiary": "#00344a",
+                        "surface-tint": "#ffb95f",
+                        "on-tertiary-container": "#004966",
+                        "surface-bright": "#373940",
+                        "on-secondary": "#2b2f43",
+                        "background": "#111319",
+                        "tertiary-fixed-dim": "#7fd0ff",
+                        "primary-fixed": "#ffddb8",
+                        "on-tertiary-fixed-variant": "#004c6a",
+                        "tertiary-container": "#1abdff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-margin": "24px",
+                        "2xl": "48px",
+                        "sm": "8px",
+                        "unit": "4px",
+                        "xl": "32px",
+                        "gutter": "16px",
+                        "xs": "4px",
+                        "lg": "24px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "display": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "display": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #0F1117; /* Level 0 Canvas */
+            color: #e2e2eb;
+            overflow: hidden; /* For absolute positioning canvas */
+        }
+        .node-line {
+            stroke: rgba(255, 255, 255, 0.1);
+            stroke-width: 1;
+            fill: none;
+        }
+        .node-bg {
+            background-color: #1E2235; /* Level 2 */
+        }
+        .panel-bg {
+            background-color: #1A1D2E; /* Level 1 */
+        }
+    </style>
+</head>
+<body class="flex h-screen w-screen overflow-hidden text-body-md font-body-md">
+<!-- TopNavBar -->
+<nav class="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-lg h-16 bg-surface-container dark:bg-surface-container border-b border-outline-variant dark:border-outline-variant">
+<div class="flex items-center gap-md">
+<span class="font-display text-headline-md font-bold text-primary dark:text-primary">Idea Atlas</span>
+<div class="hidden md:flex items-center ml-lg">
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary-fixed-dim transition-colors px-md py-sm" href="#">My Maps</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1 px-md py-sm scale-95 duration-100" href="#">Quantum Computing</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary-fixed-dim transition-colors px-md py-sm" href="#">Templates</a>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="bg-[#1A1D2E] border border-outline-variant rounded pl-xl pr-md py-sm text-body-md focus:outline-none focus:border-primary-container text-on-surface w-64 placeholder:text-on-surface-variant/50" placeholder="Search Atlas..." type="text"/>
+</div>
+<button class="bg-primary-container text-[#0F1117] px-md py-sm rounded font-label-md hover:bg-primary-fixed-dim transition-colors">Generate</button>
+</div>
+</nav>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-16 bottom-0 w-[250px] z-40 flex flex-col py-lg bg-surface-container-low dark:bg-surface-container-low border-r border-outline-variant dark:border-outline-variant hidden md:flex">
+<div class="px-md mb-lg">
+<h3 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-xs">Recent Maps</h3>
+<p class="text-label-sm font-label-sm text-on-surface-variant/70">Last 7 days</p>
+</div>
+<nav class="flex-1 overflow-y-auto space-y-unit px-sm">
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-variant px-md py-sm rounded-lg hover:bg-surface-variant dark:hover:bg-surface-variant transition-all hover:opacity-80 duration-200" href="#">
+<span class="material-symbols-outlined">psychology</span>
+<span class="font-label-md text-label-md">Artificial Intelligence</span>
+</a>
+<a class="flex items-center gap-md text-primary bg-surface-container-highest border-l-4 border-primary px-md py-sm rounded-r-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">science</span>
+<span class="font-label-md text-label-md">Quantum Computing</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-variant px-md py-sm rounded-lg hover:bg-surface-variant dark:hover:bg-surface-variant transition-all hover:opacity-80 duration-200" href="#">
+<span class="material-symbols-outlined">neurology</span>
+<span class="font-label-md text-label-md">Neuroscience</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-variant px-md py-sm rounded-lg hover:bg-surface-variant dark:hover:bg-surface-variant transition-all hover:opacity-80 duration-200" href="#">
+<span class="material-symbols-outlined">rocket_launch</span>
+<span class="font-label-md text-label-md">Space Exploration</span>
+</a>
+</nav>
+<div class="px-md mt-auto">
+<button class="w-full bg-transparent border border-outline-variant text-on-surface py-sm rounded font-label-md flex items-center justify-center gap-sm hover:border-primary-container transition-colors">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                New Atlas
+            </button>
+</div>
+</aside>
+<!-- Main Canvas Area -->
+<main class="flex-1 relative mt-16 md:ml-[250px] overflow-hidden" id="canvas-container">
+<!-- Connecting Lines SVG -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none" style="z-index: 10;">
+<!-- Root to Qubits -->
+<path class="node-line" d="M 200 300 C 350 300, 350 300, 500 300"></path>
+<!-- Qubits to Transmon -->
+<path class="node-line" d="M 680 300 C 750 300, 750 200, 850 200" stroke-dasharray="4 4"></path>
+<!-- Qubits to Topological -->
+<path class="node-line" d="M 680 300 C 750 300, 750 400, 850 400" stroke-dasharray="4 4"></path>
+</svg>
+<!-- Nodes Layer -->
+<div class="absolute inset-0 w-full h-full" style="z-index: 20;">
+<!-- Root Node: Quantum Computing -->
+<div class="absolute top-[260px] left-[50px] w-[150px] node-bg border border-outline-variant rounded-xl p-md flex flex-col items-center justify-center cursor-pointer hover:border-primary-container transition-colors">
+<span class="material-symbols-outlined text-primary mb-sm text-[32px]">science</span>
+<span class="font-headline-md text-headline-md text-center text-on-surface">Quantum<br/>Computing</span>
+</div>
+<!-- Child Node 1: Qubits -->
+<div class="absolute top-[260px] left-[500px] w-[180px] node-bg border border-outline-variant rounded-xl p-md flex flex-col items-start cursor-pointer hover:border-primary-container transition-colors shadow-[0_0_15px_rgba(245,158,11,0.1)]">
+<div class="flex items-center gap-sm mb-sm">
+<span class="material-symbols-outlined text-tertiary">memory</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Qubits</span>
+</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant opacity-80 line-clamp-3">The fundamental unit of quantum information, capable of existing in multiple states simultaneously due to superposition.</p>
+<div class="mt-sm flex gap-xs">
+<span class="bg-white/5 px-2 py-1 rounded text-[10px] text-tertiary-fixed">Physics</span>
+<span class="bg-white/5 px-2 py-1 rounded text-[10px] text-tertiary-fixed">Information</span>
+</div>
+</div>
+<!-- Grandchild Node 1: Transmon Qubits (SELECTED) -->
+<div class="absolute top-[170px] left-[850px] w-[160px] node-bg border-2 border-primary-container rounded-xl p-sm flex flex-col items-start cursor-pointer opacity-100 scale-100 transition-all z-30">
+<div class="flex items-center justify-between w-full mb-xs">
+<span class="font-label-md text-label-md text-primary font-bold">Transmon Qubits</span>
+<span class="material-symbols-outlined text-primary text-[16px]">check_circle</span>
+</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant opacity-90 text-[11px] leading-tight">Superconducting charge qubits designed for reduced sensitivity to charge noise.</p>
+</div>
+<!-- Grandchild Node 2: Topological Qubits -->
+<div class="absolute top-[370px] left-[850px] w-[140px] node-bg border border-outline-variant/50 rounded-xl p-sm flex flex-col items-start cursor-pointer opacity-60 scale-90 hover:opacity-100 hover:scale-95 transition-all">
+<span class="font-label-md text-label-md text-on-surface font-semibold mb-xs">Topological Qubits</span>
+<p class="font-label-sm text-label-sm text-on-surface-variant opacity-70 text-[10px] leading-tight">Theoretical qubits employing non-Abelian anyons to achieve fault tolerance.</p>
+</div>
+</div>
+<!-- Right Side Panel (Details for Transmon Qubits) -->
+<div class="absolute right-0 top-0 bottom-0 w-[320px] panel-bg border-l border-outline-variant z-40 flex flex-col transform transition-transform duration-300 translate-x-0">
+<!-- Panel Header -->
+<div class="p-lg border-b border-outline-variant/50 flex justify-between items-start">
+<div>
+<div class="flex items-center gap-xs text-on-surface-variant mb-sm">
+<span class="font-label-sm text-label-sm">Quantum Computing</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="font-label-sm text-label-sm">Qubits</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-primary flex items-center gap-sm">
+<span class="material-symbols-outlined">precision_manufacturing</span>
+                        Transmon Qubits
+                    </h2>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors p-sm">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Panel Content -->
+<div class="p-lg flex-1 overflow-y-auto space-y-lg">
+<!-- Description -->
+<div>
+<p class="font-body-md text-body-md text-on-surface-variant opacity-90 leading-relaxed">
+                        A type of superconducting charge qubit that was designed to have reduced sensitivity to charge noise. Transmons are widely used in current state-of-the-art quantum processors (e.g., IBM, Google).
+                    </p>
+</div>
+<!-- Key Properties -->
+<div class="bg-surface-container rounded-lg p-md border border-outline-variant/30">
+<h4 class="font-label-md text-label-md text-on-surface uppercase tracking-wider mb-sm">Key Properties</h4>
+<ul class="space-y-sm">
+<li class="flex items-start gap-sm">
+<span class="material-symbols-outlined text-tertiary-fixed text-[16px] mt-xs">speed</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">High coherence times compared to early charge qubits.</span>
+</li>
+<li class="flex items-start gap-sm">
+<span class="material-symbols-outlined text-tertiary-fixed text-[16px] mt-xs">thermostat</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Requires cooling to millikelvin temperatures.</span>
+</li>
+</ul>
+</div>
+<!-- Actions -->
+<div class="flex flex-col gap-sm pt-md">
+<button class="w-full bg-primary-container text-[#0F1117] py-sm rounded font-label-md hover:bg-primary-fixed-dim transition-colors flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+                        Expand Sub-nodes
+                    </button>
+<button class="w-full bg-transparent border border-outline-variant text-on-surface py-sm rounded font-label-md hover:bg-surface-variant transition-colors">
+                        View Literature
+                    </button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

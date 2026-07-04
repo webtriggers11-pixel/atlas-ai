@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# Environment — never commit real secrets
+.env
+.env.local
+backend/.env
+frontend/.env
+
+# Node
+node_modules/
+dist/
+
+# Auto-generated migrations — created at runtime, not needed in git
+backend/migrations/auto_generated/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db

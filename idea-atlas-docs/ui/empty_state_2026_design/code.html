@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Idea Atlas - Empty State</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-background": "#1d1a24",
+                        "on-primary-fixed-variant": "#5a00c6",
+                        "on-surface": "#1d1a24",
+                        "secondary-fixed-dim": "#c8c6c8",
+                        "inverse-primary": "#d2bbff",
+                        "surface-container-low": "#f9f1ff",
+                        "on-error": "#ffffff",
+                        "secondary": "#5f5e60",
+                        "outline": "#7b7487",
+                        "error-container": "#ffdad6",
+                        "background": "#fef7ff",
+                        "surface-variant": "#e8dfee",
+                        "on-secondary-fixed-variant": "#474649",
+                        "error": "#ba1a1a",
+                        "surface-container-highest": "#e8dfee",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#a15100",
+                        "on-primary-container": "#ede0ff",
+                        "secondary-fixed": "#e5e1e4",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#e5e1e4",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "surface-container": "#f3ebfa",
+                        "surface-dim": "#dfd7e6",
+                        "on-surface-variant": "#4a4455",
+                        "on-primary-fixed": "#25005a",
+                        "surface-container-high": "#ede5f4",
+                        "primary": "#630ed4",
+                        "tertiary-fixed-dim": "#ffb784",
+                        "on-error-container": "#93000a",
+                        "on-secondary-fixed": "#1c1b1d",
+                        "surface-tint": "#732ee4",
+                        "inverse-on-surface": "#f6eefc",
+                        "on-tertiary-container": "#ffe0cd",
+                        "surface-bright": "#fef7ff",
+                        "tertiary": "#7d3d00",
+                        "surface": "#fef7ff",
+                        "primary-fixed": "#eaddff",
+                        "primary-fixed-dim": "#d2bbff",
+                        "on-secondary": "#ffffff",
+                        "inverse-surface": "#332f39",
+                        "on-secondary-container": "#656466",
+                        "primary-container": "#7c3aed",
+                        "outline-variant": "#ccc3d8",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed": "#ffdcc6",
+                        "on-tertiary-fixed": "#301400"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "20px",
+                        "base": "4px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "xl": "40px",
+                        "container-max": "1200px",
+                        "sidebar-width": "260px",
+                        "sm": "8px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "label-sm": ["Plus Jakarta Sans"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "display": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "label-md": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-sm": ["11px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "1.2", "fontWeight": "600" }],
+                        "headline-md": ["20px", { "lineHeight": "1.4", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "display": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "label-md": ["13px", { "lineHeight": "1", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-background text-on-background flex h-screen overflow-hidden">
+<!-- SIDEBAR -->
+<aside class="w-sidebar-width border-r border-outline-variant bg-surface-container h-full flex flex-col py-md px-sm hidden md:flex">
+<!-- Header -->
+<div class="mb-lg px-sm">
+<div class="flex items-center gap-2 mb-sm">
+<div class="w-6 h-6 bg-primary-container rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-on-primary">explore</span>
+</div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Idea Atlas</h1>
+</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Concept Explorer</p>
+</div>
+<button class="bg-primary-container text-on-primary font-label-md text-label-md py-2 px-4 rounded-lg flex items-center justify-center gap-2 mb-lg hover:bg-surface-tint transition-colors w-full">
+<span class="material-symbols-outlined text-[18px]">add</span>
+            New Map
+        </button>
+<!-- Navigation -->
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary-container/10 border-l-4 border-primary text-primary font-label-md text-label-md font-bold" href="#">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">home</span>
+                Home
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]">account_tree</span>
+                My Maps
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard_customize</span>
+                Templates
+            </a>
+</nav>
+<!-- Recent Maps Empty State -->
+<div class="mt-auto mb-lg pt-lg border-t border-outline-variant px-sm">
+<h3 class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-md">Recent Maps</h3>
+<div class="flex flex-col items-center justify-center py-xl text-center">
+<div class="w-12 h-12 rounded-full bg-surface-variant flex items-center justify-center mb-3">
+<span class="material-symbols-outlined text-outline">map</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">No maps yet</p>
+</div>
+</div>
+<!-- Footer -->
+<div class="border-t border-outline-variant pt-sm">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+                Settings
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]">help</span>
+                Help
+            </a>
+</div>
+</aside>
+<!-- MAIN CONTENT AREA -->
+<main class="flex-1 flex flex-col min-w-0">
+<!-- TOP NAV BAR -->
+<header class="h-[56px] border-b border-outline-variant bg-surface flex justify-between items-center w-full px-lg max-w-full">
+<div class="flex items-center md:hidden gap-2">
+<div class="w-6 h-6 bg-primary-container rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-on-primary">explore</span>
+</div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Idea Atlas</h1>
+</div>
+<div class="hidden md:block w-[120px]"></div> <!-- Spacer for centering search on desktop -->
+<div class="flex-1 max-w-[480px] mx-auto hidden md:flex items-center bg-surface-container rounded-full px-4 py-2 border border-outline-variant focus-within:border-primary transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant mr-2">search</span>
+<input class="bg-transparent border-none outline-none w-full font-body-md text-body-md text-on-surface placeholder:text-outline p-0 focus:ring-0" placeholder="Search ideas..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="hidden md:flex bg-primary-container text-on-primary font-label-md text-label-md py-2 px-4 rounded-full items-center justify-center hover:bg-surface-tint transition-colors">
+                    Generate
+                </button>
+<button class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<!-- EMPTY STATE CANVAS -->
+<div class="flex-1 flex flex-col items-center justify-center p-lg bg-surface">
+<div class="max-w-[600px] w-full text-center flex flex-col items-center">
+<!-- Main Icon -->
+<div class="w-[120px] h-[120px] rounded-full border-2 border-outline-variant flex items-center justify-center bg-surface-container-lowest mb-lg shadow-sm">
+<span class="material-symbols-outlined text-[48px] text-primary" style="font-variation-settings: 'wght' 300;">hub</span>
+</div>
+<!-- Text -->
+<h2 class="font-headline-lg text-headline-lg text-on-background mb-sm md:font-headline-lg md:text-headline-lg font-headline-lg-mobile text-headline-lg-mobile">Explore any idea</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-xl">Type a topic above and press Generate to start mapping your thoughts.</p>
+<!-- Example Chips -->
+<div class="flex flex-wrap justify-center gap-3">
+<button class="bg-surface-variant hover:bg-surface-container-highest text-on-surface font-label-md text-label-md py-2 px-4 rounded-full border border-outline-variant transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">science</span>
+                        Quantum computing
+                    </button>
+<button class="bg-surface-variant hover:bg-surface-container-highest text-on-surface font-label-md text-label-md py-2 px-4 rounded-full border border-outline-variant transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">public</span>
+                        Climate change
+                    </button>
+<button class="bg-surface-variant hover:bg-surface-container-highest text-on-surface font-label-md text-label-md py-2 px-4 rounded-full border border-outline-variant transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">smart_toy</span>
+                        Machine learning
+                    </button>
+</div>
+</div>
+</div>
+</main>
+<!-- MOBILE BOTTOM NAV (Visible only on mobile) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 h-[64px] bg-surface border-t border-outline-variant flex justify-around items-center pb-safe">
+<a class="flex flex-col items-center justify-center w-full h-full text-primary" href="#">
+<div class="px-4 py-1 bg-primary-container/20 rounded-full mb-1">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">home</span>
+</div>
+<span class="font-label-sm text-label-sm">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center w-full h-full text-on-surface-variant" href="#">
+<div class="px-4 py-1 rounded-full mb-1">
+<span class="material-symbols-outlined text-[24px]">account_tree</span>
+</div>
+<span class="font-label-sm text-label-sm">My Maps</span>
+</a>
+<a class="flex flex-col items-center justify-center w-full h-full text-on-surface-variant" href="#">
+<div class="px-4 py-1 rounded-full mb-1">
+<span class="material-symbols-outlined text-[24px]">dashboard_customize</span>
+</div>
+<span class="font-label-sm text-label-sm">Templates</span>
+</a>
+<a class="flex flex-col items-center justify-center w-full h-full text-on-surface-variant" href="#">
+<div class="px-4 py-1 rounded-full mb-1">
+<span class="material-symbols-outlined text-[24px]">settings</span>
+</div>
+<span class="font-label-sm text-label-sm">Settings</span>
+</a>
+</nav>
+</body></html>

@@ -1,0 +1,58 @@
+@import '@fontsource/plus-jakarta-sans/400.css';
+@import '@fontsource/plus-jakarta-sans/500.css';
+@import '@fontsource/plus-jakarta-sans/600.css';
+@import '@fontsource/plus-jakarta-sans/700.css';
+
+:root {
+  --bg: #FAFAFA;
+  --surface: #FFFFFF;
+  --border: #E4E4E7;
+  --border-hover: #A1A1AA;
+  --text: #09090B;
+  --text-muted: #71717A;
+  --accent: #7C3AED;
+  --accent-light: #EDE9FE;
+  --accent-text: #5B21B6;
+  --radius-node: 10px;
+  --radius-btn: 8px;
+  --radius-panel: 14px;
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* React Flow — strip default styles that clash with our design */
+.react-flow__renderer { background: var(--bg); }
+.react-flow__background { background: var(--bg); }
+.react-flow__handle { display: none !important; }
+
+.react-flow__controls {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-btn) !important;
+  box-shadow: var(--shadow-card) !important;
+}
+.react-flow__controls-button {
+  background: var(--surface) !important;
+  border-bottom: 1px solid var(--border) !important;
+  color: var(--text-muted) !important;
+  fill: var(--text-muted) !important;
+}
+.react-flow__controls-button:hover {
+  background: var(--bg) !important;
+}
