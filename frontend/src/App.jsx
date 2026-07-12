@@ -2,6 +2,8 @@
 import { useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Toaster } from 'react-hot-toast'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { AnimatedProgress } from '@/components/ui/animated-progress'
 
 import TopBar          from './components/TopBar'
 import Sidebar         from './components/Sidebar'
@@ -10,6 +12,7 @@ import NodeDetailPanel from './components/NodeDetailPanel'
 import ViewModeToggle  from './components/ViewModeToggle'
 import ReadingMode     from './components/ReadingMode'
 import GraphBreadcrumb from './components/GraphBreadcrumb'
+import CommandPalette  from './components/CommandPalette'
 import useAtlasStore   from './store/atlasStore'
 
 export default function App() {
@@ -114,7 +117,9 @@ export default function App() {
   const showCollapseAll = viewMode === 'tree' && expandedNodeIds.size > 0
 
   return (
+    <TooltipProvider delayDuration={300}>
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)' }}>
+      <CommandPalette />
       <TopBar inputRef={topicInputRef} />
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
@@ -126,16 +131,29 @@ export default function App() {
           {/* ViewModeToggle — always visible top-right */}
           {currentMap && <ViewModeToggle />}
 
-          {/* Node count — top-right next to toggle */}
-          {currentMap && viewMode === 'tree' && (
-            <div style={{
-              position: 'absolute', top: 22, right: 150, zIndex: 10,
-              fontSize: 12, color: 'var(--text-muted)',
-              pointerEvents: 'none',
-            }}>
-              {storeNodes.length} concepts
-            </div>
-          )}
+          {/* Explored progress — top-right next to toggle */}
+          {currentMap && viewMode === 'tree' && (() => {
+            const explorable = storeNodes.filter(n => !n.is_root)
+            const readCount  = explorable.filter(n => n.is_read).length
+            return (
+              <div style={{
+                position: 'absolute', top: 18, right: 150, zIndex: 10,
+                pointerEvents: 'none', textAlign: 'right',
+              }}>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>
+                  {explorable.length > 0
+                    ? `Explored ${readCount} of ${explorable.length}`
+                    : `${storeNodes.length} concepts`}
+                </div>
+                {explorable.length > 0 && (
+                  <AnimatedProgress
+                    value={(readCount / explorable.length) * 100}
+                    style={{ width: 100, height: 3, borderRadius: 2 }}
+                  />
+                )}
+              </div>
+            )
+          })()}
 
           {/* Collapse All — top-left of canvas */}
           <AnimatePresence>
@@ -210,5 +228,6 @@ export default function App() {
         }}
       />
     </div>
+    </TooltipProvider>
   )
 }

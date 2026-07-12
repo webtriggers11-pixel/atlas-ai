@@ -17,6 +17,11 @@ class Node(Base):
     position_x = Column(Float, nullable=True)
     position_y = Column(Float, nullable=True)
     is_root = Column(Boolean, default=False, nullable=False)
+    # 'topic' = generated from a typed topic, 'document' = grounded in an uploaded doc
+    source_type = Column(Text, server_default="'topic'", nullable=False)
+    is_read = Column(Boolean, server_default="false", nullable=False)
+    # 'none' = not checked/fully documented, 'flagged' = under-documented, 'resolved' = all gaps answered
+    gap_status = Column(Text, server_default="'none'", nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     map = relationship("Map", back_populates="nodes")
@@ -24,6 +29,7 @@ class Node(Base):
     parent = relationship("Node", remote_side="Node.id", back_populates="children")
     children = relationship("Node", back_populates="parent")
     explanations = relationship("NodeExplanation", back_populates="node", cascade="all, delete-orphan")
+    gaps = relationship("NodeGap", back_populates="node", cascade="all, delete-orphan")
 
     __table_args__ = (
         Index("idx_nodes_map_id", "map_id"),

@@ -42,6 +42,19 @@ function FitViewOnLoad({ nodeCount }) {
   return null
 }
 
+/** Centers the camera on a single node whenever focusToken changes (Ctrl+K "jump to node"). */
+function FocusNodeOnRequest({ focusToken, focusNodeId }) {
+  const { fitView } = useReactFlow()
+  const isFirst = useRef(true)
+  useEffect(() => {
+    if (isFirst.current) { isFirst.current = false; return }
+    if (!focusNodeId) return
+    const id = setTimeout(() => fitView({ nodes: [{ id: focusNodeId }], duration: 450, padding: 0.6 }), 50)
+    return () => clearTimeout(id)
+  }, [focusToken, focusNodeId, fitView])
+  return null
+}
+
 /** Walk parent_id chain to compute depth (0 = root). */
 function getNodeDepth(nodeId, allNodes) {
   let depth = 0
@@ -61,6 +74,8 @@ function AtlasGraphInner({ onExpandClick, onCollapseClick }) {
   const currentMap      = useAtlasStore(s => s.currentMap)
   const expandedNodeIds = useAtlasStore(s => s.expandedNodeIds)
   const setSelectedNode = useAtlasStore(s => s.setSelectedNode)
+  const focusNodeId     = useAtlasStore(s => s.focusNodeId)
+  const focusToken      = useAtlasStore(s => s.focusToken)
 
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
@@ -91,6 +106,7 @@ function AtlasGraphInner({ onExpandClick, onCollapseClick }) {
           summary:         stdExp?.content ?? '',
           isRoot:          apiNode.is_root,
           isSelected:      apiNode.id === selectedNode?.id,
+          isRead:          apiNode.is_read,
           hasChildren,
           isExpanded,
           childCount,
@@ -147,6 +163,7 @@ function AtlasGraphInner({ onExpandClick, onCollapseClick }) {
       >
         <FitViewOnLoad   nodeCount={nodes.length} />
         <FitViewOnExpand expandedNodeIds={expandedNodeIds} />
+        <FocusNodeOnRequest focusToken={focusToken} focusNodeId={focusNodeId} />
         <Background variant={BackgroundVariant.Dots} color="#E4E4E7" gap={24} size={1} />
         <Controls showInteractive={false} />
       </ReactFlow>

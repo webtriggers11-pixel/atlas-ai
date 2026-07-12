@@ -1,6 +1,7 @@
-// Centered empty state shown on the canvas when no map is loaded
+// Centered empty state shown on the canvas when no map is loaded — dual entry point
 import { motion } from 'framer-motion'
 import useAtlasStore from '../store/atlasStore'
+import DocumentUpload from './DocumentUpload'
 
 const CHIPS = [
   { label: 'Quantum computing', icon: '⚛' },
@@ -68,93 +69,84 @@ export default function EmptyState() {
     <div style={{
       flex: 1,
       display: 'flex',
-      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
       userSelect: 'none',
+      padding: 24,
     }}>
+      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'stretch' }}>
 
-      {/* Icon circle */}
-      <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
-        style={{
-          width: 120,
-          height: 120,
-          borderRadius: '50%',
-          border: '2px solid var(--border)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'var(--surface)',
-        }}
-      >
-        <NetworkIcon />
-      </motion.div>
+        {/* Card 1 — Explore a topic */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          style={{
+            flex: 1, minWidth: 260, maxWidth: 320,
+            border: '1.5px solid var(--border)',
+            borderRadius: 'var(--radius-panel)',
+            background: 'var(--surface)',
+            padding: 24,
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            textAlign: 'center', gap: 10,
+          }}
+        >
+          {/* Icon circle */}
+          <div style={{
+            width: 48, height: 48, borderRadius: '50%',
+            border: '2px solid var(--border)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'var(--bg)', flexShrink: 0,
+          }}>
+            <NetworkIcon />
+          </div>
 
-      {/* Heading */}
-      <motion.h2
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1, duration: 0.3 }}
-        style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', marginTop: 24 }}
-      >
-        Explore any idea
-      </motion.h2>
+          <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>Explore a topic</h3>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+            Type a topic above and press Generate. Click any concept to go deeper.
+          </p>
 
-      {/* Subtext */}
-      <motion.p
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15, duration: 0.3 }}
-        style={{
-          fontSize: 14,
-          color: 'var(--text-muted)',
-          textAlign: 'center',
-          maxWidth: 260,
-          marginTop: 8,
-          lineHeight: 1.6,
-        }}
-      >
-        Type a topic above and press Generate<br />Click any concept to go deeper
-      </motion.p>
+          {/* Example chips */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginTop: 4 }}>
+            {CHIPS.map(chip => (
+              <motion.button
+                key={chip.label}
+                whileHover={{ scale: 1.03, borderColor: 'var(--accent)', color: 'var(--accent-text)', background: 'var(--accent-light)' }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => generate(chip.label)}
+                disabled={isGenerating}
+                style={{
+                  border: '1px solid var(--border)',
+                  borderRadius: 99,
+                  padding: '6px 14px',
+                  fontSize: 13,
+                  color: 'var(--text-muted)',
+                  background: 'var(--surface)',
+                  cursor: isGenerating ? 'not-allowed' : 'pointer',
+                  fontFamily: 'inherit',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  transition: 'border-color 0.15s, color 0.15s, background 0.15s',
+                }}
+              >
+                <span>{chip.icon}</span>
+                {chip.label}
+              </motion.button>
+            ))}
+          </div>
+        </motion.div>
 
-      {/* Example chips */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.3 }}
-        style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginTop: 24 }}
-      >
-        {CHIPS.map((chip, i) => (
-          <motion.button
-            key={chip.label}
-            whileHover={{ scale: 1.03, borderColor: 'var(--accent)', color: 'var(--accent-text)', background: 'var(--accent-light)' }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => generate(chip.label)}
-            disabled={isGenerating}
-            style={{
-              border: '1px solid var(--border)',
-              borderRadius: 99,
-              padding: '6px 14px',
-              fontSize: 13,
-              color: 'var(--text-muted)',
-              background: 'var(--surface)',
-              cursor: isGenerating ? 'not-allowed' : 'pointer',
-              fontFamily: 'inherit',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              transition: 'border-color 0.15s, color 0.15s, background 0.15s',
-            }}
-          >
-            <span>{chip.icon}</span>
-            {chip.label}
-          </motion.button>
-        ))}
-      </motion.div>
+        {/* Card 2 — Understand a document */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.05 }}
+        >
+          <DocumentUpload />
+        </motion.div>
 
+      </div>
     </div>
   )
 }

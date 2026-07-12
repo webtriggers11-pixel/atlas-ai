@@ -2,6 +2,7 @@
 import { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import useAtlasStore from '../store/atlasStore'
+import { TextReveal } from '@/components/ui/text-reveal'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -19,7 +20,7 @@ function SkeletonLine({ width = '100%' }) {
   )
 }
 
-function ConceptSection({ node, grandchildren }) {
+function ConceptSection({ node, grandchildren, onViewInTree }) {
   const explanation = node.explanations?.find(e => e.depth === 'standard')
 
   return (
@@ -29,14 +30,35 @@ function ConceptSection({ node, grandchildren }) {
       viewport={{ once: true }}
       transition={{ duration: 0.4 }}
       id={slugify(node.label)}
+      className="reading-section"
     >
-      <h2 style={{
-        fontSize: 22, fontWeight: 700, color: 'var(--text)',
-        marginTop: 48, paddingBottom: 12,
-        borderBottom: '1px solid var(--border)',
+      <div style={{
+        display: 'flex', alignItems: 'baseline', gap: 8,
+        marginTop: 48, paddingBottom: 12, borderBottom: '1px solid var(--border)',
       }}>
-        {node.label}
-      </h2>
+        <TextReveal
+          as="h2"
+          text={node.label}
+          style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', flex: 1 }}
+        />
+        <button
+          onClick={() => onViewInTree(node)}
+          className="view-in-tree-btn"
+          title="View in tree"
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: 'var(--accent-text)', fontSize: 12, fontFamily: 'inherit',
+            display: 'flex', alignItems: 'center', gap: 4, opacity: 0,
+            transition: 'opacity 0.12s', flexShrink: 0, paddingBottom: 4,
+          }}
+        >
+          View in tree
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M15 3h6v6" /><path d="M10 14 21 3" />
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+          </svg>
+        </button>
+      </div>
 
       <div style={{ marginTop: 16 }}>
         {explanation ? (
@@ -84,6 +106,14 @@ export default function ReadingMode() {
   const currentMap  = useAtlasStore(s => s.currentMap)
   const setViewMode = useAtlasStore(s => s.setViewMode)
   const setNodes    = useAtlasStore(s => s.setNodes)
+  const setSelectedNode = useAtlasStore(s => s.setSelectedNode)
+  const focusNode        = useAtlasStore(s => s.focusNode)
+
+  function viewInTree(node) {
+    setSelectedNode(node)
+    setViewMode('tree')
+    requestAnimationFrame(() => focusNode(node.id))
+  }
 
   const rootNode    = storeNodes.find(n => n.is_root)
   const firstLevel  = storeNodes.filter(n => n.parent_id === rootNode?.id)
@@ -130,9 +160,11 @@ export default function ReadingMode() {
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '48px 24px' }}>
 
         {/* Title */}
-        <h1 style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', lineHeight: 1.2 }}>
-          {rootNode.label}
-        </h1>
+        <TextReveal
+          as="h1"
+          text={rootNode.label}
+          style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', lineHeight: 1.2 }}
+        />
         <p style={{ fontSize: 14, color: 'var(--text-muted)', marginTop: 8 }}>
           An AI-generated concept map · {storeNodes.length} concepts
         </p>
@@ -171,7 +203,7 @@ export default function ReadingMode() {
         {firstLevel.map(node => {
           const grandchildren = storeNodes.filter(n => n.parent_id === node.id)
           return (
-            <ConceptSection key={node.id} node={node} grandchildren={grandchildren} />
+            <ConceptSection key={node.id} node={node} grandchildren={grandchildren} onViewInTree={viewInTree} />
           )
         })}
 
@@ -195,6 +227,8 @@ export default function ReadingMode() {
           </button>
         </div>
       </div>
+
+      <style>{`.reading-section:hover .view-in-tree-btn { opacity: 1 !important; }`}</style>
     </motion.div>
   )
 }

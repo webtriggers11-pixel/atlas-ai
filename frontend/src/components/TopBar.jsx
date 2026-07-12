@@ -3,6 +3,9 @@ import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import useAtlasStore from '../store/atlasStore'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { AnimatedProgress } from '@/components/ui/animated-progress'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -79,6 +82,7 @@ export default function TopBar() {
       gap: 16,
       flexShrink: 0,
       zIndex: 20,
+      position: 'relative',
     }}>
 
       {/* Logo */}
@@ -104,7 +108,7 @@ export default function TopBar() {
           <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
 
-        <input
+        <Input
           ref={inputRef}
           type="text"
           value={topic}
@@ -114,21 +118,7 @@ export default function TopBar() {
           onBlur={() => setFocused(false)}
           placeholder="Explore any topic..."
           disabled={isGenerating}
-          style={{
-            width: '100%',
-            height: 38,
-            paddingLeft: 36,
-            paddingRight: topic ? 12 : 100,
-            border: `1px solid ${focused ? 'var(--accent)' : 'var(--border)'}`,
-            borderRadius: 'var(--radius-btn)',
-            fontSize: 14,
-            fontFamily: 'inherit',
-            background: 'var(--surface)',
-            color: 'var(--text)',
-            outline: 'none',
-            boxShadow: focused ? '0 0 0 3px var(--accent-light)' : 'none',
-            transition: 'border-color 0.15s, box-shadow 0.15s',
-          }}
+          style={{ paddingLeft: 36, paddingRight: topic ? 12 : 100, fontSize: 14 }}
         />
 
         {/* Spinner when generating */}
@@ -155,30 +145,25 @@ export default function TopBar() {
       </div>
 
       {/* Generate button */}
-      <motion.button
-        whileTap={{ scale: 0.97 }}
-        onClick={() => generate()}
-        disabled={!topic.trim() || isGenerating}
-        style={{
-          height: 38,
-          padding: '0 18px',
-          background: 'var(--accent)',
-          color: '#fff',
-          border: 'none',
-          borderRadius: 'var(--radius-btn)',
-          fontSize: 14,
-          fontWeight: 500,
-          fontFamily: 'inherit',
-          cursor: !topic.trim() || isGenerating ? 'not-allowed' : 'pointer',
-          opacity: !topic.trim() || isGenerating ? 0.4 : 1,
-          flexShrink: 0,
-          transition: 'background 0.15s, opacity 0.15s',
-        }}
-        onMouseEnter={e => { if (topic.trim() && !isGenerating) e.target.style.background = '#6D28D9' }}
-        onMouseLeave={e => { e.target.style.background = 'var(--accent)' }}
-      >
-        Generate
-      </motion.button>
+      <motion.div whileTap={{ scale: 0.97 }} style={{ flexShrink: 0 }}>
+        <Button onClick={() => generate()} disabled={!topic.trim() || isGenerating} style={{ fontSize: 14 }}>
+          Generate
+        </Button>
+      </motion.div>
+
+      {/* Command palette hint */}
+      <span style={{
+        flexShrink: 0, fontSize: 11, color: 'var(--text-muted)',
+        border: '1px solid var(--border)', borderRadius: 6,
+        padding: '3px 7px', fontFamily: 'inherit',
+      }}>
+        ⌘K
+      </span>
+
+      {/* Indeterminate progress line while a map is being generated */}
+      {isGenerating && (
+        <AnimatedProgress style={{ position: 'absolute', left: 0, right: 0, bottom: -1 }} />
+      )}
 
       <style>{`@keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }`}</style>
     </div>

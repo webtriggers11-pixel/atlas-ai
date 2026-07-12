@@ -1,8 +1,14 @@
 // Left sidebar — collapsible list of recently saved maps
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import useAtlasStore from '../store/atlasStore'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+  DialogDescription, DialogFooter,
+} from '@/components/ui/dialog'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -42,6 +48,8 @@ export default function Sidebar() {
   const storeNodes      = useAtlasStore(s => s.nodes)
   const collapseAll     = useAtlasStore(s => s.collapseAll)
 
+  const [pendingDelete, setPendingDelete] = useState(null) // { id, topic } | null
+
   // Load recent maps on mount
   useEffect(() => {
     fetch(`${API}/maps`)
@@ -64,8 +72,10 @@ export default function Sidebar() {
     }
   }
 
-  async function deleteMap(e, id) {
-    e.stopPropagation()
+  async function confirmDeleteMap() {
+    if (!pendingDelete) return
+    const id = pendingDelete.id
+    setPendingDelete(null)
     try {
       await fetch(`${API}/maps/${id}`, { method: 'DELETE' })
       setRecentMaps(recentMaps.filter(m => m.id !== id))
@@ -199,20 +209,16 @@ export default function Sidebar() {
                           {formatDate(map.created_at)}
                         </p>
                         {isActive && storeNodes.length > 0 && (
-                          <span style={{
-                            fontSize: 11, color: 'var(--text-muted)',
-                            background: '#F4F4F5', borderRadius: 99,
-                            padding: '1px 7px',
-                          }}>
+                          <Badge style={{ fontSize: 11, padding: '1px 7px' }}>
                             {storeNodes.length} concepts
-                          </span>
+                          </Badge>
                         )}
                       </div>
                     </div>
 
                     {/* Delete button — shows on hover via CSS class */}
                     <button
-                      onClick={e => deleteMap(e, map.id)}
+                      onClick={e => { e.stopPropagation(); setPendingDelete({ id: map.id, topic: map.topic }) }}
                       className="delete-btn"
                       style={{
                         background: 'none',
@@ -244,6 +250,21 @@ export default function Sidebar() {
         .map-item:hover .delete-btn { opacity: 1 !important; }
         .delete-btn:hover { color: #EF4444 !important; }
       `}</style>
+
+      <Dialog open={!!pendingDelete} onOpenChange={open => !open && setPendingDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete this map?</DialogTitle>
+            <DialogDescription>
+              "{pendingDelete?.topic}" and all its concepts will be permanently removed. This can't be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setPendingDelete(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmDeleteMap}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   )
 }

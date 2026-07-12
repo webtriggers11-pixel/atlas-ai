@@ -15,6 +15,13 @@ const useAtlasStore = create((set) => ({
   expandedNodeIds: new Set(),
   viewMode: 'tree',   // 'tree' | 'read'
 
+  // Bumped whenever something asks the graph to fitView on a specific node
+  // (e.g. the Ctrl+K palette) — AtlasGraph watches focusToken, not focusNodeId,
+  // so re-selecting the same node still re-triggers the camera move.
+  focusNodeId: null,
+  focusToken: 0,
+  focusNode: (nodeId) => set((s) => ({ focusNodeId: nodeId, focusToken: s.focusToken + 1 })),
+
   setCurrentMap:  (map)   => set({ currentMap: map }),
   setNodes:       (nodes) => set({ nodes }),
   setEdges:       (edges) => set({ edges }),

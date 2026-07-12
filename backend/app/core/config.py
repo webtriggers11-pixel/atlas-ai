@@ -12,9 +12,12 @@ class Settings(BaseSettings):
     OLLAMA_MODEL: str = "llama3.1:8b"
     GROQ_API_KEY: str = ""
     GROQ_MODEL: str = "llama3-8b-8192"
+    GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-2.5-flash"
     CORS_ORIGINS: str = "http://localhost:5173"
     PORT: int = 8000
     AUTO_MIGRATE: bool = False
+    GAP_THRESHOLD: float = 0.35  # best chunk similarity below this = node is under-documented
 
     model_config = {"env_file": Path(__file__).parents[2] / ".env", "extra": "ignore"}
 

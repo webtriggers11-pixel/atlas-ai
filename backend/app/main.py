@@ -3,12 +3,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.routers.maps import router as maps_router
+from app.routers.documents import router as documents_router
+from app.routers.gaps import router as gaps_router
 
 
 def run_migrations():
     """Detect schema changes against live DB and apply any pending migrations."""
     from app.db.base import Base
-    from app.models import Map, Node, NodeExplanation, Edge  # noqa: F401 — registers tables in Base.metadata
+    from app.models import Map, Node, NodeExplanation, Edge, LlmLog, Document, DocumentChunk, NodeGap  # noqa: F401 — registers tables in Base.metadata
     from migrations.migration_manager import MigrationManager
 
     manager = MigrationManager(settings.DATABASE_URL, Base.metadata)
@@ -55,6 +57,8 @@ app.add_middleware(
 
 
 app.include_router(maps_router)
+app.include_router(documents_router)
+app.include_router(gaps_router)
 
 
 # GET /health → {"status": "ok", "message": "Idea Atlas backend is running"}

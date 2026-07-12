@@ -49,3 +49,10 @@ class ExpandResponse(BaseModel):
     """New nodes and edges created by POST .../expand."""
     new_nodes: list[NodeWithExplanations]
     new_edges: list[EdgeResponse]
+
+
+class DocumentMapResponse(FullMapResponse):
+    """Full map plus document metadata — returned by POST /documents."""
+    document_id: UUID
+    document_filename: str
+    chunk_count: int

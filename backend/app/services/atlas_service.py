@@ -8,8 +8,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from fastapi import HTTPException
 
-from app.llm import generate_concepts, generate_explanation
-from app.models import Map, Node, NodeExplanation, Edge
+from app.llm import generate_concepts, generate_explanation, generate_grounded_explanation
+from app.models import Map, Node, NodeExplanation, Edge, Document
+from app.services.document_service import retrieve_chunks
 from app.schemas import (
     FullMapResponse, MapSummary, ExpandResponse,
     NodeWithExplanations, NodeExplanationResponse, EdgeResponse,
@@ -28,6 +29,9 @@ def _node_to_schema(node: Node) -> NodeWithExplanations:
         position_x=node.position_x,
         position_y=node.position_y,
         is_root=node.is_root,
+        source_type=node.source_type or "topic",
+        is_read=node.is_read,
+        gap_status=node.gap_status or "none",
         created_at=node.created_at,
         explanations=[NodeExplanationResponse.model_validate(e) for e in node.explanations],
     )
@@ -122,6 +126,7 @@ def expand_node(map_id: UUID, node_id: UUID, depth: str, db: Session) -> ExpandR
         topic=node.label,
         depth=depth,
         parent_label=parent.label if parent else None,
+        task_type="expand_small",
     )
 
     new_nodes = []
@@ -165,14 +170,34 @@ def change_depth(map_id: UUID, node_id: UUID, depth: str, db: Session) -> NodeEx
         return NodeExplanationResponse.model_validate(cached)
 
     # Cache miss — generate content, then upsert atomically.
+    # Document-grounded nodes answer ONLY from retrieved chunks (RAG);
+    # topic nodes keep the original free-knowledge explanation.
+    source_chunk_ids = None
+    confidence = None
+    section_hint = None
+    document = db.query(Document).filter(Document.map_id == map_id).first()
+    if document is not None and node.source_type == "document":
+        results = retrieve_chunks(document.id, node.label, db, k=4)
+        excerpts = "\n\n".join(
+            f"[{r['chunk'].section_hint or 'Document'}]\n{r['chunk'].content}" for r in results
+        )
+        content = generate_grounded_explanation(node.label, depth, excerpts)
+        source_chunk_ids = [str(r["chunk"].id) for r in results]
+        confidence = max((r["score"] for r in results), default=None)
+        section_hint = results[0]["chunk"].section_hint if results else None
+    else:
+        content = generate_explanation(node.label, depth)
+
     # INSERT ... ON CONFLICT DO NOTHING is a single atomic SQL statement:
     # if a concurrent request already inserted the same (node_id, depth) between
     # our SELECT above and this INSERT, Postgres silently skips the insert instead
     # of raising a unique-constraint error. No try/except needed.
-    content = generate_explanation(node.label, depth)
     stmt = (
         pg_insert(NodeExplanation)
-        .values(id=_uuid.uuid4(), node_id=node_id, depth=depth, content=content)
+        .values(
+            id=_uuid.uuid4(), node_id=node_id, depth=depth, content=content,
+            source_chunk_ids=source_chunk_ids, confidence=confidence, section_hint=section_hint,
+        )
         .on_conflict_do_nothing(constraint="uq_node_depth")
     )
     db.execute(stmt)
@@ -186,6 +211,17 @@ def change_depth(map_id: UUID, node_id: UUID, depth: str, db: Session) -> NodeEx
         .first()
     )
     return NodeExplanationResponse.model_validate(result)
+
+
+def mark_node_read(map_id: UUID, node_id: UUID, db: Session) -> Node:
+    """Flag a node as read — idempotent, used for the 'Explored X of N' progress tracker."""
+    _get_map_or_404(map_id, db)
+    node = _get_node_or_404(node_id, map_id, db)
+    if not node.is_read:
+        node.is_read = True
+        db.commit()
+        db.refresh(node)
+    return node
 
 
 def delete_map(map_id: UUID, db: Session) -> None:

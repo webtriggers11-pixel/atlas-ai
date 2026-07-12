@@ -60,12 +60,15 @@ function ExpandToggleButton({ isExpanded, onClick }) {
 }
 
 function ChildNode({ data }) {
-  const { isSelected, isExpanded, hasChildren, childCount, depth = 1 } = data
+  const { isSelected, isExpanded, hasChildren, childCount, isRead, depth = 1 } = data
 
   // Depth-based typography
   const labelSize  = depth >= 3 ? 12 : depth === 2 ? 13 : 14
   const summarySize = depth === 2 ? 11 : 12
   const showSummary = depth < 3
+
+  // Weight signal — nodes with more sub-concepts behind them read as "heavier" content
+  const labelWeight = childCount >= 3 ? 700 : 500
 
   // Depth-based colour
   const nodeBg     = depth >= 3 ? '#FAFAFA' : isSelected ? 'var(--accent-light)' : 'var(--surface)'
@@ -94,9 +97,10 @@ function ChildNode({ data }) {
       boxShadow: 'var(--shadow-card)',
       cursor: 'pointer',
       transition: 'border-color 0.15s, background 0.15s',
+      position: 'relative',
     }}>
       <p style={{
-        fontSize: labelSize, fontWeight: 600, lineHeight: 1.4,
+        fontSize: labelSize, fontWeight: labelWeight, lineHeight: 1.4,
         color: isSelected ? 'var(--accent-text)' : 'var(--text)',
       }}>
         {data.label}
@@ -118,10 +122,19 @@ function ChildNode({ data }) {
         alignItems: 'center', marginTop: 10,
       }}>
         <span style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 500 }}>
-          {isExpanded && hasChildren ? `${childCount} concepts` : ''}
+          {hasChildren ? `${childCount} sub-concept${childCount === 1 ? '' : 's'}` : ''}
         </span>
         <ExpandToggleButton isExpanded={isExpanded} onClick={handleToggle} />
       </div>
+
+      {/* Unread indicator — small violet dot, like unread email */}
+      {!isRead && (
+        <div style={{
+          position: 'absolute', top: -4, right: -4,
+          width: 8, height: 8, borderRadius: '50%',
+          background: 'var(--accent)', border: '2px solid var(--bg)',
+        }} />
+      )}
     </div>
   )
 }

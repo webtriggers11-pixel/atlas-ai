@@ -5,9 +5,11 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.schemas import (
     CreateMapRequest, ExpandNodeRequest, ChangeDepthRequest,
-    FullMapResponse, MapSummary, ExpandResponse, NodeExplanationResponse,
+    FullMapResponse, MapSummary, ExpandResponse, NodeExplanationResponse, NodeReadResponse,
+    GapCheckResponse,
 )
 from app.services import atlas_service
+from app.services import document_service
 
 router = APIRouter(prefix="/maps", tags=["maps"])
 
@@ -53,6 +55,30 @@ def expand_node(map_id: UUID, node_id: UUID, body: ExpandNodeRequest, db: Sessio
 def change_depth(map_id: UUID, node_id: UUID, body: ChangeDepthRequest, db: Session = Depends(get_db)):
     """Return a cached explanation or generate a new one at the requested depth."""
     return atlas_service.change_depth(map_id, node_id, body.depth, db)
+
+
+# PATCH /maps/{map_id}/nodes/{node_id}/read
+# Example response: {"id": "...", "is_read": true}
+@router.patch("/{map_id}/nodes/{node_id}/read", response_model=NodeReadResponse)
+def mark_node_read(map_id: UUID, node_id: UUID, db: Session = Depends(get_db)):
+    """Flag a node as read for the map's progress tracker."""
+    return atlas_service.mark_node_read(map_id, node_id, db)
+
+
+# POST /maps/{map_id}/gap-check
+# Example response: {"checked_nodes": 11, "flagged_nodes": 3, "questions": [...]}
+@router.post("/{map_id}/gap-check", response_model=GapCheckResponse)
+def gap_check(map_id: UUID, db: Session = Depends(get_db)):
+    """Flag under-documented nodes and generate developer questions for each (document maps only)."""
+    return document_service.gap_check_map(map_id, db)
+
+
+# GET /maps/{map_id}/gaps
+# Example response: {"checked_nodes": 11, "flagged_nodes": 3, "questions": [...]}
+@router.get("/{map_id}/gaps", response_model=GapCheckResponse)
+def list_gaps(map_id: UUID, db: Session = Depends(get_db)):
+    """Return all gap questions for a map's nodes."""
+    return document_service.list_gaps(map_id, db)
 
 
 # DELETE /maps/{map_id}
