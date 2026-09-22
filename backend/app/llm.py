@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class RateLimited(Exception):
-    """Raised when a provider returns HTTP 429 so _call_llm can retry with another provider."""
+    """Raised when a provider returns HTTP 429 or 503 so _call_llm can retry with another provider."""
 
 
 # ── Response shape ────────────────────────────────────────────────────────────
@@ -161,8 +161,8 @@ def _call_groq(messages: list[dict]) -> str:
         )
     except httpx.ConnectError:
         raise HTTPException(status_code=503, detail="Cannot reach Groq API. Check your network.")
-    if resp.status_code == 429:
-        raise RateLimited(f"Groq rate limited: {resp.text[:200]}")
+    if resp.status_code in (429, 503):
+        raise RateLimited(f"Groq unavailable ({resp.status_code}): {resp.text[:200]}")
     if resp.status_code != 200:
         raise HTTPException(status_code=502, detail=f"Groq error {resp.status_code}: {resp.text}")
     return resp.json()["choices"][0]["message"]["content"]
@@ -197,8 +197,8 @@ def _call_gemini(messages: list[dict]) -> str:
         )
     except httpx.ConnectError:
         raise HTTPException(status_code=503, detail="Cannot reach Gemini API. Check your network.")
-    if resp.status_code == 429:
-        raise RateLimited(f"Gemini rate limited: {resp.text[:200]}")
+    if resp.status_code in (429, 503):
+        raise RateLimited(f"Gemini unavailable ({resp.status_code}): {resp.text[:200]}")
     if resp.status_code != 200:
         raise HTTPException(status_code=502, detail=f"Gemini error {resp.status_code}: {resp.text}")
     try:
@@ -261,7 +261,7 @@ def _log_llm_call(provider: str, task_type: str, status: str, latency_ms: int) -
 
 
 def _call_llm(messages: list[dict], provider: str | None = None, task_type: str = "unknown") -> str:
-    """Send messages to a provider; on HTTP 429 retry once with the fallback provider. Logs every request."""
+    """Send messages to a provider; on HTTP 429/503 retry once with the fallback provider. Logs every request."""
     name = provider or settings.LLM_PROVIDER
     start = time.perf_counter()
     try:
@@ -271,20 +271,20 @@ def _call_llm(messages: list[dict], provider: str | None = None, task_type: str 
     except RateLimited as exc:
         alt = _FALLBACK.get(name)
         if not alt or not _is_configured(alt):
-            _log_llm_call(name, task_type, "rate_limited", int((time.perf_counter() - start) * 1000))
+            _log_llm_call(name, task_type, "unavailable", int((time.perf_counter() - start) * 1000))
             raise HTTPException(
                 status_code=429,
-                detail=f"{name} is rate limited and no fallback provider is configured. {exc}",
+                detail=f"{name} is rate limited or unavailable and no fallback provider is configured. {exc}",
             )
-        logger.warning("%s rate limited — retrying once with %s", name, alt)
+        logger.warning("%s rate limited or unavailable — retrying once with %s", name, alt)
         start2 = time.perf_counter()
         try:
             result = _PROVIDERS[alt](messages)
         except RateLimited as exc2:
-            _log_llm_call(alt, task_type, "rate_limited", int((time.perf_counter() - start2) * 1000))
+            _log_llm_call(alt, task_type, "unavailable", int((time.perf_counter() - start2) * 1000))
             raise HTTPException(
                 status_code=429,
-                detail=f"Both {name} and {alt} are rate limited — wait a minute and try again. {exc2}",
+                detail=f"Both {name} and {alt} are rate limited or unavailable — wait a minute and try again. {exc2}",
             )
         _log_llm_call(alt, task_type, "ok_after_fallback", int((time.perf_counter() - start2) * 1000))
         return result
