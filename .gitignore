@@ -8,10 +8,13 @@ __pycache__/
 venv/
 
 # Environment — never commit real secrets
-# .env
+.env
 .env.local
-#backend/.env
-#frontend/.env
+.env.prod
+backend/.env
+backend/.env.prod
+frontend/.env
+frontend/.env.prod
 
 # Node
 node_modules/
