@@ -12,7 +12,7 @@ services:
       dockerfile: Dockerfile.prod
     container_name: idea-atlas-backend
     env_file:
-      - ./backend/.env.prod
+      - ./backend/.env
     environment:
       - REDIS_URL=redis://redis:6379
     ports:
@@ -27,7 +27,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.prod
       args:
-        VITE_API_URL: http://api-atlas-ai.webtriggers.online
+        VITE_API_URL: https://api-atlas-ai.webtriggers.online
     container_name: idea-atlas-frontend
     ports:
       - "127.0.0.1:5174:3000"
