@@ -1,0 +1,272 @@
+{
+  "label": "vector+heading-fix-retrieval",
+  "at": "2026-10-02 14:54 UTC",
+  "metrics": {
+    "requirements": 32,
+    "recall@1": 0.9230769230769231,
+    "recall@4": 1.0,
+    "mrr": 0.9519230769230769,
+    "rewrite_calls": 0
+  },
+  "results": [
+    {
+      "dataset": "clinic_portal",
+      "preset": "spec_coverage",
+      "rows": [
+        {
+          "id": "C01",
+          "expected": "covered",
+          "evidence": "A text message is sent to the patient the day before",
+          "rank": 1,
+          "top_score": 0.45
+        },
+        {
+          "id": "C02",
+          "expected": "conflict",
+          "evidence": "Cancellations are allowed until midnight on the day before",
+          "rank": 1,
+          "top_score": 0.52
+        },
+        {
+          "id": "C03",
+          "expected": "conflict",
+          "evidence": "once per night",
+          "rank": 1,
+          "top_score": 0.504
+        },
+        {
+          "id": "C04",
+          "expected": "covered",
+          "evidence": "Idle sessions are terminated after 20 minutes",
+          "rank": 1,
+          "top_score": 0.632
+        },
+        {
+          "id": "C05",
+          "expected": "covered",
+          "evidence": "second login step using a one-time code",
+          "rank": 1,
+          "top_score": 0.302
+        },
+        {
+          "id": "C06",
+          "expected": "partial",
+          "evidence": "opens a patient chart, the event is logged",
+          "rank": 1,
+          "top_score": 0.417
+        },
+        {
+          "id": "C07",
+          "expected": "missing",
+          "evidence": null,
+          "rank": null,
+          "top_score": 0.368
+        },
+        {
+          "id": "C08",
+          "expected": "missing",
+          "evidence": null,
+          "rank": null,
+          "top_score": 0.533
+        },
+        {
+          "id": "C09",
+          "expected": "missing",
+          "evidence": null,
+          "rank": null,
+          "top_score": 0.374
+        },
+        {
+          "id": "C10",
+          "expected": "covered",
+          "evidence": "down to 320 px wide",
+          "rank": 1,
+          "top_score": 0.428
+        }
+      ],
+      "run": {},
+      "retrieval": {}
+    },
+    {
+      "dataset": "payments_api",
+      "preset": "spec_coverage",
+      "rows": [
+        {
+          "id": "P01",
+          "expected": "covered",
+          "evidence": "client-credentials grant",
+          "rank": 1,
+          "top_score": 0.562
+        },
+        {
+          "id": "P02",
+          "expected": "covered",
+          "evidence": "valid for 900 seconds",
+          "rank": 1,
+          "top_score": 0.521
+        },
+        {
+          "id": "P03",
+          "expected": "conflict",
+          "evidence": "Refresh tokens are not issued",
+          "rank": 1,
+          "top_score": 0.449
+        },
+        {
+          "id": "P04",
+          "expected": "partial",
+          "evidence": "rate limited at the gateway",
+          "rank": 1,
+          "top_score": 0.465
+        },
+        {
+          "id": "P05",
+          "expected": "covered",
+          "evidence": "Idempotency-Key header",
+          "rank": 1,
+          "top_score": 0.583
+        },
+        {
+          "id": "P06",
+          "expected": "conflict",
+          "evidence": "decimal number in the major currency unit",
+          "rank": 1,
+          "top_score": 0.413
+        },
+        {
+          "id": "P07",
+          "expected": "partial",
+          "evidence": "Refunds are created with POST /refunds",
+          "rank": 1,
+          "top_score": 0.496
+        },
+        {
+          "id": "P08",
+          "expected": "covered",
+          "evidence": "POST /payments | 300 ms",
+          "rank": 1,
+          "top_score": 0.54
+        },
+        {
+          "id": "P09",
+          "expected": "partial",
+          "evidence": "PCI DSS Level 1",
+          "rank": 1,
+          "top_score": 0.443
+        },
+        {
+          "id": "P10",
+          "expected": "missing",
+          "evidence": null,
+          "rank": null,
+          "top_score": 0.311
+        },
+        {
+          "id": "P11",
+          "expected": "conflict",
+          "evidence": "retried up to 3 times at 1 minute intervals",
+          "rank": 1,
+          "top_score": 0.723
+        },
+        {
+          "id": "P12",
+          "expected": "covered",
+          "evidence": "PF-1042",
+          "rank": 1,
+          "top_score": 0.397
+        }
+      ],
+      "run": {},
+      "retrieval": {}
+    },
+    {
+      "dataset": "resume_jd",
+      "preset": "resume_jd",
+      "rows": [
+        {
+          "id": "J01",
+          "expected": "covered",
+          "evidence": "Python services",
+          "rank": 1,
+          "top_score": 0.425
+        },
+        {
+          "id": "J02",
+          "expected": "covered",
+          "evidence": "FastAPI",
+          "rank": 1,
+          "top_score": 0.456
+        },
+        {
+          "id": "J03",
+          "expected": "covered",
+          "evidence": "Designed PostgreSQL schemas",
+          "rank": 1,
+          "top_score": 0.452
+        },
+        {
+          "id": "J04",
+          "expected": "covered",
+          "evidence": "Wrote pytest suites",
+          "rank": 1,
+          "top_score": 0.474
+        },
+        {
+          "id": "J05",
+          "expected": "covered",
+          "evidence": "B.E. in Information Technology",
+          "rank": 1,
+          "top_score": 0.385
+        },
+        {
+          "id": "J06",
+          "expected": "missing",
+          "evidence": null,
+          "rank": null,
+          "top_score": 0.235
+        },
+        {
+          "id": "J07",
+          "expected": "partial",
+          "evidence": "Celery and Redis",
+          "rank": 1,
+          "top_score": 0.34
+        },
+        {
+          "id": "J08",
+          "expected": "covered",
+          "evidence": "embeddings, pgvector and LLM structured output",
+          "rank": 2,
+          "top_score": 0.247
+        },
+        {
+          "id": "J09",
+          "expected": "missing",
+          "evidence": null,
+          "rank": null,
+          "top_score": 0.257
+        },
+        {
+          "id": "J10",
+          "expected": "partial",
+          "evidence": "Mentored two junior developers",
+          "rank": 4,
+          "top_score": 0.256
+        }
+      ],
+      "run": {},
+      "retrieval": {}
+    }
+  ],
+  "settings": {
+    "retrieval_mode": "vector",
+    "k": 4,
+    "query_rewrite": false,
+    "prompt": {
+      "extract_requirements": "extract-v1",
+      "classify_requirements": "classify-v2",
+      "rewrite_queries": "rewrite-v1"
+    },
+    "embedding": "all-MiniLM-L6-v2"
+  }
+}

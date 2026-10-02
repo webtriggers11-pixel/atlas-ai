@@ -1,0 +1,520 @@
+{
+  "label": "baseline",
+  "at": "2026-10-02 10:09 UTC",
+  "metrics": {
+    "requirements": 32,
+    "recall@1": 0.9230769230769231,
+    "recall@4": 0.9615384615384616,
+    "mrr": 0.9358974358974359,
+    "status_accuracy": 0.71875,
+    "false_missing_rate": 0.07692307692307693,
+    "false_covered_rate": 0.0,
+    "unclear_rate": 0.1875,
+    "evidence_validity": 1.0,
+    "evidence_location": 1.0,
+    "llm_calls": 9,
+    "seconds_per_requirement": 1.528125,
+    "model": "gemini/gemini-flash-latest",
+    "confusion": {
+      "covered": {
+        "covered": 12,
+        "partial": 1,
+        "missing": 0,
+        "conflict": 0,
+        "unclear": 2
+      },
+      "partial": {
+        "covered": 0,
+        "partial": 3,
+        "missing": 1,
+        "conflict": 0,
+        "unclear": 2
+      },
+      "missing": {
+        "covered": 0,
+        "partial": 0,
+        "missing": 4,
+        "conflict": 0,
+        "unclear": 2
+      },
+      "conflict": {
+        "covered": 0,
+        "partial": 0,
+        "missing": 1,
+        "conflict": 4,
+        "unclear": 0
+      },
+      "unclear": {
+        "covered": 0,
+        "partial": 0,
+        "missing": 0,
+        "conflict": 0,
+        "unclear": 0
+      }
+    }
+  },
+  "results": [
+    {
+      "dataset": "clinic_portal",
+      "preset": "spec_coverage",
+      "rows": [
+        {
+          "id": "C01",
+          "expected": "covered",
+          "evidence": "A text message is sent to the patient the day before",
+          "rank": 1,
+          "top_score": 0.502,
+          "predicted": "partial",
+          "confidence": 0.7,
+          "explanation": "The documentation states a text message is sent the day before the booking, but does not specify the 24\u2011hour timing requirement.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "C02",
+          "expected": "conflict",
+          "evidence": "Cancellations are allowed until midnight on the day before",
+          "rank": 1,
+          "top_score": 0.589,
+          "predicted": "conflict",
+          "confidence": 0.9,
+          "explanation": "Requirement allows cancellation up to 2 hours before, but the docs allow cancellation only until midnight the day before.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "C03",
+          "expected": "conflict",
+          "evidence": "once per night",
+          "rank": 1,
+          "top_score": 0.578,
+          "predicted": "conflict",
+          "confidence": 0.9,
+          "explanation": "Requirement calls for 5\u2011minute sync, but docs describe a nightly batch import.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "C04",
+          "expected": "covered",
+          "evidence": "Idle sessions are terminated after 20 minutes",
+          "rank": 1,
+          "top_score": 0.642,
+          "predicted": "covered",
+          "confidence": 0.95,
+          "explanation": "Docs state idle sessions are terminated after 20 minutes.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "C05",
+          "expected": "covered",
+          "evidence": "second login step using a one-time code",
+          "rank": 1,
+          "top_score": 0.315,
+          "predicted": "covered",
+          "confidence": 0.95,
+          "explanation": "The documentation explicitly states that a second login step using an authenticator app is available.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "C06",
+          "expected": "partial",
+          "evidence": "opens a patient chart, the event is logged",
+          "rank": 1,
+          "top_score": 0.387,
+          "predicted": "partial",
+          "confidence": 0.8,
+          "explanation": "Access events are logged with staff id and timestamp, but the required retention period of six years is not specified.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "C07",
+          "expected": "missing",
+          "evidence": null,
+          "rank": null,
+          "top_score": 0.364,
+          "predicted": "missing",
+          "confidence": 0.9,
+          "explanation": "No excerpt addresses HIPAA compliance.",
+          "evidence_ok": null,
+          "evidence_count": 0
+        },
+        {
+          "id": "C08",
+          "expected": "missing",
+          "evidence": null,
+          "rank": null,
+          "top_score": 0.515,
+          "predicted": "missing",
+          "confidence": 0.9,
+          "explanation": "No excerpt mentions malware scanning of uploaded documents.",
+          "evidence_ok": null,
+          "evidence_count": 0
+        },
+        {
+          "id": "C09",
+          "expected": "missing",
+          "evidence": null,
+          "rank": null,
+          "top_score": 0.384,
+          "predicted": "missing",
+          "confidence": 0.9,
+          "explanation": "No excerpt mentions lab result visibility timing.",
+          "evidence_ok": null,
+          "evidence_count": 0
+        },
+        {
+          "id": "C10",
+          "expected": "covered",
+          "evidence": "down to 320 px wide",
+          "rank": 1,
+          "top_score": 0.481,
+          "predicted": "covered",
+          "confidence": 0.95,
+          "explanation": "Evidence explicitly states responsive layout tested down to 320 px.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        }
+      ],
+      "run": {
+        "counts": {
+          "covered": 3,
+          "missing": 3,
+          "partial": 2,
+          "unclear": 0,
+          "conflict": 2
+        },
+        "errors": 0,
+        "llm_calls": 3,
+        "cache_hits": 0,
+        "duration_s": 24.8,
+        "evidence_dropped": 0,
+        "status": "completed",
+        "error": null,
+        "model": "gemini/gemini-flash-latest"
+      }
+    },
+    {
+      "dataset": "payments_api",
+      "preset": "spec_coverage",
+      "rows": [
+        {
+          "id": "P01",
+          "expected": "covered",
+          "evidence": "client-credentials grant",
+          "rank": 1,
+          "top_score": 0.544,
+          "predicted": "covered",
+          "confidence": 0.99,
+          "explanation": "The documentation explicitly states that merchants use the OAuth 2.0 client\u2011credentials grant.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "P02",
+          "expected": "covered",
+          "evidence": "valid for 900 seconds",
+          "rank": 1,
+          "top_score": 0.49,
+          "predicted": "covered",
+          "confidence": 0.99,
+          "explanation": "Access tokens are documented as valid for 900 seconds, which equals 15 minutes.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "P03",
+          "expected": "conflict",
+          "evidence": "Refresh tokens are not issued",
+          "rank": 1,
+          "top_score": 0.418,
+          "predicted": "missing",
+          "confidence": 0.95,
+          "explanation": "The excerpts state that refresh tokens are not issued, so the requirement cannot be satisfied.",
+          "evidence_ok": null,
+          "evidence_count": 0
+        },
+        {
+          "id": "P04",
+          "expected": "partial",
+          "evidence": "rate limited at the gateway",
+          "rank": 1,
+          "top_score": 0.471,
+          "predicted": "partial",
+          "confidence": 0.85,
+          "explanation": "The documentation mentions rate limiting for failed authentication attempts but does not specify a 10\u2011minute lockout after 5 consecutive failures.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "P05",
+          "expected": "covered",
+          "evidence": "Idempotency-Key header",
+          "rank": 1,
+          "top_score": 0.589,
+          "predicted": "covered",
+          "confidence": 0.95,
+          "explanation": "Idempotency key usage and 24\u2011hour window are documented.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "P06",
+          "expected": "conflict",
+          "evidence": "decimal number in the major currency unit",
+          "rank": 1,
+          "top_score": 0.404,
+          "predicted": "conflict",
+          "confidence": 0.9,
+          "explanation": "Requirement specifies integer minor units, but documentation uses decimal major units.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "P07",
+          "expected": "partial",
+          "evidence": "Refunds are created with POST /refunds",
+          "rank": 1,
+          "top_score": 0.501,
+          "predicted": "missing",
+          "confidence": 0.85,
+          "explanation": "No excerpt specifies a 180\u2011day refund window.",
+          "evidence_ok": null,
+          "evidence_count": 0
+        },
+        {
+          "id": "P08",
+          "expected": "covered",
+          "evidence": "POST /payments | 300 ms",
+          "rank": 1,
+          "top_score": 0.579,
+          "predicted": "covered",
+          "confidence": 0.95,
+          "explanation": "p95 latency target of 300 ms is documented.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "P09",
+          "expected": "partial",
+          "evidence": "PCI DSS Level 1",
+          "rank": 1,
+          "top_score": 0.444,
+          "predicted": "partial",
+          "confidence": 0.7,
+          "explanation": "The documentation states that card numbers are tokenized by a PCI DSS Level 1 certified vault provider and that TLS 1.2 or higher is used, but it does not explicitly state compliance with PCI DSS v4.0 or detail all required controls.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "P10",
+          "expected": "missing",
+          "evidence": null,
+          "rank": null,
+          "top_score": 0.31,
+          "predicted": "missing",
+          "confidence": 0.9,
+          "explanation": "No excerpt mentions encryption of data at rest.",
+          "evidence_ok": null,
+          "evidence_count": 0
+        },
+        {
+          "id": "P11",
+          "expected": "conflict",
+          "evidence": "retried up to 3 times at 1 minute intervals",
+          "rank": 1,
+          "top_score": 0.741,
+          "predicted": "conflict",
+          "confidence": 0.8,
+          "explanation": "The documentation describes only 3 retry attempts at 1 minute intervals and then dropping, which contradicts the requirement for exponential backoff up to 24 hours.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "P12",
+          "expected": "covered",
+          "evidence": "PF-1042",
+          "rank": 1,
+          "top_score": 0.384,
+          "predicted": "covered",
+          "confidence": 0.95,
+          "explanation": "The documentation specifies that errors are returned as JSON with a code field, e.g., PF-1042.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        }
+      ],
+      "run": {
+        "counts": {
+          "covered": 5,
+          "missing": 3,
+          "partial": 2,
+          "unclear": 0,
+          "conflict": 2
+        },
+        "errors": 0,
+        "llm_calls": 3,
+        "cache_hits": 0,
+        "duration_s": 18.0,
+        "evidence_dropped": 0,
+        "status": "completed",
+        "error": null,
+        "model": "gemini/gemini-flash-latest"
+      }
+    },
+    {
+      "dataset": "resume_jd",
+      "preset": "resume_jd",
+      "rows": [
+        {
+          "id": "J01",
+          "expected": "covered",
+          "evidence": "Python services",
+          "rank": 3,
+          "top_score": 0.424,
+          "predicted": "covered",
+          "confidence": 0.95,
+          "explanation": "Candidate has worked as a Software Engineer from 2021 to 2024, providing at least 3 years of professional Python experience.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "J02",
+          "expected": "covered",
+          "evidence": "FastAPI",
+          "rank": 1,
+          "top_score": 0.501,
+          "predicted": "covered",
+          "confidence": 0.95,
+          "explanation": "Candidate built REST services in Python with FastAPI.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "J03",
+          "expected": "covered",
+          "evidence": "Designed PostgreSQL schemas",
+          "rank": 1,
+          "top_score": 0.48,
+          "predicted": "covered",
+          "confidence": 0.95,
+          "explanation": "Candidate designed PostgreSQL schemas and tuned queries.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "J04",
+          "expected": "covered",
+          "evidence": "Wrote pytest suites",
+          "rank": 1,
+          "top_score": 0.546,
+          "predicted": "covered",
+          "confidence": 0.95,
+          "explanation": "Candidate wrote pytest suites with transactional database fixtures.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "J05",
+          "expected": "covered",
+          "evidence": "B.E. in Information Technology",
+          "rank": null,
+          "top_score": 0.186,
+          "predicted": "unclear",
+          "confidence": 0.0,
+          "explanation": "Could not be analysed automatically: Both gemini and groq are rate limited or unavailable \u2014 wait a minute and try again. Groq unavailable (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m38r391vez2sdg76zv2ryay5` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 73",
+          "evidence_ok": null,
+          "evidence_count": 0
+        },
+        {
+          "id": "J06",
+          "expected": "missing",
+          "evidence": null,
+          "rank": null,
+          "top_score": 0.229,
+          "predicted": "unclear",
+          "confidence": 0.0,
+          "explanation": "Could not be analysed automatically: Both gemini and groq are rate limited or unavailable \u2014 wait a minute and try again. Groq unavailable (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m38r391vez2sdg76zv2ryay5` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 73",
+          "evidence_ok": null,
+          "evidence_count": 0
+        },
+        {
+          "id": "J07",
+          "expected": "partial",
+          "evidence": "Celery and Redis",
+          "rank": 1,
+          "top_score": 0.371,
+          "predicted": "unclear",
+          "confidence": 0.0,
+          "explanation": "Could not be analysed automatically: Both gemini and groq are rate limited or unavailable \u2014 wait a minute and try again. Groq unavailable (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m38r391vez2sdg76zv2ryay5` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 73",
+          "evidence_ok": null,
+          "evidence_count": 0
+        },
+        {
+          "id": "J08",
+          "expected": "covered",
+          "evidence": "embeddings, pgvector and LLM structured output",
+          "rank": 1,
+          "top_score": 0.21,
+          "predicted": "unclear",
+          "confidence": 0.0,
+          "explanation": "Could not be analysed automatically: Both gemini and groq are rate limited or unavailable \u2014 wait a minute and try again. Groq unavailable (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m38r391vez2sdg76zv2ryay5` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 73",
+          "evidence_ok": null,
+          "evidence_count": 0
+        },
+        {
+          "id": "J09",
+          "expected": "missing",
+          "evidence": null,
+          "rank": null,
+          "top_score": 0.203,
+          "predicted": "unclear",
+          "confidence": 0.0,
+          "explanation": "Could not be analysed automatically: Both gemini and groq are rate limited or unavailable \u2014 wait a minute and try again. Groq unavailable (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m38r391vez2sdg76zv2ryay5` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 71",
+          "evidence_ok": null,
+          "evidence_count": 0
+        },
+        {
+          "id": "J10",
+          "expected": "partial",
+          "evidence": "Mentored two junior developers",
+          "rank": 1,
+          "top_score": 0.176,
+          "predicted": "unclear",
+          "confidence": 0.0,
+          "explanation": "Could not be analysed automatically: Both gemini and groq are rate limited or unavailable \u2014 wait a minute and try again. Groq unavailable (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m38r391vez2sdg76zv2ryay5` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 71",
+          "evidence_ok": null,
+          "evidence_count": 0
+        }
+      ],
+      "run": {
+        "counts": {
+          "covered": 4,
+          "missing": 0,
+          "partial": 0,
+          "unclear": 6,
+          "conflict": 0
+        },
+        "errors": 6,
+        "llm_calls": 3,
+        "cache_hits": 0,
+        "duration_s": 6.1,
+        "evidence_dropped": 0,
+        "status": "completed",
+        "error": null,
+        "model": "gemini/gemini-flash-latest"
+      }
+    }
+  ],
+  "settings": {
+    "retrieval_mode": "vector",
+    "k": 4,
+    "prompt": {
+      "extract_requirements": "extract-v1",
+      "classify_requirements": "classify-v1"
+    },
+    "embedding": "all-MiniLM-L6-v2"
+  }
+}

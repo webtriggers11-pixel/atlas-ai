@@ -17,6 +17,25 @@ services:
       - REDIS_URL=redis://redis:6379
     ports:
       - "127.0.0.1:8002:8000"
+    volumes:
+      - uploads_data:/app/uploads      # shared with the worker, survives rebuilds
+    depends_on:
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: idea-atlas-worker
+    command: celery -A app.worker.celery_app worker --loglevel=INFO --concurrency=2 -Q atlas
+    env_file:
+      - ./backend/.env
+    environment:
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - uploads_data:/app/uploads
     depends_on:
       redis:
         condition: service_started
@@ -34,3 +53,6 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+
+volumes:
+  uploads_data:

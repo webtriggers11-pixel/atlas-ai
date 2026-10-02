@@ -6,5 +6,16 @@ from app.models.llm_log import LlmLog
 from app.models.document import Document
 from app.models.document_chunk import DocumentChunk
 from app.models.node_gap import NodeGap
+from app.models.project import Project
+from app.models.project_document import ProjectDocument
+from app.models.doc_chunk import DocChunk
+from app.models.requirement import Requirement
+from app.models.analysis_run import AnalysisRun
+from app.models.finding import Finding
+from app.models.evidence import Evidence
+from app.models.llm_call import LlmCall
 
-__all__ = ["Map", "Node", "NodeExplanation", "Edge", "LlmLog", "Document", "DocumentChunk", "NodeGap"]
+__all__ = [
+    "Map", "Node", "NodeExplanation", "Edge", "LlmLog", "Document", "DocumentChunk", "NodeGap",
+    "Project", "ProjectDocument", "DocChunk", "Requirement", "AnalysisRun", "Finding", "Evidence", "LlmCall",
+]

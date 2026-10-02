@@ -12,11 +12,14 @@ class Edge(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     map_id = Column(UUID(as_uuid=True), ForeignKey("maps.id", ondelete="CASCADE"), nullable=False)
-    source_node_id = Column(UUID(as_uuid=True), ForeignKey("nodes.id"), nullable=False)
-    target_node_id = Column(UUID(as_uuid=True), ForeignKey("nodes.id"), nullable=False)
+    source_node_id = Column(UUID(as_uuid=True), ForeignKey("nodes.id", ondelete="CASCADE"), nullable=False)
+    target_node_id = Column(UUID(as_uuid=True), ForeignKey("nodes.id", ondelete="CASCADE"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     map = relationship("Map", back_populates="edges")
+    # Declaring these lets the ORM delete edges BEFORE the nodes they reference (FK-safe ordering)
+    source_node = relationship("Node", foreign_keys=[source_node_id])
+    target_node = relationship("Node", foreign_keys=[target_node_id])
 
     __table_args__ = (
         Index("idx_edges_map_id", "map_id"),

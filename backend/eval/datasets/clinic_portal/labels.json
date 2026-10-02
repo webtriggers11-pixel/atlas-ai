@@ -1,0 +1,17 @@
+{
+  "name": "clinic_portal",
+  "preset": "spec_coverage",
+  "description": "Patient portal spec vs design. Heavy vocabulary mismatch (SMS vs text message, inactivity vs idle), conflicts on timings, and missing items sitting next to related text (uploads without malware scanning, a vague privacy line for HIPAA).",
+  "requirements": [
+    {"id": "C01", "text": "The portal must send an appointment reminder by SMS 24 hours before the visit.", "expected_status": "covered", "evidence": "A text message is sent to the patient the day before"},
+    {"id": "C02", "text": "Patients must be able to cancel an appointment up to 2 hours before its start time.", "expected_status": "conflict", "evidence": "Cancellations are allowed until midnight on the day before"},
+    {"id": "C03", "text": "The system must synchronise doctors' availability from the clinic scheduling system every 5 minutes.", "expected_status": "conflict", "evidence": "once per night"},
+    {"id": "C04", "text": "The system must log users out automatically after 20 minutes of inactivity.", "expected_status": "covered", "evidence": "Idle sessions are terminated after 20 minutes"},
+    {"id": "C05", "text": "The portal must support two-factor authentication using an authenticator app.", "expected_status": "covered", "evidence": "second login step using a one-time code"},
+    {"id": "C06", "text": "The system must record all access to medical records in an audit trail retained for 6 years.", "expected_status": "partial", "evidence": "opens a patient chart, the event is logged", "note": "logging exists, retention not stated"},
+    {"id": "C07", "text": "The system must comply with HIPAA.", "expected_status": "missing", "evidence": null, "note": "'industry best practices for privacy' is a vague distractor"},
+    {"id": "C08", "text": "The system must scan uploaded documents for malware before storing them.", "expected_status": "missing", "evidence": null, "note": "uploads are described but scanning is not"},
+    {"id": "C09", "text": "The system must make lab results visible to patients within 48 hours of being finalised.", "expected_status": "missing", "evidence": null},
+    {"id": "C10", "text": "The portal must be usable on screens as narrow as 320 pixels.", "expected_status": "covered", "evidence": "down to 320 px wide"}
+  ]
+}

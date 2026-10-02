@@ -1,0 +1,535 @@
+{
+  "label": "backoff+classify-v1",
+  "at": "2026-10-02 14:43 UTC",
+  "metrics": {
+    "requirements": 32,
+    "recall@1": 0.9230769230769231,
+    "recall@4": 0.9615384615384616,
+    "mrr": 0.9358974358974359,
+    "rewrite_calls": 0,
+    "status_accuracy": 0.78125,
+    "false_missing_rate": 0.23076923076923078,
+    "false_covered_rate": 0.0,
+    "unclear_rate": 0.0,
+    "evidence_validity": 1.0,
+    "evidence_location": 1.0,
+    "llm_calls": 9,
+    "seconds_per_requirement": 4.2875,
+    "model": "gemini/gemini-flash-latest",
+    "confusion": {
+      "covered": {
+        "covered": 13,
+        "partial": 1,
+        "missing": 1,
+        "conflict": 0,
+        "unclear": 0
+      },
+      "partial": {
+        "covered": 0,
+        "partial": 2,
+        "missing": 4,
+        "conflict": 0,
+        "unclear": 0
+      },
+      "missing": {
+        "covered": 0,
+        "partial": 0,
+        "missing": 6,
+        "conflict": 0,
+        "unclear": 0
+      },
+      "conflict": {
+        "covered": 0,
+        "partial": 0,
+        "missing": 1,
+        "conflict": 4,
+        "unclear": 0
+      },
+      "unclear": {
+        "covered": 0,
+        "partial": 0,
+        "missing": 0,
+        "conflict": 0,
+        "unclear": 0
+      }
+    }
+  },
+  "results": [
+    {
+      "dataset": "clinic_portal",
+      "preset": "spec_coverage",
+      "rows": [
+        {
+          "id": "C01",
+          "expected": "covered",
+          "evidence": "A text message is sent to the patient the day before",
+          "rank": 1,
+          "top_score": 0.502,
+          "predicted": "partial",
+          "confidence": 0.7,
+          "explanation": "The documentation states a text message is sent the day before the booking, but does not explicitly state a 24\u2011hour window.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "C02",
+          "expected": "conflict",
+          "evidence": "Cancellations are allowed until midnight on the day before",
+          "rank": 1,
+          "top_score": 0.589,
+          "predicted": "conflict",
+          "confidence": 0.9,
+          "explanation": "Requirement allows cancellation up to 2 hours before start, but documentation allows cancellation only until midnight the day before.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "C03",
+          "expected": "conflict",
+          "evidence": "once per night",
+          "rank": 1,
+          "top_score": 0.578,
+          "predicted": "conflict",
+          "confidence": 0.9,
+          "explanation": "Requirement specifies 5\u2011minute sync, but documentation states a nightly batch job.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "C04",
+          "expected": "covered",
+          "evidence": "Idle sessions are terminated after 20 minutes",
+          "rank": 1,
+          "top_score": 0.642,
+          "predicted": "covered",
+          "confidence": 0.95,
+          "explanation": "Documentation explicitly states idle sessions terminate after 20 minutes.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "C05",
+          "expected": "covered",
+          "evidence": "second login step using a one-time code",
+          "rank": 1,
+          "top_score": 0.315,
+          "predicted": "covered",
+          "confidence": 0.95,
+          "explanation": "The documentation explicitly states that patients can enable a second login step using a one-time code from Google Authenticator or a similar app.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "C06",
+          "expected": "partial",
+          "evidence": "opens a patient chart, the event is logged",
+          "rank": 1,
+          "top_score": 0.387,
+          "predicted": "missing",
+          "confidence": 0.9,
+          "explanation": "The audit trail is logged when staff opens a chart, but no retention period of six years is specified.",
+          "evidence_ok": null,
+          "evidence_count": 0
+        },
+        {
+          "id": "C07",
+          "expected": "missing",
+          "evidence": null,
+          "rank": null,
+          "top_score": 0.364,
+          "predicted": "missing",
+          "confidence": 0.85,
+          "explanation": "No excerpt references HIPAA compliance.",
+          "evidence_ok": null,
+          "evidence_count": 0
+        },
+        {
+          "id": "C08",
+          "expected": "missing",
+          "evidence": null,
+          "rank": null,
+          "top_score": 0.515,
+          "predicted": "missing",
+          "confidence": 0.9,
+          "explanation": "The upload process is described but there is no mention of malware scanning before storage.",
+          "evidence_ok": null,
+          "evidence_count": 0
+        },
+        {
+          "id": "C09",
+          "expected": "missing",
+          "evidence": null,
+          "rank": null,
+          "top_score": 0.384,
+          "predicted": "missing",
+          "confidence": 0.9,
+          "explanation": "No excerpt mentions lab results visibility timeframe.",
+          "evidence_ok": null,
+          "evidence_count": 0
+        },
+        {
+          "id": "C10",
+          "expected": "covered",
+          "evidence": "down to 320 px wide",
+          "rank": 1,
+          "top_score": 0.481,
+          "predicted": "covered",
+          "confidence": 0.95,
+          "explanation": "Evidence states layout is responsive and tested on devices down to 320\u202fpx wide.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        }
+      ],
+      "run": {
+        "counts": {
+          "covered": 3,
+          "missing": 4,
+          "partial": 1,
+          "unclear": 0,
+          "conflict": 2
+        },
+        "errors": 0,
+        "llm_calls": 3,
+        "cache_hits": 0,
+        "duration_s": 95.6,
+        "prompt_tokens": 3092,
+        "evidence_dropped": 0,
+        "completion_tokens": 1466,
+        "provider_attempts": 4,
+        "status": "completed",
+        "error": null,
+        "model": "gemini/gemini-flash-latest"
+      },
+      "retrieval": {}
+    },
+    {
+      "dataset": "payments_api",
+      "preset": "spec_coverage",
+      "rows": [
+        {
+          "id": "P01",
+          "expected": "covered",
+          "evidence": "client-credentials grant",
+          "rank": 1,
+          "top_score": 0.544,
+          "predicted": "covered",
+          "confidence": 0.99,
+          "explanation": "The documentation explicitly states the use of OAuth 2.0 client\u2011credentials grant.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "P02",
+          "expected": "covered",
+          "evidence": "valid for 900 seconds",
+          "rank": 1,
+          "top_score": 0.49,
+          "predicted": "covered",
+          "confidence": 0.99,
+          "explanation": "Access token lifetime is specified as 900 seconds, which equals 15 minutes.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "P03",
+          "expected": "conflict",
+          "evidence": "Refresh tokens are not issued",
+          "rank": 1,
+          "top_score": 0.418,
+          "predicted": "missing",
+          "confidence": 0.95,
+          "explanation": "The documentation states that refresh tokens are not issued, so the 30\u2011day expiry cannot be satisfied.",
+          "evidence_ok": null,
+          "evidence_count": 0
+        },
+        {
+          "id": "P04",
+          "expected": "partial",
+          "evidence": "rate limited at the gateway",
+          "rank": 1,
+          "top_score": 0.471,
+          "predicted": "partial",
+          "confidence": 0.85,
+          "explanation": "Rate limiting is mentioned, but the required 5 attempts and 10\u2011minute lockout are not specified.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "P05",
+          "expected": "covered",
+          "evidence": "Idempotency-Key header",
+          "rank": 1,
+          "top_score": 0.589,
+          "predicted": "covered",
+          "confidence": 1.0,
+          "explanation": "The documentation specifies the use of an Idempotency-Key header and that repeated keys within 24 hours return the original response, satisfying the idempotency requirement.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "P06",
+          "expected": "conflict",
+          "evidence": "decimal number in the major currency unit",
+          "rank": 1,
+          "top_score": 0.404,
+          "predicted": "conflict",
+          "confidence": 0.9,
+          "explanation": "The requirement calls for integer minor units, but the docs state the amount is a decimal in major units.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "P07",
+          "expected": "partial",
+          "evidence": "Refunds are created with POST /refunds",
+          "rank": 1,
+          "top_score": 0.501,
+          "predicted": "missing",
+          "confidence": 0.8,
+          "explanation": "No excerpt mentions a 180\u2011day refund window.",
+          "evidence_ok": null,
+          "evidence_count": 0
+        },
+        {
+          "id": "P08",
+          "expected": "covered",
+          "evidence": "POST /payments | 300 ms",
+          "rank": 1,
+          "top_score": 0.579,
+          "predicted": "covered",
+          "confidence": 1.0,
+          "explanation": "The service level objectives state a 95th percentile latency target of 300\u202fms for POST /payments.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "P09",
+          "expected": "partial",
+          "evidence": "PCI DSS Level 1",
+          "rank": 1,
+          "top_score": 0.444,
+          "predicted": "partial",
+          "confidence": 0.7,
+          "explanation": "The documentation states that card numbers are tokenized by a PCI DSS Level 1 certified vault provider and that TLS 1.2 or higher is used, but it does not explicitly claim compliance with PCI DSS v4.0.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "P10",
+          "expected": "missing",
+          "evidence": null,
+          "rank": null,
+          "top_score": 0.31,
+          "predicted": "missing",
+          "confidence": 0.9,
+          "explanation": "No excerpt mentions encryption of data at rest.",
+          "evidence_ok": null,
+          "evidence_count": 0
+        },
+        {
+          "id": "P11",
+          "expected": "conflict",
+          "evidence": "retried up to 3 times at 1 minute intervals",
+          "rank": 1,
+          "top_score": 0.741,
+          "predicted": "conflict",
+          "confidence": 0.95,
+          "explanation": "The documentation describes webhook retry logic that retries only 3 times at 1 minute intervals and then drops the delivery, which contradicts the requirement for exponential backoff up to 24 hours.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "P12",
+          "expected": "covered",
+          "evidence": "PF-1042",
+          "rank": 1,
+          "top_score": 0.384,
+          "predicted": "covered",
+          "confidence": 0.95,
+          "explanation": "The documentation states that errors are returned as JSON with a code field, e.g., PF-1042.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        }
+      ],
+      "run": {
+        "counts": {
+          "covered": 5,
+          "missing": 3,
+          "partial": 2,
+          "unclear": 0,
+          "conflict": 2
+        },
+        "errors": 0,
+        "llm_calls": 3,
+        "cache_hits": 0,
+        "duration_s": 11.7,
+        "prompt_tokens": 3595,
+        "evidence_dropped": 0,
+        "completion_tokens": 2066,
+        "provider_attempts": 5,
+        "status": "completed",
+        "error": null,
+        "model": "gemini/gemini-flash-latest"
+      },
+      "retrieval": {}
+    },
+    {
+      "dataset": "resume_jd",
+      "preset": "resume_jd",
+      "rows": [
+        {
+          "id": "J01",
+          "expected": "covered",
+          "evidence": "Python services",
+          "rank": 3,
+          "top_score": 0.424,
+          "predicted": "covered",
+          "confidence": 1.0,
+          "explanation": "The r\u00e9sum\u00e9 lists two roles spanning 2021\u20112024 and 2024\u2011present, totaling at least three years of professional Python work.",
+          "evidence_ok": true,
+          "evidence_count": 2
+        },
+        {
+          "id": "J02",
+          "expected": "covered",
+          "evidence": "FastAPI",
+          "rank": 1,
+          "top_score": 0.501,
+          "predicted": "covered",
+          "confidence": 1.0,
+          "explanation": "Explicit mention of FastAPI usage demonstrates required framework experience.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "J03",
+          "expected": "covered",
+          "evidence": "Designed PostgreSQL schemas",
+          "rank": 1,
+          "top_score": 0.48,
+          "predicted": "covered",
+          "confidence": 1.0,
+          "explanation": "Direct reference to PostgreSQL schema design confirms database experience.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "J04",
+          "expected": "covered",
+          "evidence": "Wrote pytest suites",
+          "rank": 1,
+          "top_score": 0.546,
+          "predicted": "covered",
+          "confidence": 1.0,
+          "explanation": "Explicit mention of pytest suites with transactional fixtures and contract tests satisfies unit and integration testing requirement.",
+          "evidence_ok": true,
+          "evidence_count": 1
+        },
+        {
+          "id": "J05",
+          "expected": "covered",
+          "evidence": "B.E. in Information Technology",
+          "rank": null,
+          "top_score": 0.186,
+          "predicted": "missing",
+          "confidence": 0.95,
+          "explanation": "No excerpt mentions a bachelor\u2019s degree in Computer Science or a related field.",
+          "evidence_ok": null,
+          "evidence_count": 0
+        },
+        {
+          "id": "J06",
+          "expected": "missing",
+          "evidence": null,
+          "rank": null,
+          "top_score": 0.229,
+          "predicted": "missing",
+          "confidence": 0.95,
+          "explanation": "No excerpt references Kubernetes usage.",
+          "evidence_ok": null,
+          "evidence_count": 0
+        },
+        {
+          "id": "J07",
+          "expected": "partial",
+          "evidence": "Celery and Redis",
+          "rank": 1,
+          "top_score": 0.371,
+          "predicted": "missing",
+          "confidence": 0.95,
+          "explanation": "No excerpt references RabbitMQ or Kafka.",
+          "evidence_ok": null,
+          "evidence_count": 0
+        },
+        {
+          "id": "J08",
+          "expected": "covered",
+          "evidence": "embeddings, pgvector and LLM structured output",
+          "rank": 1,
+          "top_score": 0.21,
+          "predicted": "covered",
+          "confidence": 0.9,
+          "explanation": "Excerpts describe LLM and embeddings usage consistent with RAG features.",
+          "evidence_ok": true,
+          "evidence_count": 2
+        },
+        {
+          "id": "J09",
+          "expected": "missing",
+          "evidence": null,
+          "rank": null,
+          "top_score": 0.203,
+          "predicted": "missing",
+          "confidence": 0.95,
+          "explanation": "No excerpt mentions an AWS certification.",
+          "evidence_ok": null,
+          "evidence_count": 0
+        },
+        {
+          "id": "J10",
+          "expected": "partial",
+          "evidence": "Mentored two junior developers",
+          "rank": 1,
+          "top_score": 0.176,
+          "predicted": "missing",
+          "confidence": 0.9,
+          "explanation": "Mentored two junior developers, but no evidence of leading a team of at least three engineers.",
+          "evidence_ok": null,
+          "evidence_count": 0
+        }
+      ],
+      "run": {
+        "counts": {
+          "covered": 5,
+          "missing": 5,
+          "partial": 0,
+          "unclear": 0,
+          "conflict": 0
+        },
+        "errors": 0,
+        "llm_calls": 3,
+        "cache_hits": 0,
+        "duration_s": 29.9,
+        "prompt_tokens": 2531,
+        "evidence_dropped": 0,
+        "completion_tokens": 1083,
+        "provider_attempts": 6,
+        "status": "completed",
+        "error": null,
+        "model": "gemini/gemini-flash-latest"
+      },
+      "retrieval": {}
+    }
+  ],
+  "settings": {
+    "retrieval_mode": "vector",
+    "k": 4,
+    "query_rewrite": false,
+    "prompt": {
+      "extract_requirements": "extract-v1",
+      "classify_requirements": "classify-v1",
+      "rewrite_queries": "rewrite-v1"
+    },
+    "embedding": "all-MiniLM-L6-v2"
+  }
+}
