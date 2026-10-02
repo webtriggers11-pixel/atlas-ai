@@ -6,36 +6,15 @@ from unittest.mock import patch
 from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 from app.main import app
-from app.db import get_db
-from app.db.base import Base
-from app.models import Map, Node, NodeExplanation, Edge  # noqa: F401
 from app.llm import ConceptList, Concept
-from app.core.config import settings
-
-# ── Test database (same Postgres DB, separate test schema via transactions) ───
-
-engine = create_engine(settings.DATABASE_URL)
-TestSession = sessionmaker(bind=engine)
 
 
 @pytest.fixture(autouse=True)
-def db_session():
-    """Each test runs in a transaction that is rolled back on teardown — no data leaks."""
-    connection = engine.connect()
-    transaction = connection.begin()
-    session = TestSession(bind=connection)
-
-    app.dependency_overrides[get_db] = lambda: session
-    yield session
-
-    session.close()
-    transaction.rollback()
-    connection.close()
-    app.dependency_overrides.clear()
+def db_session(db):
+    """Each test uses the shared conftest session on the test database, rolled back on teardown."""
+    yield db
 
 
 client = TestClient(app, raise_server_exceptions=True)

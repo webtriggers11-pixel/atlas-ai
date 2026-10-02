@@ -4,7 +4,7 @@ Schema Comparator - Compares SQLAlchemy models against the live PostgreSQL schem
 from sqlalchemy import inspect, MetaData, DateTime
 from sqlalchemy.engine import Engine
 from typing import List, Any
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import re
 
 
@@ -29,6 +29,9 @@ class IndexDifference:
     index_name: str
     change_type: str  # 'add', 'drop'
     columns: List[str] = None
+    unique: bool = False
+    using: str = None          # access method, e.g. 'hnsw' or 'gin' (None = btree)
+    ops: dict = None           # per-column operator class, e.g. {'embedding': 'vector_cosine_ops'}
 
 
 @dataclass
@@ -40,9 +43,12 @@ class SchemaDiff:
     columns_to_drop: List[ColumnDifference]
     indexes_to_add: List[IndexDifference]
     indexes_to_drop: List[IndexDifference]
+    extensions_to_add: List[str] = field(default_factory=list)
 
     def has_changes(self) -> bool:
+        """True when there is anything to apply (table drops are never applied automatically)."""
         return bool(
+            self.extensions_to_add or
             self.tables_to_add or self.columns_to_add or
             self.columns_to_modify or self.columns_to_drop or
             self.indexes_to_add
@@ -83,6 +89,10 @@ class SchemaComparator:
         if name == 'String':
             length = getattr(col_type, 'length', None)
             return f'VARCHAR({length})' if length else 'TEXT'
+        if name == 'Vector':
+            return f'VECTOR({col_type.dim})'
+        if name == 'TSVECTOR':
+            return 'TSVECTOR'
 
         return self._normalize_db_type(str(col_type))
 
@@ -118,8 +128,28 @@ class SchemaComparator:
         if 'NUMERIC' in t or 'DECIMAL' in t:
             m = re.search(r'\((\d+),\s*(\d+)\)', t)
             return f'NUMERIC({m.group(1)}, {m.group(2)})' if m else 'NUMERIC'
+        if t.startswith('VECTOR'):
+            m = re.search(r'\((\d+)\)', t)
+            return f'VECTOR({m.group(1)})' if m else 'VECTOR'
 
         return t
+
+    def _db_pg_type(self, db_type) -> str:
+        """Canonical type string for a column type reflected from the database.
+
+        Reflection returns TIMESTAMP(timezone=True) whose str() is just 'TIMESTAMP',
+        so the timezone flag must be read from the object — otherwise every TIMESTAMPTZ
+        column looks changed and a pointless ALTER is generated on every run.
+        """
+        if type(db_type).__name__ in ("TIMESTAMP", "DateTime"):
+            return 'TIMESTAMPTZ' if getattr(db_type, 'timezone', False) else 'TIMESTAMP'
+        return self._normalize_db_type(str(db_type))
+
+    def _installed_extensions(self) -> set:
+        """Return the names of extensions already installed in the connected database."""
+        from sqlalchemy import text
+        with self.engine.connect() as conn:
+            return {row[0] for row in conn.execute(text("SELECT extname FROM pg_extension"))}
 
     def compare_schemas(self) -> SchemaDiff:
         """Compare SQLAlchemy metadata against the live database and return all differences."""
@@ -130,8 +160,14 @@ class SchemaComparator:
         columns_to_add, columns_to_modify, columns_to_drop = [], [], []
         indexes_to_add, indexes_to_drop = [], []
 
-        for t in model_tables - db_tables:
-            tables_to_add.append(TableDifference(table_name=t, change_type='add'))
+        # Create new tables parent-first so inline FOREIGN KEY references always resolve
+        for table in self.metadata.sorted_tables:
+            if table.name not in db_tables:
+                tables_to_add.append(TableDifference(table_name=table.name, change_type='add'))
+                # indexes of a brand-new table are created in the same migration, right after it
+                indexes_to_add.extend(
+                    self._index_difference(table.name, idx) for idx in table.indexes if idx.name
+                )
 
         for t in db_tables - model_tables:
             tables_to_drop.append(TableDifference(table_name=t, change_type='drop'))
@@ -158,8 +194,10 @@ class SchemaComparator:
                 db_col = db_cols[col_name]
 
                 model_type_str = self._model_pg_type(model_col.type)
-                db_type_str = self._normalize_db_type(str(db_col['type']))
+                db_type_str = self._db_pg_type(db_col['type'])
 
+                if model_col.computed is not None:
+                    continue  # generated columns are defined by their expression; never ALTER them
                 if model_type_str != db_type_str or model_col.nullable != db_col['nullable']:
                     columns_to_modify.append(ColumnDifference(
                         table_name=table_name, column_name=col_name,
@@ -172,15 +210,27 @@ class SchemaComparator:
             model_indexes = {i.name: i for i in model_table.indexes if i.name}
 
             for idx_name in set(model_indexes) - set(db_indexes):
-                idx = model_indexes[idx_name]
-                indexes_to_add.append(IndexDifference(
-                    table_name=table_name, index_name=idx_name,
-                    change_type='add', columns=[c.name for c in idx.columns],
-                ))
+                indexes_to_add.append(self._index_difference(table_name, model_indexes[idx_name]))
+
+        required = set(self.metadata.info.get("required_extensions", []))
+        extensions_to_add = sorted(required - self._installed_extensions()) if required else []
 
         return SchemaDiff(
             tables_to_add=tables_to_add, tables_to_drop=tables_to_drop,
             columns_to_add=columns_to_add, columns_to_modify=columns_to_modify,
             columns_to_drop=columns_to_drop,
             indexes_to_add=indexes_to_add, indexes_to_drop=indexes_to_drop,
+            extensions_to_add=extensions_to_add,
+        )
+
+    @staticmethod
+    def _index_difference(table_name: str, idx) -> IndexDifference:
+        """Describe a model Index (unique flag, USING method, operator classes) as an IndexDifference."""
+        pg_opts = idx.dialect_options["postgresql"]
+        return IndexDifference(
+            table_name=table_name, index_name=idx.name, change_type='add',
+            columns=[c.name for c in idx.columns],
+            unique=bool(idx.unique),
+            using=pg_opts.get("using"),
+            ops=dict(pg_opts.get("ops") or {}),
         )

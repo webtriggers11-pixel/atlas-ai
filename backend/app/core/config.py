@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     PORT: int = 8000
     AUTO_MIGRATE: bool = False
     GAP_THRESHOLD: float = 0.35  # best chunk similarity below this = node is under-documented
+    UPLOAD_DIR: str = "uploads"   # where uploaded project documents are stored (relative to backend/)
 
     model_config = {"env_file": Path(__file__).parents[2] / ".env", "extra": "ignore"}
 

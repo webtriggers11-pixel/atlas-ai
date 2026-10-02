@@ -1,0 +1,33 @@
+from uuid import UUID
+from fastapi import APIRouter, Depends, status
+from sqlalchemy.orm import Session
+
+from app.db import get_db
+from app.schemas.project import DocumentResponse, ChunkResponse
+from app.services import project_service
+
+router = APIRouter(prefix="/documents", tags=["documents"])
+
+
+# GET /api/v1/documents/{document_id}
+# Example response: {"id": "...", "role": "existing", "filename": "sdd.docx", "status": "processing", ...}
+@router.get("/{document_id}", response_model=DocumentResponse)
+def get_document(document_id: UUID, db: Session = Depends(get_db)):
+    """Get one document — the UI polls this to follow processing status."""
+    return project_service.get_document_or_404(document_id, db)
+
+
+# GET /api/v1/documents/{document_id}/chunks
+# Example response: [{"id": "...", "chunk_index": 0, "section": "1. Overview", "page_start": 1, "content": "..."}]
+@router.get("/{document_id}/chunks", response_model=list[ChunkResponse])
+def list_chunks(document_id: UUID, db: Session = Depends(get_db)):
+    """List a document's chunks in reading order."""
+    return project_service.list_chunks(document_id, db)
+
+
+# DELETE /api/v1/documents/{document_id}
+# Example response: 204 No Content
+@router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_document(document_id: UUID, db: Session = Depends(get_db)):
+    """Delete a document, its chunks and its stored file."""
+    project_service.delete_document(document_id, db)
