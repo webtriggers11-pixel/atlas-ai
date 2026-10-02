@@ -238,3 +238,23 @@ def test_heading_misfire_never_loses_text():
 def test_pdf_cid_glyphs_removed():
     """pdfplumber's '(cid:127)' bullet placeholders are stripped during normalization."""
     assert "(cid" not in normalize_pages([Page(1, "(cid:127) Built REST APIs")])[0].text
+
+
+def test_upload_survives_missing_queue_setup(client, monkeypatch):
+    """If the task module can't even be imported (e.g. Celery not installed), the upload still
+    succeeds and the document shows a readable message instead of the request failing with 500."""
+    import builtins
+
+    real_import = builtins.__import__
+
+    def failing_import(name, *args, **kwargs):
+        """Pretend the app.tasks module is unavailable."""
+        if name == "app.tasks":
+            raise ModuleNotFoundError("No module named 'celery'")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", failing_import)
+    pid = _project(client)
+    resp = client.post(f"/api/v1/projects/{pid}/documents", data={"role": "reference", "title": "x", "text": "Some requirement text here."})
+    assert resp.status_code == 201
+    assert resp.json()["status"] == "uploaded" and "unavailable" in resp.json()["error_message"]

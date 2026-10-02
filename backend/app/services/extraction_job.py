@@ -89,8 +89,9 @@ def start_extraction(project_id: UUID, db: Session) -> Project:
     project.extraction_error = None
     db.commit()
 
-    from app.tasks import extract_requirements as task
     try:
+        from app.tasks import extract_requirements as task   # inside the try: a broken queue setup must not crash the request
+
         task.delay(str(project.id))
     except Exception as exc:
         logger.warning("Could not enqueue extraction for %s: %s", project.id, exc)

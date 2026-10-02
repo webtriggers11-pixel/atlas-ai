@@ -72,8 +72,9 @@ def start_analysis(project_id: UUID, db: Session) -> AnalysisRun:
     db.add(run)
     db.commit()
 
-    from app.tasks import run_analysis as task
     try:
+        from app.tasks import run_analysis as task   # inside the try: a broken queue setup must not crash the request
+
         task.delay(str(run.id))
     except Exception as exc:
         logger.warning("Could not enqueue analysis run %s: %s", run.id, exc)

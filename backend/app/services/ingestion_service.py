@@ -25,14 +25,16 @@ logger = logging.getLogger(__name__)
 
 def _enqueue(document_id: UUID, force: bool = False) -> bool:
     """Queue background processing; return False (instead of failing the upload) if the queue is down."""
-    from app.tasks import process_document
-
     try:
+        # imported here (inside the try) so a missing/broken queue setup degrades to a visible
+        # message on the document instead of a 500 that leaves it stuck as "uploaded"
+        from app.tasks import process_document
+
         process_document.delay(str(document_id), force)
         return True
     except DocumentError:
         raise
-    except Exception as exc:  # broker unreachable — the upload itself still succeeded
+    except Exception as exc:  # broker unreachable or Celery not installed — the upload itself still succeeded
         logger.warning("Could not enqueue processing for %s: %s", document_id, exc)
         return False
 
