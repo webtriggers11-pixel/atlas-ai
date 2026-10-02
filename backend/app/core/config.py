@@ -20,6 +20,15 @@ class Settings(BaseSettings):
     GAP_THRESHOLD: float = 0.35  # best chunk similarity below this = node is under-documented
     UPLOAD_DIR: str = "uploads"   # where uploaded project documents are stored (relative to backend/)
 
+    # ── V2 ingestion ──
+    MAX_UPLOAD_MB: int = 20
+    MAX_PDF_PAGES: int = 500
+    CHUNK_WORDS: int = 180          # MiniLM reads at most 256 tokens (~190 words); longer chunks get truncated
+    CHUNK_OVERLAP_WORDS: int = 30
+
+    # ── Background jobs (Celery + Redis) ──
+    CELERY_TASK_ALWAYS_EAGER: bool = False   # true = run tasks inline (tests / no Redis available)
+
     model_config = {"env_file": Path(__file__).parents[2] / ".env", "extra": "ignore"}
 
 

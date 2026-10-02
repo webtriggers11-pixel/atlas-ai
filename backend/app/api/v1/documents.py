@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.schemas.project import DocumentResponse, ChunkResponse
-from app.services import project_service
+from app.services import project_service, ingestion_service
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -31,3 +31,11 @@ def list_chunks(document_id: UUID, db: Session = Depends(get_db)):
 def delete_document(document_id: UUID, db: Session = Depends(get_db)):
     """Delete a document, its chunks and its stored file."""
     project_service.delete_document(document_id, db)
+
+
+# POST /api/v1/documents/{document_id}/reprocess
+# Example response: 202 {"id": "...", "status": "uploaded", ...}  — processing re-queued
+@router.post("/{document_id}/reprocess", response_model=DocumentResponse, status_code=status.HTTP_202_ACCEPTED)
+def reprocess_document(document_id: UUID, db: Session = Depends(get_db)):
+    """Re-run extraction/chunking for a failed or stuck document."""
+    return ingestion_service.reprocess_document(document_id, db)

@@ -1,6 +1,6 @@
 from typing import Optional
 from uuid import UUID
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.db import get_db
@@ -9,7 +9,8 @@ from app.schemas.project import (
     RequirementCreate, RequirementResponse, RequirementStatus, RequirementMerge, ApproveAllResponse,
     RunResponse,
 )
-from app.services import project_service, requirement_service, findings_service
+from app.core.config import settings
+from app.services import project_service, requirement_service, findings_service, ingestion_service
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -63,6 +64,39 @@ def delete_project(project_id: UUID, db: Session = Depends(get_db)):
 def list_documents(project_id: UUID, role: Optional[DocumentRole] = None, db: Session = Depends(get_db)):
     """List a project's documents, optionally only one role."""
     return project_service.list_documents(project_id, role, db)
+
+
+# POST /api/v1/projects/{project_id}/documents   (multipart/form-data)
+# Example request:  role=reference, file=@srs.pdf          — or —   role=existing, text="pasted...", title="notes"
+# Example response: 201 {"id": "...", "role": "reference", "filename": "srs.pdf", "status": "uploaded", ...}
+#                   200 with the existing document if the same file was already uploaded to this project
+@router.post("/{project_id}/documents", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
+def upload_document(
+    project_id: UUID,
+    response: Response,
+    role: DocumentRole = Form(...),
+    file: Optional[UploadFile] = File(None),
+    text: Optional[str] = Form(None),
+    title: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
+):
+    """Upload a file (or pasted text) as a reference/existing document; processing runs in the background."""
+    limit = settings.MAX_UPLOAD_MB * 1024 * 1024
+    if file is not None and file.filename:
+        data = file.file.read(limit + 1)   # read at most limit+1 bytes so a huge upload can't exhaust memory
+        filename = file.filename
+    elif text and text.strip():
+        data = text.encode("utf-8")
+        filename = f"{(title or 'pasted-text').strip()[:100]}.txt"
+    else:
+        raise HTTPException(status_code=422, detail="Send a file or non-empty text.")
+    if len(data) > limit:
+        raise HTTPException(status_code=413, detail=f"File is larger than the {settings.MAX_UPLOAD_MB} MB limit.")
+
+    document, created = ingestion_service.upload_document(project_id, role, filename, data, db)
+    if not created:
+        response.status_code = status.HTTP_200_OK
+    return document
 
 
 # GET /api/v1/projects/{project_id}/requirements?status=draft

@@ -79,15 +79,24 @@ def migrated(test_engine, tmp_path_factory):
 
 
 @pytest.fixture
-def db(migrated):
+def db(migrated, monkeypatch):
     """A session whose work is rolled back after each test, even if the code under test calls commit()."""
+    from contextlib import contextmanager
     from app.main import app
     from app.db import get_db
+    import app.tasks as tasks
 
     connection = migrated.connect()
     outer = connection.begin()
     session = Session(bind=connection, join_transaction_mode="create_savepoint")
     app.dependency_overrides[get_db] = lambda: session
+
+    @contextmanager
+    def test_session_scope():
+        """Background tasks (run eagerly in tests) share the same rolled-back session."""
+        yield session
+
+    monkeypatch.setattr(tasks, "session_scope", test_session_scope)
     try:
         yield session
     finally:

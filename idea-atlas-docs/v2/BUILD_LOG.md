@@ -73,3 +73,54 @@ A: Open a connection, begin an outer transaction, bind the session with `join_tr
 
 Q: How does a schema-diff migration system work and what's dangerous about it?
 A: It reflects the live schema (information_schema), compares it with the model metadata, and generates DDL for the differences in a safe order (extensions → tables parent-first → columns → indexes). The danger is that a rename looks like "drop + add", which deletes data — so drops must be opt-in and reviewed.
+
+---
+
+## Phase 2 — Ingestion pipeline with background jobs
+
+**Built**
+- `POST /api/v1/projects/{id}/documents` (file or pasted text, `role` = reference|existing),
+  `POST /api/v1/documents/{id}/reprocess`.
+- **Validation** (`services/extraction.py`): extension allow-list + **magic bytes**
+  (`%PDF-`, `PK\x03\x04`), UTF-8 check, size limit, PDF page limit.
+- **Extraction**: PDF via pdfplumber — body text *outside* tables plus tables
+  rendered as `a | b | c` rows, page numbers kept; DOCX walked in body order
+  (headings → `## `, tables → rows); TXT/MD.
+- **Normalization**: NFKC, de-hyphenation across line breaks, and removal of
+  running headers/footers (lines repeated on > half the pages, digits
+  normalized so "Page 3 of 10" is caught).
+- **Chunking** (`services/chunking.py`): sentence-aware, ~180 words, whole-sentence
+  overlap, a new chunk at every section change, page range per chunk.
+- **Celery** (`app/worker.py`, `app/tasks.py`): `acks_late`, `reject_on_worker_lost`,
+  prefetch 1, retry with backoff only for transient DB errors.
+- **Idempotency**: sha256 content hash → same file twice returns the existing
+  document (HTTP 200); processing deletes-then-inserts chunks so a redelivered
+  task never duplicates them; an already-indexed document is skipped.
+- Compose: `worker` service; prod gets an `uploads_data` volume shared by API + worker.
+- **v1 bug found by the new FKs**: deleting a map deleted nodes before the edges
+  pointing at them. Fixed with Edge→Node relationships (ORM orders the deletes)
+  plus `ON DELETE CASCADE` for fresh installs.
+
+**Key decisions**
+- *Why ~180-word chunks?* all-MiniLM-L6-v2 truncates input at 256 tokens. v1
+  used 500-word chunks, so roughly the last 60% of every chunk was never embedded
+  and could never be found by search.
+- *Why status in Postgres instead of a Celery result backend?* The UI needs
+  document status anyway, it survives Redis restarts, and it's queryable.
+- *What if Redis is down at upload time?* The upload still succeeds; the
+  document stays `uploaded` with a message and can be re-queued with Reprocess.
+
+**Verified:** 47 passed (20 new ingestion tests: validation matrix, real PDF/DOCX
+built in memory, header/footer removal, tables, chunk sizes/sections/pages,
+duplicate upload, corrupt PDF → failed, reprocess idempotency).
+
+**Interview**
+
+Q: What does "at-least-once delivery" mean and how did you design for it?
+A: With `acks_late`, a task is acknowledged only after it finishes, so if a worker dies mid-task the broker redelivers it — a task can run twice. So processing is idempotent: it skips already-indexed documents and replaces chunks (delete + insert in one transaction) instead of appending.
+
+Q: Why check magic bytes and not just the file extension?
+A: The extension is user-controlled; anyone can rename an executable to `.pdf`. Checking the first bytes (`%PDF-`, the ZIP header for DOCX) makes sure we only hand real PDFs/DOCX files to the parsers, which reduces parser-exploit risk and gives clear errors.
+
+Q: How did you choose a chunk size?
+A: From the embedding model's limit: MiniLM reads 256 tokens, about 190 words, and silently truncates the rest. So chunks are ~180 words, split on sentence boundaries so quotes stay intact, with a small sentence overlap and a hard break at section changes so each chunk's section label is accurate.
