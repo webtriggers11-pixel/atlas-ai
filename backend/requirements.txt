@@ -16,5 +16,4 @@ python-multipart>=0.0.9
 celery[redis]>=5.4.0
 pdfplumber>=0.11.0
 numpy>=1.26.0
-pgvector>=0.3.0
 fpdf2>=2.8.0
