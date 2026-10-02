@@ -41,6 +41,12 @@ def _to_response(project: Project, db: Session) -> ProjectResponse:
         .order_by(AnalysisRun.created_at.desc())
         .limit(1)
     ).scalar()
+    latest_completed = db.execute(
+        select(AnalysisRun.stats, AnalysisRun.finished_at)
+        .where(AnalysisRun.project_id == project.id, AnalysisRun.status == "completed")
+        .order_by(AnalysisRun.created_at.desc())
+        .limit(1)
+    ).first()
     return ProjectResponse(
         id=project.id,
         name=project.name,
@@ -55,6 +61,8 @@ def _to_response(project: Project, db: Session) -> ProjectResponse:
         extraction_status=project.extraction_status,
         extraction_error=project.extraction_error,
         extracted_at=project.extracted_at,
+        finding_counts=(latest_completed.stats or {}).get("counts") if latest_completed else None,
+        last_analyzed_at=latest_completed.finished_at if latest_completed else None,
     )
 
 
@@ -135,3 +143,21 @@ def delete_document(document_id: UUID, db: Session) -> None:
     db.delete(document)
     db.commit()
     storage.delete_file(path)
+
+
+
+def list_all_documents(search: str | None, db: Session):
+    """Every project document with its project's name, newest first; optional filename search."""
+    from app.schemas.project import DocumentListItem, DocumentResponse
+
+    query = (
+        select(ProjectDocument, Project.name)
+        .join(Project, ProjectDocument.project_id == Project.id)
+        .order_by(ProjectDocument.created_at.desc())
+    )
+    if search:
+        query = query.where(ProjectDocument.filename.ilike(f"%{search}%"))
+    return [
+        DocumentListItem(**DocumentResponse.model_validate(doc).model_dump(), project_name=name)
+        for doc, name in db.execute(query).all()
+    ]

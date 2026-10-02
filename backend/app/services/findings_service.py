@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from app.models import AnalysisRun, Finding, Evidence, DocChunk
+from app.models import AnalysisRun, Finding, Evidence, DocChunk, Requirement
 from app.schemas.project import FindingResponse, EvidenceResponse, RequirementRef
 from app.services.project_service import get_project_or_404
 
@@ -31,7 +31,7 @@ def list_runs(project_id: UUID, db: Session) -> list[AnalysisRun]:
 def _finding_query():
     """Base query that eagerly loads everything a FindingResponse needs (avoids N+1 queries)."""
     return select(Finding).options(
-        selectinload(Finding.requirement),
+        selectinload(Finding.requirement).selectinload(Requirement.source_chunk).selectinload(DocChunk.document),
         selectinload(Finding.evidence).selectinload(Evidence.chunk).selectinload(DocChunk.document),
     )
 
@@ -42,7 +42,11 @@ def to_finding_response(finding: Finding) -> FindingResponse:
     return FindingResponse(
         id=finding.id,
         run_id=finding.run_id,
-        requirement=RequirementRef(id=req.id, code=req.code, text=req.text, section=req.section),
+        requirement=RequirementRef(
+            id=req.id, code=req.code, text=req.text, section=req.section,
+            source_document=req.source_chunk.document.filename if req.source_chunk else None,
+            source_page=req.source_chunk.page_start if req.source_chunk else None,
+        ),
         status=finding.status,
         confidence=finding.confidence,
         explanation=finding.explanation,
@@ -71,8 +75,6 @@ def to_finding_response(finding: Finding) -> FindingResponse:
 
 def list_findings(run_id: UUID, status: str | None, db: Session) -> list[FindingResponse]:
     """Return a run's findings ordered by requirement code, optionally filtered by status."""
-    from app.models import Requirement
-
     get_run_or_404(run_id, db)
     query = _finding_query().join(Finding.requirement).where(Finding.run_id == run_id)
     if status:

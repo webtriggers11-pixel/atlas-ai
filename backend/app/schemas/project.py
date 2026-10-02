@@ -49,6 +49,8 @@ class ProjectResponse(BaseModel):
     extraction_status: Literal["idle", "running", "completed", "failed"] = "idle"
     extraction_error: Optional[str] = None
     extracted_at: Optional[datetime] = None
+    finding_counts: Optional[dict[str, int]] = None   # from the latest COMPLETED run
+    last_analyzed_at: Optional[datetime] = None
 
 
 # ── Documents ─────────────────────────────────────────────────────────────────
@@ -164,6 +166,8 @@ class RequirementRef(BaseModel):
     code: str
     text: str
     section: Optional[str] = None
+    source_document: Optional[str] = None   # reference document the requirement was extracted from
+    source_page: Optional[int] = None
 
 
 class FindingResponse(BaseModel):
@@ -202,3 +206,27 @@ class SearchResult(BaseModel):
     content: str
     score: float
     rank: int
+
+
+class DocumentListItem(DocumentResponse):
+    """A document plus the analysis (project) it belongs to — for the global Documents page."""
+    project_name: str
+
+
+class ProviderInfo(BaseModel):
+    name: str
+    configured: bool
+    model: str
+
+
+class SettingsResponse(BaseModel):
+    """Read-only server configuration for the Settings page. Never contains secrets."""
+    version: str
+    default_provider: str
+    providers: list[ProviderInfo]
+    embedding_model: str
+    retrieval_mode: str
+    prompt_versions: dict[str, str]
+    max_upload_mb: int
+    max_pdf_pages: int
+    background_jobs: Literal["worker", "inline"]

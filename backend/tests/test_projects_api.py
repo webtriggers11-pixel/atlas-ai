@@ -182,3 +182,58 @@ def test_findings_with_evidence(client, db):
     assert client.get(f"/api/v1/runs/{run.id}/findings?status=missing").json() == []
     assert client.get(f"/api/v1/findings/{finding.id}").json()["status"] == "covered"
     assert client.get(f"/api/v1/projects/{project['id']}").json()["latest_run_status"] == "completed"
+
+
+# ── UI support endpoints ──────────────────────────────────────────────────────
+
+def test_project_summary_has_latest_completed_counts(client, db):
+    """finding_counts/last_analyzed_at come from the latest COMPLETED run (a newer failed run is ignored)."""
+    project = _project(client)
+    assert client.get(f"/api/v1/projects/{project['id']}").json()["finding_counts"] is None
+    done = AnalysisRun(project_id=project["id"], status="completed", stats={"counts": {"covered": 3, "missing": 1}})
+    db.add(done)
+    db.flush()
+    db.add(AnalysisRun(project_id=project["id"], status="failed"))
+    db.flush()
+    body = client.get(f"/api/v1/projects/{project['id']}").json()
+    assert body["finding_counts"] == {"covered": 3, "missing": 1}
+
+
+def test_global_documents_list_with_project_name_and_search(client, db):
+    """GET /documents lists documents across projects with their project name; search filters by filename."""
+    p1, p2 = _project(client, name="Alpha"), _project(client, name="Beta")
+    _document(db, p1["id"], filename="alpha-spec.txt")
+    _document(db, p2["id"], filename="beta-resume.txt")
+    names = {d["filename"]: d["project_name"] for d in client.get("/api/v1/documents").json()}
+    assert names["alpha-spec.txt"] == "Alpha" and names["beta-resume.txt"] == "Beta"
+    found = client.get("/api/v1/documents?search=resume").json()
+    assert [d["filename"] for d in found if d["filename"].endswith(".txt") and "resume" in d["filename"]] == ["beta-resume.txt"]
+
+
+def test_finding_includes_requirement_source_document(client, db):
+    """Findings carry the reference document the requirement came from (for conflict cards)."""
+    project = _project(client)
+    ref = _document(db, project["id"], "reference", "srs.txt")
+    ref_chunk = DocChunk(document_id=ref.id, chunk_index=0, content="Tokens expire after 15 minutes.", page_start=2, word_count=5)
+    db.add(ref_chunk)
+    db.flush()
+    req = Requirement(project_id=project["id"], code="REQ-001", text="Tokens expire after 15 minutes.",
+                      content_hash="h", status="approved", source_chunk_id=ref_chunk.id)
+    run = AnalysisRun(project_id=project["id"], status="completed")
+    db.add_all([req, run])
+    db.flush()
+    db.add(Finding(run_id=run.id, requirement_id=req.id, status="missing", explanation="Not mentioned."))
+    db.flush()
+    finding = client.get(f"/api/v1/runs/{run.id}/findings").json()[0]
+    assert (finding["requirement"]["source_document"], finding["requirement"]["source_page"]) == ("srs.txt", 2)
+
+
+def test_settings_endpoint_never_returns_keys(client):
+    """Settings exposes providers/models/limits but no secret values."""
+    from app.core.config import settings as cfg
+
+    body = client.get("/api/v1/settings").json()
+    assert {p["name"] for p in body["providers"]} == {"groq", "gemini", "ollama"}
+    raw = str(body)
+    for secret in (cfg.GROQ_API_KEY, cfg.GEMINI_API_KEY):
+        assert not secret or secret not in raw
