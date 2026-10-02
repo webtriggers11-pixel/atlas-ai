@@ -407,3 +407,34 @@ doesn't mention testing). Remaining limitation: the explanation *prose* is not v
 said "including OpenAI" next to a correct, verified quote) — guardrails cover quotes, not prose.
 
 **Verified:** 93 passed.
+
+**Phase 8 confirmation run** (after the BadGeneration + item-level parsing fixes): status accuracy
+78%, false-missing 8%, false-covered 0%, unclear 3% (was 12.5%), recall@4 100%.
+
+---
+
+## UI revamp (V2 frontend) — first version
+
+**Built** (React 18 + Vite, no Next.js; design language ported from the WebTriggers 2.0 site):
+- Tailwind v4 (`@tailwindcss/vite`), theme tokens in `src/config/theme.js` (NeoPOP palette,
+  light/dark, sharp shape) injected as CSS variables; plunk buttons, grid/glow backgrounds,
+  Geist / Geist Mono / Instrument Serif.
+- React Router pages: Projects (`/`), Project workspace (`/projects/:id?step=`), Explore (`/explore`,
+  the v1 topic explorer, lazy-loaded and kept working).
+- TanStack Query for server state with **conditional polling** (only while a document is
+  processing, extraction is running or a run is active).
+- Workspace steps: ① Documents (drag-drop / paste, live status, reprocess, chunk viewer)
+  ② Requirements (AI extract, inline edit, approve/reject, approve-all, merge, add)
+  ③ Analysis (run + progress, run history, coverage bar + status tiles as filters, search,
+  CSV export, evidence drawer with verified quotes) and a Search tab (retrieval inspector).
+
+**Verified in the browser** against a local API on the test DB: create project → upload →
+chunks viewer → AI extraction (12 requirements) → approve all → analysis (5 covered, 1 partial,
+3 missing, 3 conflict) → evidence drawer → light mode → Explore page. Bug found and fixed:
+with inline (eager) jobs the extract request returns after extraction finished, so the
+"running → finished" refresh never fired — the list is now also refreshed on return.
+
+**Open:** `idea-atlas-docs/v2/Idea_Atlas_V2_UI_Spec.md` (added later) asks for a sidebar layout,
+global Documents and Settings pages, analysis tabs (Findings / Evidence / Documents / Map), and a
+light, purple-accent, low-animation style — which differs from the WebTriggers style requested
+in chat. Direction to be confirmed before the next UI iteration.

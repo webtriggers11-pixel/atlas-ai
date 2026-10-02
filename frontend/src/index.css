@@ -1,102 +1,179 @@
-@import '@fontsource/plus-jakarta-sans/400.css';
-@import '@fontsource/plus-jakarta-sans/500.css';
-@import '@fontsource/plus-jakarta-sans/600.css';
-@import '@fontsource/plus-jakarta-sans/700.css';
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+@import '@fontsource/instrument-serif/400.css';
+@import '@fontsource/instrument-serif/400-italic.css';
+@import "tailwindcss";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/*
+ * Color values live in src/config/theme.js and are injected as CSS variables
+ * for [data-theme=light] and [data-theme=dark] (design system ported from WebTriggers 2.0).
+ */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
-:root {
-  --bg: #FAFAFA;
-  --surface: #FFFFFF;
-  --border: #E4E4E7;
-  --border-hover: #A1A1AA;
-  --text: #09090B;
-  --text-muted: #71717A;
-  --accent: #7C3AED;
-  --accent-light: #EDE9FE;
-  --accent-text: #5B21B6;
-  --radius-node: 10px;
-  --radius-btn: 8px;
-  --radius-panel: 14px;
-  --shadow-card: 0 1px 3px rgba(0,0,0,0.08);
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-fill: var(--fill);
+  --color-fill-strong: var(--fill-strong);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--on-primary);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--on-accent);
+  --color-glow: var(--glow);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-covered: var(--covered);
+  --color-partial: var(--partial);
+  --color-missing: var(--missing);
+  --color-conflict: var(--conflict);
+  --color-unclear: var(--unclear);
+  --radius-pill: var(--shape-pill);
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+  --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
 
-  /* shadcn/ui tokens — aliases onto our existing palette above, not new colors.
-     Kept as plain hex (not hsl()) since our tokens are already hex and Tailwind
-     reads var(--x) directly; this is what makes the migration visually identical. */
-  --background: var(--bg);
-  --foreground: var(--text);
-  --card: var(--surface);
-  --card-foreground: var(--text);
-  --popover: var(--surface);
-  --popover-foreground: var(--text);
-  --primary: var(--accent);
-  --primary-foreground: #FFFFFF;
-  --secondary: #F4F4F5;
-  --secondary-foreground: var(--text);
-  --muted: #F4F4F5;
-  --muted-foreground: var(--text-muted);
-  --accent-bg: var(--accent-light);
-  --accent-foreground: var(--accent-text);
-  --destructive: #EF4444;
-  --destructive-foreground: #FFFFFF;
-  --input: var(--border);
-  --ring: var(--accent);
-  --radius: 0.5rem;
+  /* aliases used by the v1 explorer's shadcn components */
+  --color-card: var(--surface);
+  --color-popover: var(--surface);
+  --color-muted-foreground: var(--muted);
+  --color-destructive: var(--danger);
+  --color-input: var(--border);
+  --color-ring: var(--foreground);
+
+  --animate-aurora: aurora 18s ease-in-out infinite alternate;
+  --animate-beam-x: beam-x 2.4s linear infinite;
+  --animate-shimmer: shimmer-sweep 1.6s ease-in-out infinite;
+
+  @keyframes beam-x {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(250%); }
+  }
+  @keyframes aurora {
+    0% { transform: translate3d(-10%, -5%, 0) rotate(0deg) scale(1); }
+    100% { transform: translate3d(10%, 5%, 0) rotate(20deg) scale(1.15); }
+  }
+  @keyframes shimmer-sweep {
+    100% { transform: translateX(100%); }
+  }
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+/* v1 explorer components use these older variable names — mapped onto the new theme */
+:root {
+  --bg: var(--background);
+  --text: var(--foreground);
+  --text-muted: var(--muted);
+  --border-hover: color-mix(in oklab, var(--foreground) 35%, transparent);
+  --accent-light: color-mix(in oklab, var(--accent) 16%, transparent);
+  --accent-text: var(--foreground);
+  --radius-node: 0;
+  --radius-btn: 0;
+  --radius-panel: 0;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+
+html { scrollbar-gutter: stable; }   /* no layout jump when an overlay locks scrolling */
+html, body, #root { min-height: 100%; }
 
 body {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 15px;
-  line-height: 1.6;
-  background: var(--bg);
-  color: var(--text);
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-html, body, #root {
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
+/* Light mode: white cards on a light page need a soft shadow to separate them */
+[data-theme="light"] .bg-surface {
+  box-shadow: 0 1px 2px rgb(12 19 34 / 0.04), 0 8px 24px -12px rgb(12 19 34 / 0.12);
 }
 
-/* React Flow — strip default styles that clash with our design */
-.react-flow__renderer { background: var(--bg); }
-.react-flow__background { background: var(--bg); }
-.react-flow__handle { display: none !important; }
-
-.react-flow__controls {
-  background: var(--surface) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: var(--radius-btn) !important;
-  box-shadow: var(--shadow-card) !important;
-}
-.react-flow__controls-button {
-  background: var(--surface) !important;
-  border-bottom: 1px solid var(--border) !important;
-  color: var(--text-muted) !important;
-  fill: var(--text-muted) !important;
-}
-.react-flow__controls-button:hover {
-  background: var(--bg) !important;
-}
-
-/* Magic UI shimmer — used by <Skeleton> instead of a plain opacity pulse */
-.shimmer {
+/*
+ * NeoPOP "plunk" button (after CRED's open-source NeoPOP, Apache-2.0):
+ * a 3px right and bottom edge skewed 45° makes the button look raised;
+ * pressing pushes the face into the edges.
+ */
+.pop, .pop-outline {
   position: relative;
-  overflow: hidden;
+  margin: 0 3px 3px 0;
+  transition: transform 0.12s ease-in-out;
 }
+.pop::before, .pop::after, .pop-outline::before, .pop-outline::after {
+  content: "";
+  position: absolute;
+  transform-origin: 0 0;
+  transition: opacity 0.12s ease-in-out;
+  pointer-events: none;
+}
+.pop::after, .pop-outline::after {
+  top: 0; right: -3px; width: 3px; height: 100%;
+  transform: skewY(45deg);
+  background: var(--pop-right);
+}
+.pop::before, .pop-outline::before {
+  left: 0; bottom: -3px; width: 100%; height: 3px;
+  transform: skewX(45deg);
+  background: var(--pop-bottom);
+}
+.pop-outline::after { background: var(--pop-right-2); }
+.pop-outline::before { background: var(--pop-bottom-2); }
+.pop:active:not(:disabled), .pop-outline:active:not(:disabled) { transform: translate(3px, 3px); }
+.pop:active:not(:disabled)::before, .pop:active:not(:disabled)::after,
+.pop-outline:active:not(:disabled)::before, .pop-outline:active:not(:disabled)::after { opacity: 0; }
+.pop:disabled, .pop-outline:disabled { opacity: 0.45; cursor: not-allowed; }
+
+::selection { background: color-mix(in oklab, var(--primary) 35%, transparent); }
+
+@utility text-gradient {
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility bg-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--foreground) 6%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--foreground) 6%, transparent) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+/* Shimmer — used by skeleton placeholders */
+.shimmer { position: relative; overflow: hidden; }
 .shimmer::after {
   content: '';
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--foreground) 8%, transparent), transparent);
   animation: shimmer-sweep 1.6s ease-in-out infinite;
 }
-@keyframes shimmer-sweep {
-  100% { transform: translateX(100%); }
+
+/* React Flow (v1 explorer + coverage map) — blend into the theme */
+.react-flow__renderer, .react-flow__background { background: var(--background); }
+.react-flow__handle { display: none !important; }
+.react-flow__controls {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+}
+.react-flow__controls-button {
+  background: var(--surface) !important;
+  border-bottom: 1px solid var(--border) !important;
+  color: var(--muted) !important;
+  fill: var(--muted) !important;
+}
+.react-flow__controls-button:hover { background: var(--surface-2) !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

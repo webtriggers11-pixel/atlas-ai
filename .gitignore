@@ -31,3 +31,6 @@ backend/migrations/auto_generated/
 # OS
 .DS_Store
 Thumbs.db
+
+# Uploaded documents (local storage) — never commit user files
+backend/uploads/
