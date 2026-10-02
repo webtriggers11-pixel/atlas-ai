@@ -1,0 +1,272 @@
+{
+  "label": "vector+query-cleanup-retrieval",
+  "at": "2026-10-02 14:52 UTC",
+  "metrics": {
+    "requirements": 32,
+    "recall@1": 0.8846153846153846,
+    "recall@4": 0.9615384615384616,
+    "mrr": 0.9102564102564104,
+    "rewrite_calls": 0
+  },
+  "results": [
+    {
+      "dataset": "clinic_portal",
+      "preset": "spec_coverage",
+      "rows": [
+        {
+          "id": "C01",
+          "expected": "covered",
+          "evidence": "A text message is sent to the patient the day before",
+          "rank": 1,
+          "top_score": 0.514
+        },
+        {
+          "id": "C02",
+          "expected": "conflict",
+          "evidence": "Cancellations are allowed until midnight on the day before",
+          "rank": 1,
+          "top_score": 0.524
+        },
+        {
+          "id": "C03",
+          "expected": "conflict",
+          "evidence": "once per night",
+          "rank": 1,
+          "top_score": 0.592
+        },
+        {
+          "id": "C04",
+          "expected": "covered",
+          "evidence": "Idle sessions are terminated after 20 minutes",
+          "rank": 1,
+          "top_score": 0.62
+        },
+        {
+          "id": "C05",
+          "expected": "covered",
+          "evidence": "second login step using a one-time code",
+          "rank": 1,
+          "top_score": 0.331
+        },
+        {
+          "id": "C06",
+          "expected": "partial",
+          "evidence": "opens a patient chart, the event is logged",
+          "rank": 1,
+          "top_score": 0.334
+        },
+        {
+          "id": "C07",
+          "expected": "missing",
+          "evidence": null,
+          "rank": null,
+          "top_score": 0.334
+        },
+        {
+          "id": "C08",
+          "expected": "missing",
+          "evidence": null,
+          "rank": null,
+          "top_score": 0.456
+        },
+        {
+          "id": "C09",
+          "expected": "missing",
+          "evidence": null,
+          "rank": null,
+          "top_score": 0.366
+        },
+        {
+          "id": "C10",
+          "expected": "covered",
+          "evidence": "down to 320 px wide",
+          "rank": 1,
+          "top_score": 0.57
+        }
+      ],
+      "run": {},
+      "retrieval": {}
+    },
+    {
+      "dataset": "payments_api",
+      "preset": "spec_coverage",
+      "rows": [
+        {
+          "id": "P01",
+          "expected": "covered",
+          "evidence": "client-credentials grant",
+          "rank": 1,
+          "top_score": 0.595
+        },
+        {
+          "id": "P02",
+          "expected": "covered",
+          "evidence": "valid for 900 seconds",
+          "rank": 1,
+          "top_score": 0.55
+        },
+        {
+          "id": "P03",
+          "expected": "conflict",
+          "evidence": "Refresh tokens are not issued",
+          "rank": 1,
+          "top_score": 0.471
+        },
+        {
+          "id": "P04",
+          "expected": "partial",
+          "evidence": "rate limited at the gateway",
+          "rank": 1,
+          "top_score": 0.431
+        },
+        {
+          "id": "P05",
+          "expected": "covered",
+          "evidence": "Idempotency-Key header",
+          "rank": 1,
+          "top_score": 0.615
+        },
+        {
+          "id": "P06",
+          "expected": "conflict",
+          "evidence": "decimal number in the major currency unit",
+          "rank": 1,
+          "top_score": 0.421
+        },
+        {
+          "id": "P07",
+          "expected": "partial",
+          "evidence": "Refunds are created with POST /refunds",
+          "rank": 1,
+          "top_score": 0.504
+        },
+        {
+          "id": "P08",
+          "expected": "covered",
+          "evidence": "POST /payments | 300 ms",
+          "rank": 1,
+          "top_score": 0.566
+        },
+        {
+          "id": "P09",
+          "expected": "partial",
+          "evidence": "PCI DSS Level 1",
+          "rank": 1,
+          "top_score": 0.419
+        },
+        {
+          "id": "P10",
+          "expected": "missing",
+          "evidence": null,
+          "rank": null,
+          "top_score": 0.196
+        },
+        {
+          "id": "P11",
+          "expected": "conflict",
+          "evidence": "retried up to 3 times at 1 minute intervals",
+          "rank": 1,
+          "top_score": 0.733
+        },
+        {
+          "id": "P12",
+          "expected": "covered",
+          "evidence": "PF-1042",
+          "rank": 1,
+          "top_score": 0.437
+        }
+      ],
+      "run": {},
+      "retrieval": {}
+    },
+    {
+      "dataset": "resume_jd",
+      "preset": "resume_jd",
+      "rows": [
+        {
+          "id": "J01",
+          "expected": "covered",
+          "evidence": "Python services",
+          "rank": 3,
+          "top_score": 0.507
+        },
+        {
+          "id": "J02",
+          "expected": "covered",
+          "evidence": "FastAPI",
+          "rank": 1,
+          "top_score": 0.532
+        },
+        {
+          "id": "J03",
+          "expected": "covered",
+          "evidence": "Designed PostgreSQL schemas",
+          "rank": 1,
+          "top_score": 0.48
+        },
+        {
+          "id": "J04",
+          "expected": "covered",
+          "evidence": "Wrote pytest suites",
+          "rank": 1,
+          "top_score": 0.552
+        },
+        {
+          "id": "J05",
+          "expected": "covered",
+          "evidence": "B.E. in Information Technology",
+          "rank": null,
+          "top_score": 0.21
+        },
+        {
+          "id": "J06",
+          "expected": "missing",
+          "evidence": null,
+          "rank": null,
+          "top_score": 0.229
+        },
+        {
+          "id": "J07",
+          "expected": "partial",
+          "evidence": "Celery and Redis",
+          "rank": 1,
+          "top_score": 0.372
+        },
+        {
+          "id": "J08",
+          "expected": "covered",
+          "evidence": "embeddings, pgvector and LLM structured output",
+          "rank": 3,
+          "top_score": 0.214
+        },
+        {
+          "id": "J09",
+          "expected": "missing",
+          "evidence": null,
+          "rank": null,
+          "top_score": 0.276
+        },
+        {
+          "id": "J10",
+          "expected": "partial",
+          "evidence": "Mentored two junior developers",
+          "rank": 1,
+          "top_score": 0.248
+        }
+      ],
+      "run": {},
+      "retrieval": {}
+    }
+  ],
+  "settings": {
+    "retrieval_mode": "vector",
+    "k": 4,
+    "query_rewrite": false,
+    "prompt": {
+      "extract_requirements": "extract-v1",
+      "classify_requirements": "classify-v2",
+      "rewrite_queries": "rewrite-v1"
+    },
+    "embedding": "all-MiniLM-L6-v2"
+  }
+}

@@ -137,7 +137,13 @@ def _best_source_chunk(req_vec: np.ndarray, batch: _Batch) -> DocChunk | None:
 
 
 def run_extraction(project_id: str | UUID, db: Session) -> None:
-    """The background job body. Safe to re-run: it only replaces unreviewed extracted drafts."""
+    """The background job body (LLM calls tagged with the project for token accounting)."""
+    with llm.call_context(f"extract:{project_id}"):
+        _run_extraction(project_id, db)
+
+
+def _run_extraction(project_id: str | UUID, db: Session) -> None:
+    """Extraction body. Safe to re-run: it only replaces unreviewed extracted drafts."""
     project = db.get(Project, UUID(str(project_id)))
     if project is None:
         return

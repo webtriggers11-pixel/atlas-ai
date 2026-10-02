@@ -36,7 +36,16 @@ class Settings(BaseSettings):
     RRF_K: int = 60                              # Reciprocal Rank Fusion constant (standard value)
     HYBRID_CANDIDATES: int = 20                  # candidates taken from each ranking before fusion
     QUERY_REWRITE: bool = False                  # LLM rephrasings for weak matches (hybrid mode only)
+    STRIP_QUERY_BOILERPLATE: bool = False        # search "Apache Kafka" instead of the full sentence — measured: no gain
     REWRITE_BELOW_SCORE: float = 0.5             # only rewrite when the best similarity is below this
+
+    # ── LLM reliability ──
+    LLM_MAX_ATTEMPTS: int = 4                 # provider attempts per call (across fallback providers)
+    LLM_RETRY_BUDGET_S: float = 20            # max seconds spent waiting on rate limits (interactive requests)
+    LLM_BACKGROUND_RETRY_BUDGET_S: float = 150  # same, for background jobs (extraction, analysis)
+    LLM_DEFAULT_BACKOFF_S: float = 5          # cooldown when a provider doesn't say how long to wait
+    LLM_MAX_BACKOFF_S: float = 60
+    CLASSIFY_PROMPT: str = "classify-v2"      # classify-v1 | classify-v2 (kept for evaluation comparisons)
 
     # ── Gap analysis ──
     EVIDENCE_K: int = 4                 # evidence chunks retrieved per requirement

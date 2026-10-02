@@ -8,6 +8,7 @@ Three search strategies, all running inside Postgres:
            score(chunk) = Σ 1 / (RRF_K + rank_in_list)
 RRF only uses ranks, so the two very different score scales never need calibrating.
 """
+import re
 from dataclasses import dataclass
 from uuid import UUID
 
@@ -151,8 +152,27 @@ def search(
     return hybrid_search(project_id, [query, *(extra_queries or [])], db, role=role, k=k)
 
 
+# Requirement boilerplate that matches every chunk and drowns out the real subject
+# ("Candidate has experience with Apache Kafka" → "Apache Kafka").
+_BOILERPLATE = re.compile(
+    r"^\s*(the\s+)?(candidate|system|platform|portal|api|application|service|solution|user|users|patients?|merchants?)\s+"
+    r"(must be able to|shall be able to|is able to|has|have|must|shall|should|will|can)\s+"
+    r"(an?\s+|be\s+)?"
+    r"((strong|solid|proven|hands-on|professional|demonstrable)\s+)*"
+    r"(experience\s+(with|in|of)\s+)?",
+    re.IGNORECASE,
+)
+
+
+def retrieval_query(requirement_text: str) -> str:
+    """The text used to SEARCH for evidence: the requirement minus generic boilerplate (classification still sees the full text)."""
+    stripped = _BOILERPLATE.sub("", requirement_text).strip()
+    return stripped if len(stripped.split()) >= 2 else requirement_text
+
+
 def search_evidence(
     project_id: UUID, requirement_text: str, db: Session, k: int | None = None, extra_queries: list[str] | None = None,
 ) -> list[ScoredChunk]:
     """Evidence candidates for one requirement: the top-k chunks of the project's EXISTING documents."""
-    return search(project_id, requirement_text, db, role="existing", k=k or settings.EVIDENCE_K, extra_queries=extra_queries)
+    query = retrieval_query(requirement_text) if settings.STRIP_QUERY_BOILERPLATE else requirement_text
+    return search(project_id, query, db, role="existing", k=k or settings.EVIDENCE_K, extra_queries=extra_queries)

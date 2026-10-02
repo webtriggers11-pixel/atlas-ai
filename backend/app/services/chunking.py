@@ -43,8 +43,12 @@ def is_heading(line: str) -> bool:
         return True
     if " | " in line:
         return False                         # table rows are content
+    if line[:1] in "-*•●▪" or ";" in line:
+        return False                         # bullet items and wrapped clauses are content, not headings
     if _NUMBERED_HEADING.match(line):
         return True
+    if "," in line:
+        return False                         # "Vercel, Apache Kafka (Basic)" is a wrapped list, not a title
     words = line.split()
     if not 1 <= len(words) <= 8 or len(line) > 70 or line.endswith((".", ",", ";", ":")):
         return False
@@ -70,6 +74,9 @@ def _units(pages: list[Page]) -> list[_Unit]:
                 continue
             if is_heading(line):
                 section = line.removeprefix("## ").strip()
+                # Keep the heading text as content too: if the heuristic misfires on a real
+                # content line (e.g. a wrapped "Vercel, Apache Kafka (Basic)"), nothing is lost.
+                units.append(_Unit(section, section, page.number, len(section.split())))
                 continue
             for sentence in _split_sentences(line):
                 units.append(_Unit(sentence, section, page.number, len(sentence.split())))

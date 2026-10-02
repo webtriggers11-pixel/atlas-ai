@@ -328,3 +328,82 @@ A: Each ranked list gives a document 1/(k + rank) and the scores are summed (k �
 
 Q: Why can a waiting ALTER TABLE take down an app?
 A: It needs an exclusive lock, and while it waits in the lock queue every later query on that table queues behind it — reads included. A `lock_timeout` makes the migration fail fast instead; plus `idle_in_transaction_session_timeout` so dead clients can't hold locks for hours.
+
+---
+
+## Phase 8 — LLM reliability (+ fixes found by testing a real CV)
+
+**Built**
+- **Typed provider errors** (`llm.py`): `RateLimited` (429/503, carries the provider's
+  `retry-after` / Gemini `retryDelay`), `ProviderUnavailable` (timeouts, connection errors,
+  5xx), and everything else (400/401) raised immediately — retrying can't fix a bad request.
+- **Cooldown per provider** (a small circuit breaker): a provider that says 429 is skipped
+  until its retry-after passes; the other provider is tried at once; when *all* are cooling,
+  wait (with jitter, capped) inside a **retry budget** — 20 s for interactive requests,
+  150 s for background jobs — then a clear 429/503.
+- **Structured-output fallback**: invalid JSON → retry with the exact validation error →
+  then a fresh attempt on the *other* provider → `LLMOutputError`. Every invalid output is
+  logged with its raw text (`llm_calls.status = invalid_output`) so failures can be diagnosed.
+- **`llm_calls` table** — provider, model, task, prompt version, status, attempt, latency,
+  prompt/completion tokens, error, and a job tag (`run:<id>`, `extract:<id>`) set with a
+  `contextvar`; each analysis run's stats now include its tokens and provider attempts.
+- **Classification prompt v2** — an ordered decision list (conflict → covered → partial →
+  missing → unclear) and an explicit "never answer missing when an excerpt discusses the same
+  feature" rule. Written from the error analysis, kept generic (no examples copied from the
+  eval set). v1 stays selectable (`CLASSIFY_PROMPT`) for comparison.
+- **Ingestion fixes found by an end-to-end run on a real CV PDF** (`eval/smoke_run.py`):
+  - the heading heuristic treated a wrapped line ("Vercel, Apache Kafka (Basic)") as a title,
+    and heading lines were dropped from content → "Kafka" vanished from the document.
+    Heading text is now *also kept as content* (a misfire can't lose text) and comma-lists,
+    bullets and `;` clauses are never headings;
+  - pdfplumber's `(cid:127)` bullet placeholders are stripped.
+- Tried and rejected by measurement: stripping requirement boilerplate from search queries
+  ("Candidate has experience with …") lowered recall@1 92% → 88% → off by default.
+
+**How the numbers moved** (32 labelled requirements, same datasets):
+
+| Change | Status acc. | False-missing | Unclear | Recall@4 |
+|---|---|---|---|---|
+| Phase 6 baseline | 72% | 8%* | 19% | 96% |
+| + backoff/cooldowns (prompt v1) | 78% | 23% | 0% | 96% |
+| + prompt v2 | 72% | 12% | 12.5% (one bad-JSON batch) | 96% |
+| + provider fallback on invalid output | 84% | 12% | 0% | 96% |
+
+\* low only because 6 requirements were never classified (rate-limited) in the baseline.
+
+**Interview**
+
+Q: How do you handle LLM provider rate limits?
+A: Treat them as typed, retryable errors that carry the provider's retry-after. Put that provider on a cooldown (a tiny circuit breaker) so we stop hammering it, fail over to the other provider immediately, and only sleep when every provider is cooling — with jitter and inside a time budget that differs for interactive vs background work. Non-transient errors (400/401) are never retried.
+
+Q: Your prompt change made accuracy go DOWN (78% → 72%) — why keep it?
+A: Because the drop wasn't the prompt: one batch returned malformed JSON, which made 4 requirements "unclear". Separating "wrong answer" from "no answer" showed v2 halved the false-missing rate. The real fix was in the reliability layer (retry on the other provider), after which accuracy reached 84%. Breaking errors down by cause beats reading the headline number.
+
+Q: What did testing on a real document teach you that the synthetic eval didn't?
+A: Synthetic markdown never exercised PDF layout. A real CV showed that a heuristic (heading detection) could silently delete content, so the design changed from "decide and discard" to "decide but never discard". Real inputs belong in testing even when they can't go into the committed dataset.
+
+**Phase 8 — later runs and two more structured-output failure modes**
+
+| Run | Status acc. | False-missing | Unclear | Recall@4 |
+|---|---|---|---|---|
+| + heading fix (recall@4 96% → 100%, MRR 0.94 → 0.95) — run "phase8-final" | 78% | 8% | 12.5% | 100% |
+
+That run lost a batch to two failure modes not seen before, both now handled:
+- Groq's JSON mode itself rejected a generation (HTTP 400 `json_validate_failed`). It was
+  treated as a non-retryable bad request; it is now a `BadGeneration` → no cooldown, but the
+  other provider is preferred for the rest of that call.
+- Gemini returned a `results` list with one non-object item, which invalidated all 4 results.
+  Results are now validated item by item; requirements without a valid result are recorded
+  individually as "no result".
+
+**Variance:** the same configuration scored 84% and 78% on consecutive runs (different LLM
+output and rate-limit paths each time). On 32 requirements a ±6-point swing is noise —
+compare configurations over several runs before claiming a difference.
+
+**Real CV end-to-end (local only, not committed):** 15 requirements extracted from a job
+description, all quotes verified, 72 s. After the fixes: Kafka found (listed under "Additional"),
+"Feature Lead" counted for leadership, AWS → partial (S3 only), pytest → missing (true — the CV
+doesn't mention testing). Remaining limitation: the explanation *prose* is not verified (one run
+said "including OpenAI" next to a correct, verified quote) — guardrails cover quotes, not prose.
+
+**Verified:** 93 passed.

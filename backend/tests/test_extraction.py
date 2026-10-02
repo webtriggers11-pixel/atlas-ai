@@ -109,7 +109,7 @@ def test_structured_call_retries_once_with_error_feedback():
     """Bad JSON first, valid JSON second → success; the retry message tells the model what was wrong."""
     calls = []
 
-    def fake_call(messages, provider, task_type, max_tokens=None, json_mode=False):
+    def fake_call(messages, provider, task_type, max_tokens=None, json_mode=False, **kwargs):
         """First reply is invalid; second is valid."""
         calls.append(messages)
         return "not json" if len(calls) == 1 else '{"requirements":[{"text":"The system must log errors.","section":null}]}'

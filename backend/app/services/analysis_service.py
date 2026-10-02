@@ -19,12 +19,12 @@ from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import HTTPException
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session, selectinload
 
 from app import llm
 from app.core.config import settings
-from app.models import AnalysisRun, Evidence, Finding, Project, Requirement
+from app.models import AnalysisRun, Evidence, Finding, LlmCall, Project, Requirement
 from app.services import retrieval
 from app.services.evidence_verifier import verify_quote
 from app.services.project_service import get_project_or_404
@@ -239,7 +239,24 @@ def _classify_batch(batch: list[_Item], project: Project, run: AnalysisRun, db: 
 
 
 def run_analysis(run_id: str | UUID, db: Session) -> None:
-    """Background job body. Idempotent: a redelivered run clears its partial findings and starts again."""
+    """Background job body. Every LLM call inside is tagged with the run id for token accounting."""
+    with llm.call_context(f"run:{run_id}"):
+        _run_analysis(run_id, db)
+
+
+def _token_usage(context: str, db: Session) -> dict:
+    """Sum tokens and provider attempts logged in llm_calls for one job context."""
+    prompt, completion, attempts = db.execute(
+        select(func.coalesce(func.sum(LlmCall.prompt_tokens), 0),
+               func.coalesce(func.sum(LlmCall.completion_tokens), 0),
+               func.count(LlmCall.id))
+        .where(LlmCall.context == context)
+    ).one()
+    return {"prompt_tokens": int(prompt), "completion_tokens": int(completion), "provider_attempts": int(attempts)}
+
+
+def _run_analysis(run_id: str | UUID, db: Session) -> None:
+    """Pipeline body. Idempotent: a redelivered run clears its partial findings and starts again."""
     run = db.get(AnalysisRun, UUID(str(run_id)))
     if run is None or run.status == "completed":
         return
@@ -286,6 +303,7 @@ def run_analysis(run_id: str | UUID, db: Session) -> None:
         for status in db.execute(select(Finding.status).where(Finding.run_id == run.id)).scalars():
             counts[status] += 1
         stats["counts"] = counts
+        stats.update(_token_usage(f"run:{run.id}", db))
         stats["duration_s"] = round(time.perf_counter() - started, 1)
         run.stats = stats
         run.status = "completed"

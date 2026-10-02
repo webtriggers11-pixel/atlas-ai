@@ -153,6 +153,7 @@ def _normalize_text(text: str) -> str:
     """Unicode NFKC, join words hyphenated across line breaks, collapse spaces, drop blank lines."""
     text = unicodedata.normalize("NFKC", text)
     text = text.replace("­", "")                     # soft hyphen
+    text = re.sub(r"\(cid:\d+\)", " ", text)               # unmapped PDF glyphs (often bullets) from pdfplumber
     text = re.sub(r"(\w)-\n(\w)", r"\1\2", text)          # "require-\nment" -> "requirement"
     lines = [re.sub(r"[ \t]+", " ", line).strip() for line in text.splitlines()]
     return "\n".join(line for line in lines if line)

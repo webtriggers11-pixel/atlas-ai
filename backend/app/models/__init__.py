@@ -13,8 +13,9 @@ from app.models.requirement import Requirement
 from app.models.analysis_run import AnalysisRun
 from app.models.finding import Finding
 from app.models.evidence import Evidence
+from app.models.llm_call import LlmCall
 
 __all__ = [
     "Map", "Node", "NodeExplanation", "Edge", "LlmLog", "Document", "DocumentChunk", "NodeGap",
-    "Project", "ProjectDocument", "DocChunk", "Requirement", "AnalysisRun", "Finding", "Evidence",
+    "Project", "ProjectDocument", "DocChunk", "Requirement", "AnalysisRun", "Finding", "Evidence", "LlmCall",
 ]

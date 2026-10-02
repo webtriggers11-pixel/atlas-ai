@@ -170,7 +170,7 @@ def test_classify_prompt_contains_rules_and_untrusted_note():
     """The classification prompt carries the status definitions, the verbatim-quote rule and the injection guard."""
     captured = {}
 
-    def fake_call(messages, provider, task_type, max_tokens=None, json_mode=False):
+    def fake_call(messages, provider, task_type, max_tokens=None, json_mode=False, **kwargs):
         """Capture the prompt and return a valid answer."""
         captured["system"] = messages[0]["content"]
         captured["user"] = messages[1]["content"]

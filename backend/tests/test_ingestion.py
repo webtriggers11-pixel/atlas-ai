@@ -133,7 +133,7 @@ def test_chunks_respect_size_sections_and_pages():
     assert all(c.word_count <= 60 for c in chunks)
     assert {c.section for c in chunks} == {"Validation", "Logging"}
     logging_chunk = [c for c in chunks if c.section == "Logging"]
-    assert len(logging_chunk) == 1 and logging_chunk[0].content.startswith("All errors")
+    assert len(logging_chunk) == 1 and logging_chunk[0].content.startswith("Logging All errors")
     assert any(c.page_start == 1 and c.page_end == 2 for c in chunks)   # a chunk spanning the page break
     # overlap: consecutive chunks in the same section share whole sentences
     first, second = chunks[0], chunks[1]
@@ -221,3 +221,20 @@ def test_missing_role_or_content_rejected(client):
     pid = _project(client)
     assert client.post(f"/api/v1/projects/{pid}/documents", data={"text": "x"}).status_code == 422
     assert client.post(f"/api/v1/projects/{pid}/documents", data={"role": "reference"}).status_code == 422
+
+
+
+def test_heading_misfire_never_loses_text():
+    """A wrapped skills line that looks like a title must still be searchable content (real CV regression)."""
+    pages = [Page(1, "CORE TECHNICAL SKILLS\nAdditional: Django, Django REST Framework, React, Next.js, Git, Railway,\n"
+                     "Vercel, Apache Kafka (Basic)\nSUMMARY\nBackend developer with two years of experience.")]
+    chunks = chunk_pages(pages)
+    assert any("Apache Kafka" in c.content for c in chunks)
+    assert not is_heading("Vercel, Apache Kafka (Basic)")
+    assert not is_heading("- Experience with Apache Kafka")
+    assert not is_heading("Developer (Udemy); AI Classroom Foundation Course, Jio Institute")
+
+
+def test_pdf_cid_glyphs_removed():
+    """pdfplumber's '(cid:127)' bullet placeholders are stripped during normalization."""
+    assert "(cid" not in normalize_pages([Page(1, "(cid:127) Built REST APIs")])[0].text
