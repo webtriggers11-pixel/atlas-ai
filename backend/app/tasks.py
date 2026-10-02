@@ -30,7 +30,7 @@ _RETRY = dict(autoretry_for=(OperationalError,), retry_backoff=5, retry_backoff_
 
 @celery_app.task(name="atlas.process_document", **_RETRY)
 def process_document(document_id: str, force: bool = False) -> None:
-    """Extract → normalize → chunk → index one uploaded document."""
+    """Extract → normalize → chunk → embed → index one uploaded document."""
     from app.services import ingestion_service
 
     with session_scope() as db:

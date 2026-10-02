@@ -176,3 +176,26 @@ class FindingResponse(BaseModel):
     evidence: list[EvidenceResponse]
     created_at: datetime
     updated_at: datetime
+
+
+# ── Search ────────────────────────────────────────────────────────────────────
+
+class SearchRequest(BaseModel):
+    query: str = Field(max_length=2000)
+    role: Optional[DocumentRole] = None
+    k: int = Field(default=5, ge=1, le=50)
+    mode: Literal["vector"] = "vector"
+
+    _clean_query = field_validator("query")(_strip_non_empty)
+
+
+class SearchResult(BaseModel):
+    chunk_id: UUID
+    document_id: UUID
+    document_filename: str
+    document_role: DocumentRole
+    section: Optional[str] = None
+    page_start: Optional[int] = None
+    content: str
+    score: float
+    rank: int

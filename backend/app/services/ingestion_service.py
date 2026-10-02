@@ -1,6 +1,6 @@
 """
 Ingestion service — upload (validate, dedupe, store, enqueue) and processing
-(extract → normalize → chunk → index) of project documents.
+(extract → normalize → chunk → embed → index) of project documents.
 
 Status lifecycle:  uploaded → processing → indexed
                                        └──→ failed (error_message explains why)
@@ -15,7 +15,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.models import ProjectDocument, DocChunk
-from app.services import storage
+from app.services import retrieval, storage
 from app.services.chunking import chunk_pages
 from app.services.extraction import DocumentError, detect_file_type, extract_pages
 from app.services.project_service import get_project_or_404, get_document_or_404
@@ -123,6 +123,7 @@ def process_document(document_id: str | UUID, db: Session, force: bool = False) 
         ]
         db.add_all(rows)
         db.flush()
+        retrieval.embed_chunks(rows, db)
 
         document.chunk_count = len(rows)
         document.page_count = max((p.number for p in pages if p.number), default=None)

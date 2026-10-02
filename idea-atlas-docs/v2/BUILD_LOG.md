@@ -124,3 +124,49 @@ A: The extension is user-controlled; anyone can rename an executable to `.pdf`. 
 
 Q: How did you choose a chunk size?
 A: From the embedding model's limit: MiniLM reads 256 tokens, about 190 words, and silently truncates the rest. So chunks are ~180 words, split on sentence boundaries so quotes stay intact, with a small sentence overlap and a hard break at section changes so each chunk's section label is accurate.
+
+---
+
+## Phase 3 — Embeddings + pgvector retrieval
+
+**Built**
+- pgvector 0.6.0 installed on the server and enabled in `atlas-ai` and
+  `atlas-ai-test`; `/health/ready` → `{"status": "ready", "pgvector": "0.6.0"}`.
+- `Base.metadata.info["required_extensions"] = ["vector"]` — our migrator now
+  creates the extension itself on a fresh database.
+- `doc_chunks.embedding VECTOR(384)` + **HNSW index** with `vector_cosine_ops`.
+- **Embedding provider interface** (`services/embedding_service.py`):
+  `local` = all-MiniLM-L6-v2 on CPU, `fake` = deterministic hashed bag-of-words
+  for tests. v1 callers (`embed_text/embed_texts`) work unchanged.
+- Chunks are embedded during ingestion with the section title prepended
+  (`"Authentication: Access tokens are…"`) so a chunk carries its context.
+- `services/retrieval.py`: `vector_search()` — `ORDER BY embedding <=> :q LIMIT k`
+  in SQL, filtered by project, role, indexed status; `SET LOCAL hnsw.ef_search`.
+- `POST /api/v1/projects/{id}/search` — also a retrieval-debugging tool.
+
+**Key decisions**
+- *Cosine distance with normalized vectors* — for unit vectors cosine and dot
+  product rank identically; cosine ops make the intent explicit.
+- *HNSW over IVFFlat* — HNSW needs no training step (IVFFlat must be built after
+  data exists to pick its lists), gives better recall/speed, and handles inserts
+  well. Trade-off: slower to build and more memory.
+- *Filtered ANN caveat* — HNSW finds `ef_search` candidates and THEN applies the
+  WHERE filter, so a selective filter can return fewer than k rows. We raise
+  `ef_search` to 100 per query.
+
+**Verified:** 54 passed — embeddings stored (384 dims, none NULL), ranking,
+role/project isolation, HNSW index used in the query plan, migrator idempotent
+with the vector column. Manual check with the real MiniLM model: the query "How
+long is a session credential valid?" ranks "Access tokens … expire after fifteen
+minutes" first (0.477 vs 0.335/0.305) with no shared keywords.
+
+**Interview**
+
+Q: What is an embedding and why does semantic search beat keyword search here?
+A: An embedding is a vector where texts with similar meaning land close together. "Session credential validity" and "access tokens expire after 15 minutes" share no words, so keyword search misses it, but their vectors are close. Requirements and design docs routinely describe the same thing in different words.
+
+Q: HNSW vs IVFFlat?
+A: Both are approximate nearest-neighbour indexes. IVFFlat clusters vectors into lists and only searches the nearest lists — fast to build but it needs data to train on and recall depends on `probes`. HNSW builds a layered proximity graph — better speed/recall and no training, at the cost of build time and memory. I chose HNSW because documents arrive incrementally.
+
+Q: Any gotcha with filtering + vector indexes?
+A: Yes — the index returns its top candidates first and the WHERE clause filters afterwards, so a selective filter (one project out of many) can leave fewer than k results. Mitigations: raise `hnsw.ef_search`, partition/partial indexes per tenant, or iterative index scans (pgvector 0.8+).

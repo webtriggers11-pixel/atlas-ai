@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     CHUNK_WORDS: int = 180          # MiniLM reads at most 256 tokens (~190 words); longer chunks get truncated
     CHUNK_OVERLAP_WORDS: int = 30
 
+    # ── Embeddings + retrieval ──
+    EMBEDDING_PROVIDER: str = "local"            # local (MiniLM on CPU) | fake (tests)
+    EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
+    HNSW_EF_SEARCH: int = 100                    # candidates HNSW examines per query (recall vs speed)
+
     # ── Background jobs (Celery + Redis) ──
     CELERY_TASK_ALWAYS_EAGER: bool = False   # true = run tasks inline (tests / no Redis available)
 

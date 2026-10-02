@@ -7,10 +7,10 @@ from app.db import get_db
 from app.schemas.project import (
     ProjectCreate, ProjectUpdate, ProjectResponse, DocumentResponse, DocumentRole,
     RequirementCreate, RequirementResponse, RequirementStatus, RequirementMerge, ApproveAllResponse,
-    RunResponse,
+    RunResponse, SearchRequest, SearchResult,
 )
 from app.core.config import settings
-from app.services import project_service, requirement_service, findings_service, ingestion_service
+from app.services import project_service, requirement_service, findings_service, ingestion_service, retrieval
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -139,3 +139,22 @@ def merge_requirements(project_id: UUID, body: RequirementMerge, db: Session = D
 def list_runs(project_id: UUID, db: Session = Depends(get_db)):
     """List a project's analysis runs, newest first."""
     return findings_service.list_runs(project_id, db)
+
+
+# POST /api/v1/projects/{project_id}/search
+# Example request:  {"query": "refresh token expiry", "role": "existing", "k": 5}
+# Example response: [{"chunk_id": "...", "document_filename": "sdd.pdf", "section": "4. Auth",
+#                     "page_start": 7, "content": "...", "score": 0.71, "rank": 1}]
+@router.post("/{project_id}/search", response_model=list[SearchResult])
+def search(project_id: UUID, body: SearchRequest, db: Session = Depends(get_db)):
+    """Semantic search over a project's indexed documents (also used to debug retrieval quality)."""
+    project_service.get_project_or_404(project_id, db)
+    results = retrieval.vector_search(project_id, body.query, db, role=body.role, k=body.k)
+    return [
+        SearchResult(
+            chunk_id=r.chunk.id, document_id=r.document.id, document_filename=r.document.filename,
+            document_role=r.document.role, section=r.chunk.section, page_start=r.chunk.page_start,
+            content=r.chunk.content, score=round(r.score, 4), rank=r.rank,
+        )
+        for r in results
+    ]
