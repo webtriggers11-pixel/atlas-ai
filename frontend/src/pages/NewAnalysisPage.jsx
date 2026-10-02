@@ -36,14 +36,14 @@ function Steps({ current }) {
 
 /** Step 1 — choose the analysis type and name it. */
 function TypeStep({ onCreated }) {
-  const [preset, setPreset] = useState('spec_coverage')
+  const [preset, setPreset] = useState(null)   // no default: the type decides how the AI reads the documents
   const [name, setName] = useState('')
   const create = useAction(() => api.createProject(name.trim(), preset), {
     invalidate: [keys.projects],
     onSuccess: (project) => onCreated(project.id),
   })
   return (
-    <form className="max-w-3xl space-y-6" onSubmit={(e) => { e.preventDefault(); if (name.trim()) create.mutate() }}>
+    <form className="max-w-3xl space-y-6" onSubmit={(e) => { e.preventDefault(); if (name.trim() && preset) create.mutate() }}>
       <div>
         <h2 className="text-lg font-semibold tracking-tight">What do you want to analyze?</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -61,10 +61,13 @@ function TypeStep({ onCreated }) {
       <Field label="Name" hint="Name it after what you're comparing.">
         <Input
           value={name} onChange={(e) => setName(e.target.value)} maxLength={200}
-          placeholder={preset === 'resume_jd' ? 'Resume vs Python Backend JD' : 'Payments API — SRS vs design docs'}
+          placeholder={preset === 'resume_jd' ? 'Resume vs Python Backend JD' : preset ? 'Payments API — SRS vs design docs' : 'Choose a type above, then name it'}
         />
       </Field>
-      <Button type="submit" icon={ArrowRight} disabled={!name.trim()} loading={create.isPending}>Continue</Button>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button type="submit" icon={ArrowRight} disabled={!name.trim() || !preset} loading={create.isPending}>Continue</Button>
+        {!preset && <span className="text-sm text-muted">Choose what you want to analyze first.</span>}
+      </div>
     </form>
   )
 }
