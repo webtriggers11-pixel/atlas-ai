@@ -103,7 +103,7 @@ export function DocumentRow({ doc, projectId, onOpen, selected = false }) {
           </p>
         </div>
         <StatusPill status={doc.status}>{DOC_STATUS_LABEL[doc.status]}</StatusPill>
-        {(doc.status === 'failed' || (busy && doc.error_message)) && (
+        {(doc.status === 'failed' || doc.status === 'uploaded') && (
           <Button variant="ghost" size="icon" aria-label="Retry processing" title="Retry" loading={reprocess.isPending} onClick={() => reprocess.mutate()}>
             <RotateCw className="size-4" />
           </Button>
