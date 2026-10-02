@@ -212,3 +212,49 @@ A: Layers: document text is wrapped in tags and the system prompt says it's untr
 
 Q: Why a human review step instead of trusting extraction?
 A: Extraction is the step where model errors compound — a missed requirement can never be reported as missing. Letting the user edit/merge/approve the list is cheap and makes every later number trustworthy. Reviewed items are never overwritten by a re-run.
+
+---
+
+## Phase 5 — Gap analysis pipeline (core product)
+
+**Built**
+- `POST /api/v1/projects/{id}/analyze` → queued `AnalysisRun` → Celery task.
+- `services/analysis_service.py`:
+  1. **Retrieval** — top-k (`EVIDENCE_K=4`) chunks from *existing* documents per requirement.
+  2. **Cache** — key = sha256(requirement hash + evidence chunk ids + prompt version
+     + model + preset). Same key in an earlier completed run → finding copied
+     (`source="cache"`), no LLM call.
+  3. **Classification** — `llm.classify_requirements`, `ANALYSIS_BATCH_SIZE=4`
+     requirements per call sharing a de-duplicated excerpt list `[C1]…`, strict
+     schema (status enum, confidence 0–1, evidence = `{chunk, quote}`).
+  4. **Guardrails** (deterministic):
+     - every quote is checked against its chunk by `services/evidence_verifier.py`
+       (exact after normalization, else ≥ 90 % fuzzy over word windows); the stored
+       quote is the *source* span, never the model's wording;
+     - covered/partial/conflict with no verified evidence → `unclear`;
+     - `missing` while retrieval found similar text (≥ `MISSING_GUARD_SCORE`) → `unclear`.
+  5. Progress committed after every batch (`processed / total`), stats stored
+     on the run (counts, cache hits, LLM calls, dropped evidence, errors, duration).
+- Failure handling: a bad batch turns only its requirements into `unclear` with
+  the reason; if *every* requirement fails the run is `failed` with a message;
+  a redelivered task clears partial findings and restarts (idempotent).
+
+**Verified:** 71 passed — verifier (exact, normalized, fuzzy, inventions rejected),
+guardrails (invented quote → dropped + downgraded), missing-guard, cache (2nd run
+0 LLM calls; editing 1 requirement → exactly 1 re-classification), partial and
+total LLM failure, preconditions, prompt contents.
+
+*Incident during this phase:* one full test run hung on a stale DB lock left by an
+interrupted run. The test engine now sets `lock_timeout=30s` and
+`statement_timeout=120s` so a blocked test fails fast with an error.
+
+**Interview**
+
+Q: How do you stop the LLM from hallucinating evidence?
+A: The model must cite an excerpt label and quote it verbatim; code then searches that chunk for the quote (exact, then 90 % fuzzy). Unverifiable quotes are dropped, and a "covered" verdict with no surviving evidence is downgraded to "unclear". The UI only ever shows text copied from the source document.
+
+Q: Why batch several requirements per LLM call?
+A: Fewer calls (free-tier request limits), and requirements in the same area share excerpts, so the de-duplicated excerpt list costs fewer tokens than separate calls. Trade-off: a bad response affects the whole batch, so failures are isolated per batch and recorded per requirement.
+
+Q: How does the cache stay correct?
+A: The key hashes every input that can change the answer — normalized requirement text, the exact evidence chunks, prompt version, model and preset. Change any of them and the key changes, so stale results are never reused; nothing else needs invalidation logic.

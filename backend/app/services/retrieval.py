@@ -76,3 +76,8 @@ def vector_search(
         ScoredChunk(chunk=chunk, document=document, score=1.0 - float(dist), rank=i)
         for i, (chunk, document, dist) in enumerate(db.execute(stmt).all(), start=1)
     ]
+
+
+def search_evidence(project_id: UUID, requirement_text: str, db: Session, k: int | None = None) -> list[ScoredChunk]:
+    """Evidence candidates for one requirement: the top-k chunks of the project's EXISTING documents."""
+    return vector_search(project_id, requirement_text, db, role="existing", k=k or settings.EVIDENCE_K)

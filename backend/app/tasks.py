@@ -44,3 +44,12 @@ def extract_requirements(project_id: str) -> None:
 
     with session_scope() as db:
         extraction_job.run_extraction(project_id, db)
+
+
+@celery_app.task(name="atlas.run_analysis", **_RETRY)
+def run_analysis(run_id: str) -> None:
+    """Run the gap analysis pipeline for one AnalysisRun."""
+    from app.services import analysis_service
+
+    with session_scope() as db:
+        analysis_service.run_analysis(run_id, db)

@@ -10,7 +10,7 @@ from app.schemas.project import (
     RunResponse, SearchRequest, SearchResult,
 )
 from app.core.config import settings
-from app.services import project_service, requirement_service, findings_service, ingestion_service, retrieval, extraction_job
+from app.services import project_service, requirement_service, findings_service, ingestion_service, retrieval, extraction_job, analysis_service
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -142,6 +142,15 @@ def approve_all_requirements(project_id: UUID, db: Session = Depends(get_db)):
 def merge_requirements(project_id: UUID, body: RequirementMerge, db: Session = Depends(get_db)):
     """Merge requirements the extractor split too finely."""
     return requirement_service.merge_requirements(project_id, body.ids, body.text, db)
+
+
+# POST /api/v1/projects/{project_id}/analyze
+# Example response: 202 {"id": "<run id>", "status": "queued", "total": 24, "processed": 0, ...}
+#   → poll GET /api/v1/runs/{run_id} for progress, then GET /api/v1/runs/{run_id}/findings
+@router.post("/{project_id}/analyze", response_model=RunResponse, status_code=status.HTTP_202_ACCEPTED)
+def analyze(project_id: UUID, db: Session = Depends(get_db)):
+    """Start a gap analysis of all approved requirements against the existing documents."""
+    return analysis_service.start_analysis(project_id, db)
 
 
 # GET /api/v1/projects/{project_id}/runs

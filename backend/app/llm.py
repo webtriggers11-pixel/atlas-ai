@@ -3,6 +3,7 @@ All LLM calls live here and ONLY here.
 Switching providers (ollama ↔ groq) means editing only this file — nothing else changes.
 """
 import json
+from typing import Literal
 import logging
 import time
 import httpx
@@ -623,3 +624,111 @@ def extract_requirements(document_text: str, preset: str = "spec_coverage") -> l
         shape_hint='{"requirements":[{"text":"The system must ...","section":"heading or null"}]}',
     )
     return result.requirements
+
+
+# ── Gap classification ────────────────────────────────────────────────────────
+
+PROMPT_VERSIONS["classify_requirements"] = "classify-v1"
+
+FindingStatus = Literal["covered", "partial", "missing", "conflict", "unclear"]
+
+
+class EvidenceQuote(BaseModel):
+    chunk: str = Field(max_length=10)                 # label such as "C3"
+    quote: str = Field(min_length=3, max_length=600)  # copied verbatim from that excerpt
+
+
+class Classification(BaseModel):
+    id: str = Field(max_length=10)                    # label such as "R2"
+    status: FindingStatus
+    confidence: float = Field(ge=0.0, le=1.0)
+    explanation: str = Field(min_length=3, max_length=1200)
+    missing_detail: str | None = Field(default=None, max_length=800)
+    suggested_action: str | None = Field(default=None, max_length=800)
+    evidence: list[EvidenceQuote] = Field(default_factory=list, max_length=4)
+
+
+class ClassificationList(BaseModel):
+    results: list[Classification]
+
+
+_CLASSIFY_CONTEXT = {
+    "spec_coverage": (
+        "REQUIREMENTS come from the reference specification. EXCERPTS come from the existing technical "
+        "documentation (design docs, API docs). Decide how well the existing documentation covers each requirement."
+    ),
+    "resume_jd": (
+        "REQUIREMENTS come from a job description. EXCERPTS come from the candidate's resume. "
+        "Decide how well the resume demonstrates each requirement."
+    ),
+}
+
+_CLASSIFY_RULES = """\
+Status definitions:
+- covered: the excerpts fully satisfy the requirement, including any specific value (numbers, limits, names).
+- partial: some aspects are present but something is missing or less specific (e.g. the feature exists but the required value is not stated).
+- missing: none of the excerpts address the requirement.
+- conflict: an excerpt contradicts the requirement (different value, opposite behaviour).
+- unclear: excerpts are related but too ambiguous to decide.
+Rules:
+- Judge ONLY from the excerpts. Never assume something exists because it is common practice.
+- Every covered/partial/conflict result MUST cite evidence: the excerpt label and a quote copied WORD FOR WORD from that excerpt (one sentence or less).
+- missing results have an empty evidence list.
+- missing_detail: what exactly is absent (null when covered).
+- suggested_action: one concrete next step (null when covered).
+- confidence: 0.0-1.0, how sure you are of the status."""
+
+_CLASSIFY_EXAMPLE = (
+    'Example input:\n'
+    '<requirements>\n[R1] The system must expire access tokens after 15 minutes.\n'
+    '[R2] The system must log every failed login.\n</requirements>\n'
+    '<evidence>\n[C1] (api.md, section "Tokens") Access tokens are JWTs. Their lifetime is configured per tenant.\n'
+    '</evidence>\n'
+    'Example output:\n'
+    '{"results":['
+    '{"id":"R1","status":"partial","confidence":0.8,"explanation":"Access tokens are documented but no 15 minute lifetime is stated.",'
+    '"missing_detail":"The 15 minute expiry value.","suggested_action":"Document the default access-token lifetime as 15 minutes.",'
+    '"evidence":[{"chunk":"C1","quote":"Access tokens are JWTs."}]},'
+    '{"id":"R2","status":"missing","confidence":0.85,"explanation":"No excerpt mentions logging failed logins.",'
+    '"missing_detail":"Failed-login logging.","suggested_action":"Describe where failed logins are logged.","evidence":[]}]}'
+)
+
+
+def classify_requirements(
+    requirements: list[dict],
+    excerpts: list[dict],
+    preset: str = "spec_coverage",
+) -> list[Classification]:
+    """Classify a batch of requirements against shared evidence excerpts.
+
+    requirements: [{"id": "R1", "text": "..."}]
+    excerpts:     [{"id": "C1", "source": "sdd.pdf, section \"4. Auth\", p.7", "text": "..."}]
+    """
+    system = "\n".join([
+        _CLASSIFY_CONTEXT.get(preset, _CLASSIFY_CONTEXT["spec_coverage"]),
+        _CLASSIFY_RULES,
+        _UNTRUSTED_NOTE,
+        'Return ONLY a JSON object: {"results":[{"id","status","confidence","explanation","missing_detail",'
+        '"suggested_action","evidence":[{"chunk","quote"}]}]} with exactly one result per requirement id.',
+        _CLASSIFY_EXAMPLE,
+    ])
+    req_block = "\n".join(f"[{r['id']}] {r['text']}" for r in requirements)
+    ev_block = "\n".join(f"[{e['id']}] ({e['source']}) {e['text']}" for e in excerpts) or "(no excerpts found)"
+    messages = [
+        {"role": "system", "content": system},
+        {"role": "user", "content": f"<requirements>\n{req_block}\n</requirements>\n<evidence>\n{ev_block}\n</evidence>"},
+    ]
+    result = _structured_call(
+        messages, ClassificationList, "classify_requirements",
+        shape_hint='{"results":[{"id":"R1","status":"covered|partial|missing|conflict|unclear","confidence":0.8,'
+                   '"explanation":"...","missing_detail":null,"suggested_action":null,"evidence":[{"chunk":"C1","quote":"..."}]}]}',
+        max_tokens=4000,
+    )
+    return result.results
+
+
+def model_label(task_type: str) -> str:
+    """Human-readable provider/model that will serve a task (stored on runs for traceability)."""
+    provider = pick_provider(task_type, has_document_context=True)
+    model = {"groq": settings.GROQ_MODEL, "gemini": settings.GEMINI_MODEL, "ollama": settings.OLLAMA_MODEL}.get(provider, "?")
+    return f"{provider}/{model}"

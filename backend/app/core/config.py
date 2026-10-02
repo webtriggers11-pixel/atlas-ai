@@ -31,6 +31,11 @@ class Settings(BaseSettings):
     EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
     HNSW_EF_SEARCH: int = 100                    # candidates HNSW examines per query (recall vs speed)
 
+    # ── Gap analysis ──
+    EVIDENCE_K: int = 4                 # evidence chunks retrieved per requirement
+    ANALYSIS_BATCH_SIZE: int = 4        # requirements classified per LLM call
+    MISSING_GUARD_SCORE: float = 0.55   # "missing" with retrieval similarity above this becomes "unclear"
+
     # ── Background jobs (Celery + Redis) ──
     CELERY_TASK_ALWAYS_EAGER: bool = False   # true = run tasks inline (tests / no Redis available)
 
