@@ -33,7 +33,8 @@ Read all planning docs before writing any code:
 
 ## Tech stack (do not deviate without asking)
 
-- Backend: Python 3.11+, FastAPI, SQLAlchemy 2.0, Alembic, Pydantic v2
+- Backend: Python 3.11+, FastAPI, SQLAlchemy 2.0, Pydantic v2
+- Migrations: our own system in `backend/migrations/` (NOT Alembic — see `idea-atlas-docs/adr/ADR-001-keep-custom-migrations.md`)
 - Frontend: React 18, Vite, React Flow (@xyflow/react), Zustand, Tailwind CSS
 - Database: PostgreSQL 16 via Docker Compose
 - AI (local dev): Ollama with llama3.1:8b or phi3:mini
@@ -49,13 +50,13 @@ idea-atlas/
     app/
       api/                     FastAPI route files only
       services/                business logic
-      db/                      SQLAlchemy models + Alembic migrations
+      db/                      SQLAlchemy models + session
       llm.py                   ONLY file that talks to Ollama/Groq
       schemas.py               Pydantic request/response models
       main.py                  FastAPI app entrypoint
     tests/
     requirements.txt
-    alembic.ini
+    migrations/                custom migration system (schema diff → SQL → apply)
     Dockerfile
   frontend/
     src/
@@ -102,7 +103,7 @@ Then wait for me to confirm before starting Phase 1.
 
 ## How to explain things to me
 
-When you build something I haven't seen before (e.g. Alembic migrations,
+When you build something I haven't seen before (e.g. our migration system,
 React Flow, Zustand store, Pydantic models), explain it like this:
 - One sentence: what it is
 - One sentence: why we're using it
