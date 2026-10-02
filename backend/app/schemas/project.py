@@ -46,6 +46,9 @@ class ProjectResponse(BaseModel):
     requirements: int = 0
     approved_requirements: int = 0
     latest_run_status: Optional[RunStatus] = None
+    extraction_status: Literal["idle", "running", "completed", "failed"] = "idle"
+    extraction_error: Optional[str] = None
+    extracted_at: Optional[datetime] = None
 
 
 # ── Documents ─────────────────────────────────────────────────────────────────

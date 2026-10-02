@@ -10,7 +10,7 @@ from app.schemas.project import (
     RunResponse, SearchRequest, SearchResult,
 )
 from app.core.config import settings
-from app.services import project_service, requirement_service, findings_service, ingestion_service, retrieval
+from app.services import project_service, requirement_service, findings_service, ingestion_service, retrieval, extraction_job
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -114,6 +114,17 @@ def list_requirements(project_id: UUID, status: Optional[RequirementStatus] = No
 def create_requirement(project_id: UUID, body: RequirementCreate, db: Session = Depends(get_db)):
     """Add a requirement by hand during review."""
     return requirement_service.create_requirement(project_id, body, db)
+
+
+# POST /api/v1/projects/{project_id}/requirements/extract
+# Example response: 202 {"id": "...", "extraction_status": "running", ...}
+#   → poll GET /api/v1/projects/{id} until extraction_status is "completed" or "failed",
+#     then GET /api/v1/projects/{id}/requirements?status=draft to review
+@router.post("/{project_id}/requirements/extract", response_model=ProjectResponse, status_code=status.HTTP_202_ACCEPTED)
+def extract_requirements(project_id: UUID, db: Session = Depends(get_db)):
+    """Start AI extraction of draft requirements from the indexed reference documents."""
+    extraction_job.start_extraction(project_id, db)
+    return project_service.get_project(project_id, db)
 
 
 # POST /api/v1/projects/{project_id}/requirements/approve-all

@@ -52,6 +52,9 @@ def _to_response(project: Project, db: Session) -> ProjectResponse:
         requirements=sum(n for status, n in req_counts.items() if status != "rejected"),
         approved_requirements=req_counts.get("approved", 0),
         latest_run_status=latest_run_status,
+        extraction_status=project.extraction_status,
+        extraction_error=project.extraction_error,
+        extracted_at=project.extracted_at,
     )
 
 

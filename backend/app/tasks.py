@@ -35,3 +35,12 @@ def process_document(document_id: str, force: bool = False) -> None:
 
     with session_scope() as db:
         ingestion_service.process_document(document_id, db, force=force)
+
+
+@celery_app.task(name="atlas.extract_requirements", **_RETRY)
+def extract_requirements(project_id: str) -> None:
+    """Extract draft requirements from a project's indexed reference documents."""
+    from app.services import extraction_job
+
+    with session_scope() as db:
+        extraction_job.run_extraction(project_id, db)

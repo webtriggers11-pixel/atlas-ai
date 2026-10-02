@@ -15,6 +15,11 @@ class Project(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(Text, nullable=False)
     preset = Column(Text, server_default="'spec_coverage'", nullable=False)
+    # Requirement-extraction job state: idle | running | completed | failed (validated in code;
+    # our migrator only creates CHECK constraints together with a new table)
+    extraction_status = Column(Text, server_default="'idle'", nullable=False)
+    extraction_error = Column(Text, nullable=True)
+    extracted_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 

@@ -170,3 +170,45 @@ A: Both are approximate nearest-neighbour indexes. IVFFlat clusters vectors into
 
 Q: Any gotcha with filtering + vector indexes?
 A: Yes — the index returns its top candidates first and the WHERE clause filters afterwards, so a selective filter (one project out of many) can leave fewer than k results. Mitigations: raise `hnsw.ef_search`, partition/partial indexes per tenant, or iterative index scans (pgvector 0.8+).
+
+---
+
+## Phase 4 — Requirement extraction + review
+
+**Built**
+- `llm.py` (still the only file that talks to LLMs):
+  - provider calls accept `max_tokens` and **JSON mode** (`response_format`
+    json_object on Groq, `responseMimeType` on Gemini, `format: json` on Ollama);
+    `reasoning_effort=low` for gpt-oss models (reasoning tokens count against max_tokens);
+  - `_structured_call()` — JSON mode → `_extract_json` → Pydantic validation →
+    one retry that tells the model the *exact* validation error → `LLMOutputError`;
+  - `extract_requirements()` with preset-specific rules (spec vs job description),
+    a few-shot example, and the untrusted-data note against prompt injection;
+  - `PROMPT_VERSIONS` so results/evals are tied to the prompt that produced them.
+- `services/extraction_job.py`: chunks → overlap removed → ~1200-word batches
+  with `<section title=…>` tags → LLM per batch → dedupe (normalized-text hash +
+  cosine ≥ 0.93) → each requirement linked to its most similar source chunk →
+  drafts `REQ-001…`. Partial failure (some batches bad) still completes with a
+  warning; total failure ends `failed` with a readable message.
+- Re-running replaces only unreviewed extracted drafts; approved, rejected and
+  manual requirements are kept and new extractions are deduplicated against them.
+- `POST /api/v1/projects/{id}/requirements/extract` (202, Celery task) +
+  `extraction_status / extraction_error / extracted_at` on the project.
+
+**Verified:** 62 passed (mocked LLM: batching, overlap removal, dedupe, source
+linking, re-run safety, failure path, retry-with-feedback, prompt-injection note).
+Live run against the real model on a sample spec: 6 atomic requirements, every
+number preserved, background text skipped, an embedded "Ignore all previous
+instructions…" line ignored; Gemini was rate-limited and the call fell back to
+Groq automatically.
+
+**Interview**
+
+Q: Why do small/free models need JSON mode, validation AND a retry?
+A: They often wrap JSON in prose, truncate it, or drift from the schema. JSON mode constrains decoding, Pydantic catches schema errors (wrong keys, too-short text), and one retry that quotes the exact error usually fixes it. After two failures we raise a typed error so the job degrades (partial results + a warning) instead of crashing.
+
+Q: How do you defend against prompt injection in uploaded documents?
+A: Layers: document text is wrapped in tags and the system prompt says it's untrusted data; outputs must match a strict schema so an injected instruction can't make the model do anything but fill fields; the model has no write access (code decides what's stored); and an injected document is part of the evaluation set. No single layer is perfect, so it's defence in depth.
+
+Q: Why a human review step instead of trusting extraction?
+A: Extraction is the step where model errors compound — a missed requirement can never be reported as missing. Letting the user edit/merge/approve the list is cheap and makes every later number trustworthy. Reviewed items are never overwritten by a re-run.
