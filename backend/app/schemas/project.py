@@ -187,7 +187,7 @@ class SearchRequest(BaseModel):
     query: str = Field(max_length=2000)
     role: Optional[DocumentRole] = None
     k: int = Field(default=5, ge=1, le=50)
-    mode: Literal["vector"] = "vector"
+    mode: Optional[Literal["vector", "hybrid"]] = None   # None = server default (RETRIEVAL_MODE)
 
     _clean_query = field_validator("query")(_strip_non_empty)
 

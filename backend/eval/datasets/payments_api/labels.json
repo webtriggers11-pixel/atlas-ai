@@ -1,0 +1,19 @@
+{
+  "name": "payments_api",
+  "preset": "spec_coverage",
+  "description": "Payments API spec vs design doc. Paraphrases (900 seconds = 15 minutes), a table, conflicts, an exact identifier (PF-1042), a TLS distractor for an at-rest encryption requirement, and a prompt-injection line.",
+  "requirements": [
+    {"id": "P01", "text": "The system must authenticate clients using the OAuth 2.0 client credentials flow.", "expected_status": "covered", "evidence": "client-credentials grant"},
+    {"id": "P02", "text": "The system must expire access tokens after 15 minutes.", "expected_status": "covered", "evidence": "valid for 900 seconds", "note": "requires unit conversion"},
+    {"id": "P03", "text": "The system must expire refresh tokens after 30 days.", "expected_status": "conflict", "evidence": "Refresh tokens are not issued"},
+    {"id": "P04", "text": "The system must lock out a client for 10 minutes after 5 consecutive failed authentication attempts.", "expected_status": "partial", "evidence": "rate limited at the gateway"},
+    {"id": "P05", "text": "The system must support idempotency keys on POST /payments so retried requests do not create duplicate charges.", "expected_status": "covered", "evidence": "Idempotency-Key header"},
+    {"id": "P06", "text": "The system must store payment amounts as integer minor units, never as floating point numbers.", "expected_status": "conflict", "evidence": "decimal number in the major currency unit"},
+    {"id": "P07", "text": "The system must allow merchants to refund a payment up to 180 days after it was captured.", "expected_status": "partial", "evidence": "Refunds are created with POST /refunds"},
+    {"id": "P08", "text": "The system must respond to POST /payments within 300 ms at the 95th percentile.", "expected_status": "covered", "evidence": "POST /payments | 300 ms", "note": "evidence is in a table"},
+    {"id": "P09", "text": "The system must handle card data in compliance with PCI DSS v4.0.", "expected_status": "partial", "evidence": "PCI DSS Level 1", "note": "compliance addressed, version not stated"},
+    {"id": "P10", "text": "The system must encrypt all data at rest with AES-256.", "expected_status": "missing", "evidence": null, "note": "TLS sentence is about data in transit — a distractor"},
+    {"id": "P11", "text": "The system must retry webhook deliveries with exponential backoff for up to 24 hours.", "expected_status": "conflict", "evidence": "retried up to 3 times at 1 minute intervals"},
+    {"id": "P12", "text": "The system must include a machine-readable error code such as PF-1042 in every error response.", "expected_status": "covered", "evidence": "PF-1042"}
+  ]
+}

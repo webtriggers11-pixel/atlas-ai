@@ -86,6 +86,33 @@ def start_analysis(project_id: UUID, db: Session) -> AnalysisRun:
 
 # ── Pipeline ──────────────────────────────────────────────────────────────────
 
+REWRITE_BATCH = 10   # requirements per query-rewriting call
+
+
+def retrieve_for_requirements(project_id: UUID, requirements: list[Requirement], db: Session,
+                              stats: dict | None = None) -> dict[UUID, list[retrieval.ScoredChunk]]:
+    """Stage 1 for a set of requirements: hybrid search, then LLM query rewriting for weak matches only.
+
+    Shared by the pipeline and the evaluation harness so both measure the same retrieval.
+    """
+    stats = stats if stats is not None else {}
+    hits = {r.id: retrieval.search_evidence(project_id, r.text, db) for r in requirements}
+
+    if settings.QUERY_REWRITE and settings.RETRIEVAL_MODE == "hybrid":
+        weak = [r for r in requirements
+                if max((h.score for h in hits[r.id]), default=0.0) < settings.REWRITE_BELOW_SCORE]
+        for start in range(0, len(weak), REWRITE_BATCH):
+            batch = weak[start:start + REWRITE_BATCH]
+            labels = {f"R{i + 1}": r for i, r in enumerate(batch)}
+            stats["rewrite_calls"] = stats.get("rewrite_calls", 0) + 1
+            alternatives = llm.rewrite_queries([{"id": lab, "text": r.text} for lab, r in labels.items()])
+            for lab, req in labels.items():
+                if alternatives.get(lab):
+                    hits[req.id] = retrieval.search_evidence(project_id, req.text, db, extra_queries=alternatives[lab])
+                    stats["rewritten"] = stats.get("rewritten", 0) + 1
+    return hits
+
+
 def _cache_key(item: _Item, project: Project, run: AnalysisRun) -> str:
     """Hash of every input that determines a finding — identical inputs give an identical result."""
     chunk_ids = ",".join(sorted(str(h.chunk.id) for h in item.hits))
@@ -229,11 +256,11 @@ def run_analysis(run_id: str | UUID, db: Session) -> None:
             Requirement.project_id == project.id, Requirement.status == "approved").order_by(Requirement.code)).scalars().all()
         run.total = len(requirements)
 
-        # Stage 1 — retrieval + cache lookup
+        # Stage 1 — retrieval (+ query rewriting for weak matches) + cache lookup
+        all_hits = retrieve_for_requirements(project.id, requirements, db, stats)
         pending: list[_Item] = []
         for req in requirements:
-            item = _Item(requirement=req)
-            item.hits = retrieval.search_evidence(project.id, req.text, db)
+            item = _Item(requirement=req, hits=all_hits[req.id])
             item.cache_key = _cache_key(item, project, run)
             cached = _cached_finding(item.cache_key, project.id, db)
             if cached is not None:

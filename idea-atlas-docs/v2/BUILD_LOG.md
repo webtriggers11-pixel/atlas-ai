@@ -258,3 +258,73 @@ A: Fewer calls (free-tier request limits), and requirements in the same area sha
 
 Q: How does the cache stay correct?
 A: The key hashes every input that can change the answer — normalized requirement text, the exact evidence chunks, prompt version, model and preset. Change any of them and the key changes, so stale results are never reused; nothing else needs invalidation logic.
+
+---
+
+## Phase 6 — Evaluation harness
+
+**Built**
+- `backend/eval/datasets/` — 3 hand-labelled pairs, 32 requirements: payments API spec vs
+  design doc, clinic portal spec vs design, job description vs resume. Built to be hard:
+  paraphrases and unit conversion (900 seconds = 15 minutes), evidence inside a table, exact
+  identifiers (PF-1042), conflicts, "missing" requirements sitting next to related text
+  (TLS vs at-rest encryption, uploads without malware scanning), abbreviations (B.E.), and a
+  prompt-injection line.
+- `python -m eval.run_eval --label <name> [--retrieval-only]` — runs the real pipeline (real
+  embeddings, real LLM) in the TEST database, deletes its projects afterwards, saves full JSON to
+  `eval/results/` and appends a row to `idea-atlas-docs/v2/EVAL_RESULTS.md`.
+- Metrics: recall@1, recall@k, MRR, status accuracy, confusion matrix, false-missing rate,
+  false-covered rate, unclear rate, evidence validity, evidence location, LLM calls, seconds/requirement.
+
+**Results (baseline):** recall@1 92%, status accuracy 72% (88% on the requirements not hit by
+rate limits), false-missing 8%, false-covered 0%, evidence validity 100%. See EVAL_RESULTS.md.
+
+**What the eval taught us (→ next phases):** most errors were HTTP 429 from both free tiers (→
+backoff/retry in Phase 8); the model says "missing" when related-but-incomplete or contradicting
+text exists (→ prompt rule in Phase 8).
+
+**Interview**
+
+Q: How do you evaluate a RAG system?
+A: Separately for each stage. Retrieval: is the labelled evidence in the top-k (recall@k, MRR)? Generation: is the verdict right (accuracy, confusion matrix) and is it grounded (are quotes real, do they point at the right passage)? Plus the business metric that matters most — here the false-missing rate — and cost/latency. Keep a fixed labelled set and compare every change against it.
+
+Q: Your accuracy was 72% — is that bad?
+A: Breaking errors down mattered more than the headline: 6 of 9 were rate-limit failures, not wrong answers. Without per-error analysis I'd have tuned prompts to fix an infrastructure problem.
+
+---
+
+## Phase 7 — Hybrid retrieval + query rewriting (measured, not adopted by default)
+
+**Built**
+- `doc_chunks.tsv` — `TSVECTOR GENERATED ALWAYS AS (to_tsvector('english', section || content)) STORED`
+  + GIN index (our migrator now emits generated columns).
+- `keyword_search()` — `plainto_tsquery` with `&` rewritten to `|` (OR), ranked by `ts_rank_cd`.
+- `hybrid_search()` — Reciprocal Rank Fusion of vector and keyword lists for one or more phrasings;
+  `score` stays cosine similarity so the missing-guard threshold keeps its meaning.
+- `llm.rewrite_queries()` — batched alternative phrasings, only for requirements whose best
+  similarity is below `REWRITE_BELOW_SCORE`.
+- `retrieve_for_requirements()` — one retrieval function shared by the pipeline and the eval.
+- Search API `mode: vector | hybrid`.
+
+**Result:** neither beat plain vector search on our set (recall@1 92% → 88% → 85%). Defaults stay
+vector / no rewriting; the code stays, switchable by config, with the evidence documented.
+
+**Also in this phase:** DB connection safety after an orphaned "idle in transaction" session
+(left by a killed test process) blocked a migration: app connections now use
+`idle_in_transaction_session_timeout=10min` + TCP keepalives + `pool_pre_ping`; migrations use
+`lock_timeout=10s`; test connections have short lock/statement/idle timeouts.
+
+**Verified:** 78 passed (tsvector generated + GIN index, keyword search on identifiers, RRF
+ordering and score scale, extra phrasings changing the ranking, rewriting only for weak matches,
+vector mode unchanged, API mode switch).
+
+**Interview**
+
+Q: You built hybrid search and then didn't use it — why?
+A: Because the evaluation said so. On my labelled set hybrid lowered recall@1 from 92% to 88% and rewriting lowered it further. I kept it behind a config flag and documented why. I deliberately didn't tune weights on the same small set I report on — that would overfit to the test set and the numbers would stop meaning anything.
+
+Q: What is Reciprocal Rank Fusion and why use it?
+A: Each ranked list gives a document 1/(k + rank) and the scores are summed (k ≈ 60). It uses only ranks, so you can fuse BM25-style scores and cosine similarities without calibrating them against each other, and documents that rank well in several lists rise to the top.
+
+Q: Why can a waiting ALTER TABLE take down an app?
+A: It needs an exclusive lock, and while it waits in the lock queue every later query on that table queues behind it — reads included. A `lock_timeout` makes the migration fail fast instead; plus `idle_in_transaction_session_timeout` so dead clients can't hold locks for hours.

@@ -162,14 +162,14 @@ def list_runs(project_id: UUID, db: Session = Depends(get_db)):
 
 
 # POST /api/v1/projects/{project_id}/search
-# Example request:  {"query": "refresh token expiry", "role": "existing", "k": 5}
+# Example request:  {"query": "refresh token expiry", "role": "existing", "k": 5, "mode": "hybrid"}
 # Example response: [{"chunk_id": "...", "document_filename": "sdd.pdf", "section": "4. Auth",
 #                     "page_start": 7, "content": "...", "score": 0.71, "rank": 1}]
 @router.post("/{project_id}/search", response_model=list[SearchResult])
 def search(project_id: UUID, body: SearchRequest, db: Session = Depends(get_db)):
     """Semantic search over a project's indexed documents (also used to debug retrieval quality)."""
     project_service.get_project_or_404(project_id, db)
-    results = retrieval.vector_search(project_id, body.query, db, role=body.role, k=body.k)
+    results = retrieval.search(project_id, body.query, db, role=body.role, k=body.k, mode=body.mode)
     return [
         SearchResult(
             chunk_id=r.chunk.id, document_id=r.document.id, document_filename=r.document.filename,

@@ -54,7 +54,8 @@ def test_engine():
     """Engine for the test database; skips DB tests if it is unreachable."""
     # lock_timeout: a test blocked by a stale lock fails fast with an error instead of hanging forever
     engine = create_engine(os.environ["DATABASE_URL"], connect_args={
-        "connect_timeout": 10, "options": "-c lock_timeout=30s -c statement_timeout=120s"})
+        "connect_timeout": 10,
+        "options": "-c lock_timeout=30s -c statement_timeout=120s -c idle_in_transaction_session_timeout=120s"})
     try:
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))

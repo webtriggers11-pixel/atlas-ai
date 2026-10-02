@@ -15,7 +15,9 @@ class MigrationManager:
         """Set up engine, comparator, generator, and ensure tracking table exists."""
         self.database_url = database_url
         self.metadata = metadata
-        self.engine = create_engine(database_url)
+        # lock_timeout: an ALTER TABLE waiting for a lock makes every later query on that table
+        # queue behind it — fail fast with an error instead of silently blocking the app.
+        self.engine = create_engine(database_url, connect_args={"options": "-c lock_timeout=10s"})
 
         if migrations_dir is None:
             migrations_dir = Path(__file__).parent / "auto_generated"

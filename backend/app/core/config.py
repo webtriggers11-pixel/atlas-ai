@@ -30,6 +30,13 @@ class Settings(BaseSettings):
     EMBEDDING_PROVIDER: str = "local"            # local (MiniLM on CPU) | fake (tests)
     EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
     HNSW_EF_SEARCH: int = 100                    # candidates HNSW examines per query (recall vs speed)
+    # Defaults chosen by evaluation (idea-atlas-docs/v2/EVAL_RESULTS.md): on our labelled set hybrid and
+    # query rewriting did NOT beat plain vector search, so they are available but off by default.
+    RETRIEVAL_MODE: str = "vector"               # vector | hybrid (vector + full-text, fused with RRF)
+    RRF_K: int = 60                              # Reciprocal Rank Fusion constant (standard value)
+    HYBRID_CANDIDATES: int = 20                  # candidates taken from each ranking before fusion
+    QUERY_REWRITE: bool = False                  # LLM rephrasings for weak matches (hybrid mode only)
+    REWRITE_BELOW_SCORE: float = 0.5             # only rewrite when the best similarity is below this
 
     # ── Gap analysis ──
     EVIDENCE_K: int = 4                 # evidence chunks retrieved per requirement

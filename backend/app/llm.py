@@ -732,3 +732,46 @@ def model_label(task_type: str) -> str:
     provider = pick_provider(task_type, has_document_context=True)
     model = {"groq": settings.GROQ_MODEL, "gemini": settings.GEMINI_MODEL, "ollama": settings.OLLAMA_MODEL}.get(provider, "?")
     return f"{provider}/{model}"
+
+
+# ── Query rewriting (retrieval helper) ────────────────────────────────────────
+
+PROMPT_VERSIONS["rewrite_queries"] = "rewrite-v1"
+
+
+class QueryAlternatives(BaseModel):
+    id: str = Field(max_length=10)
+    alternatives: list[str] = Field(default_factory=list, max_length=3)
+
+
+class QueryAlternativesList(BaseModel):
+    queries: list[QueryAlternatives]
+
+
+_REWRITE_SYSTEM = (
+    "You help a search engine find evidence for requirements inside other documents.\n"
+    "For each requirement write 2 alternative search queries describing the same thing the way another "
+    "document might phrase it: synonyms, abbreviations and their expansions (B.E. / Bachelor of Engineering), "
+    "related technical terms, equivalent units (15 minutes = 900 seconds). Each query under 15 words.\n"
+    'Return ONLY a JSON object: {"queries":[{"id":"R1","alternatives":["...","..."]}]}\n'
+    'Example input: [R1] The system must log users out after 20 minutes of inactivity.\n'
+    'Example output: {"queries":[{"id":"R1","alternatives":["idle session timeout 20 minutes",'
+    '"sessions terminated after 1200 seconds without activity"]}]}'
+)
+
+
+def rewrite_queries(requirements: list[dict]) -> dict[str, list[str]]:
+    """Alternative phrasings per requirement id, e.g. {"R1": ["...", "..."]}. Best effort: {} on failure."""
+    messages = [
+        {"role": "system", "content": _REWRITE_SYSTEM},
+        {"role": "user", "content": "\n".join(f"[{r['id']}] {r['text']}" for r in requirements)},
+    ]
+    try:
+        result = _structured_call(
+            messages, QueryAlternativesList, "rewrite_queries",
+            shape_hint='{"queries":[{"id":"R1","alternatives":["...","..."]}]}', max_tokens=1500,
+        )
+    except (LLMOutputError, HTTPException) as exc:
+        logger.warning("Query rewriting skipped: %s", getattr(exc, "detail", exc))
+        return {}
+    return {q.id.strip().upper(): [a for a in q.alternatives if a.strip()][:3] for q in result.queries}

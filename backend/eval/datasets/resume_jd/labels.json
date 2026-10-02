@@ -1,0 +1,17 @@
+{
+  "name": "resume_jd",
+  "preset": "resume_jd",
+  "description": "Job description vs resume. Needs date reasoning (2021-present = 3+ years), related-but-different tech (Docker vs Kubernetes, Celery/Redis vs RabbitMQ/Kafka) and a weaker leadership claim.",
+  "requirements": [
+    {"id": "J01", "text": "Candidate has 3+ years of professional Python experience.", "expected_status": "covered", "evidence": "Python services", "note": "2021 - present"},
+    {"id": "J02", "text": "Candidate has experience with FastAPI or Django.", "expected_status": "covered", "evidence": "FastAPI"},
+    {"id": "J03", "text": "Candidate has experience with PostgreSQL.", "expected_status": "covered", "evidence": "Designed PostgreSQL schemas"},
+    {"id": "J04", "text": "Candidate has experience writing unit and integration tests with pytest.", "expected_status": "covered", "evidence": "Wrote pytest suites"},
+    {"id": "J05", "text": "Candidate has a bachelor's degree in Computer Science or a related field.", "expected_status": "covered", "evidence": "B.E. in Information Technology"},
+    {"id": "J06", "text": "Candidate has experience with Kubernetes.", "expected_status": "missing", "evidence": null, "note": "Docker Compose is a distractor"},
+    {"id": "J07", "text": "Candidate has experience with message queues such as RabbitMQ or Kafka.", "expected_status": "partial", "evidence": "Celery and Redis"},
+    {"id": "J08", "text": "Candidate has experience building RAG or LLM-powered features.", "expected_status": "covered", "evidence": "embeddings, pgvector and LLM structured output"},
+    {"id": "J09", "text": "Candidate has an AWS certification.", "expected_status": "missing", "evidence": null},
+    {"id": "J10", "text": "Candidate has experience leading a team of at least 3 engineers.", "expected_status": "partial", "evidence": "Mentored two junior developers"}
+  ]
+}
