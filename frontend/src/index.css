@@ -97,7 +97,9 @@ body {
  * NeoPOP "plunk" button (after CRED's open-source NeoPOP, Apache-2.0):
  * a 3px right and bottom edge skewed 45° makes the button look raised;
  * pressing pushes the face into the edges.
+ * Inside @layer components so Tailwind utilities (e.g. mt-6) can still override margins.
  */
+@layer components {
 .pop, .pop-outline {
   position: relative;
   margin: 0 3px 3px 0;
@@ -126,6 +128,7 @@ body {
 .pop:active:not(:disabled)::before, .pop:active:not(:disabled)::after,
 .pop-outline:active:not(:disabled)::before, .pop-outline:active:not(:disabled)::after { opacity: 0; }
 .pop:disabled, .pop-outline:disabled { opacity: 0.45; cursor: not-allowed; }
+}
 
 ::selection { background: color-mix(in oklab, var(--primary) 35%, transparent); }
 

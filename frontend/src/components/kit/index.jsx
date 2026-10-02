@@ -4,8 +4,8 @@
  */
 import { forwardRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { Loader2, X } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { AlertTriangle, CheckCircle2, CircleAlert, CircleHelp, Contrast, Loader2, RotateCw, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 // ── Buttons ───────────────────────────────────────────────────────────────────
@@ -88,14 +88,26 @@ const STATUS_STYLES = {
 }
 const PULSING = new Set(['uploaded', 'processing', 'queued', 'running'])
 
-/** Colored status label with a dot; in-progress statuses pulse. */
+// Finding statuses get a distinct icon as well as a color — never rely on color alone
+export const STATUS_ICONS = {
+  covered: CheckCircle2,
+  partial: Contrast,
+  missing: CircleAlert,
+  conflict: AlertTriangle,
+  unclear: CircleHelp,
+}
+
+/** Colored status label (icon for finding statuses, dot otherwise); in-progress statuses pulse. */
 export function StatusPill({ status, className, children }) {
+  const Icon = STATUS_ICONS[status]
   return (
     <span className={cn(
       'inline-flex items-center gap-1.5 border px-2 py-0.5 font-mono text-[10px] font-medium tracking-wider whitespace-nowrap uppercase',
       STATUS_STYLES[status] || STATUS_STYLES.unclear, className,
     )}>
-      <span className={cn('size-1.5 rounded-full bg-current', PULSING.has(status) && 'animate-pulse')} />
+      {Icon
+        ? <Icon className="size-3" aria-hidden />
+        : <span className={cn('size-1.5 rounded-full bg-current', PULSING.has(status) && 'animate-pulse')} />}
       {children || status}
     </span>
   )
@@ -104,11 +116,11 @@ export function StatusPill({ status, className, children }) {
 export const FINDING_STATUSES = ['covered', 'partial', 'missing', 'conflict', 'unclear']
 
 export const STATUS_HELP = {
-  covered: 'Fully satisfied by the existing documents',
-  partial: 'Addressed, but a required detail is missing or vaguer',
-  missing: 'Nothing in the existing documents addresses it',
-  conflict: 'The existing documents contradict it',
-  unclear: 'Related text exists but needs a human decision',
+  covered: 'Supported by the existing documents',
+  partial: 'Partly supported — a required detail was not found or is vaguer',
+  missing: 'No supporting evidence found in the existing documents',
+  conflict: 'The existing documents state something different',
+  unclear: 'Related text found, but it needs a human decision',
 }
 
 // ── Form fields ───────────────────────────────────────────────────────────────
@@ -184,21 +196,39 @@ export function Notice({ tone = 'danger', icon: Icon, children, className }) {
   )
 }
 
-// ── Motion ────────────────────────────────────────────────────────────────────
-
-/** Fades, lifts and un-blurs its children the first time they scroll into view. */
-export function Reveal({ children, delay = 0, y = 16, className }) {
-  const reduce = useReducedMotion()
+/** Standard error block with a retry button (UI spec: never hide failures). */
+export function ErrorState({ error, onRetry, className }) {
   return (
-    <motion.div
-      className={className}
-      initial={reduce ? false : { opacity: 0, y, filter: 'blur(6px)' }}
-      whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-      viewport={{ once: true, margin: '-40px' }}
-      transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
-    >
-      {children}
-    </motion.div>
+    <div className={cn('flex flex-col items-center gap-3 border border-danger/30 bg-danger/5 px-6 py-10 text-center', className)}>
+      <AlertTriangle className="size-6 text-danger" />
+      <p className="font-medium">Something went wrong.</p>
+      <p className="max-w-md text-sm text-muted">{error?.message || 'Unexpected error.'}</p>
+      {onRetry && <Button variant="outline" size="sm" icon={RotateCw} onClick={onRetry}>Try again</Button>}
+    </div>
+  )
+}
+
+/** Underlined tab bar. `tabs` = [{ id, label, count?, icon? }]. */
+export function Tabs({ tabs, value, onChange, className }) {
+  return (
+    <div role="tablist" className={cn('flex gap-1 overflow-x-auto overflow-y-hidden border-b border-border', className)}>
+      {tabs.map((t) => {
+        const active = t.id === value
+        return (
+          <button
+            key={t.id} role="tab" type="button" aria-selected={active} onClick={() => onChange(t.id)}
+            className={cn(
+              '-mb-px flex shrink-0 cursor-pointer items-center gap-2 border-b-2 px-4 py-2.5 text-sm transition-colors',
+              active ? 'border-secondary font-semibold text-foreground' : 'border-transparent text-muted hover:text-foreground',
+            )}
+          >
+            {t.icon && <t.icon className="size-4" />}
+            {t.label}
+            {t.count != null && <span className="font-mono text-[11px] text-muted">{t.count}</span>}
+          </button>
+        )
+      })}
+    </div>
   )
 }
 

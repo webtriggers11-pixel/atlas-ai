@@ -117,7 +117,7 @@ export default function ExplorePage() {
 
   return (
     <TooltipProvider delayDuration={300}>
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', paddingTop: 84, background: 'var(--bg)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 56px)', background: 'var(--bg)' }}>
       <CommandPalette />
       <TopBar inputRef={topicInputRef} />
 

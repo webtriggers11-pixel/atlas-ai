@@ -1,14 +1,14 @@
 /**
- * App chrome — floating pill navbar, theme toggle, logo and page header,
- * following the WebTriggers 2.0 site's layout components.
+ * App chrome — layout per the V2 UI spec (left sidebar + slim topbar), styled with the
+ * WebTriggers 2.0 design language (NeoPOP palette, sharp edges, plunk buttons).
  */
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
-import { Link, NavLink, useLocation } from 'react-router-dom'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronRight, Menu, Moon, Sun, X } from 'lucide-react'
+import { ChevronRight, Files, LayoutDashboard, ListChecks, Menu, Moon, Network, PanelLeftClose, PanelLeft, Plus, Settings, Sun } from 'lucide-react'
 import { applyMode, initialMode } from '@/config/theme'
 import { cn } from '@/lib/utils'
-import { Reveal } from '@/components/kit'
+import { Button } from '@/components/kit'
 
 // ── Theme mode ───────────────────────────────────────────────────────────────
 
@@ -19,13 +19,13 @@ export function ThemeProvider({ children }) {
   const [mode, setMode] = useState(initialMode)
   useEffect(() => applyMode(mode), [mode])
   const toggle = useCallback(() => setMode((m) => (m === 'dark' ? 'light' : 'dark')), [])
-  return <ThemeContext.Provider value={{ mode, toggle }}>{children}</ThemeContext.Provider>
+  return <ThemeContext.Provider value={{ mode, toggle, setMode }}>{children}</ThemeContext.Provider>
 }
 
 export const useThemeMode = () => useContext(ThemeContext)
 
-/** Sun/moon button with a small rotate animation. */
-export function ThemeToggle() {
+/** Sun/moon button. */
+export function ThemeToggle({ className }) {
   const { mode, toggle } = useThemeMode()
   const isDark = mode === 'dark'
   return (
@@ -33,155 +33,198 @@ export function ThemeToggle() {
       type="button"
       onClick={toggle}
       aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
-      className="relative grid size-9 cursor-pointer place-items-center overflow-hidden rounded-pill border border-border text-muted transition-colors hover:bg-fill-strong hover:text-foreground"
+      className={cn('grid size-9 cursor-pointer place-items-center border border-border text-muted transition-colors hover:bg-fill-strong hover:text-foreground', className)}
     >
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.span
-          key={isDark ? 'moon' : 'sun'}
-          initial={{ y: 12, opacity: 0, rotate: -45 }}
-          animate={{ y: 0, opacity: 1, rotate: 0 }}
-          exit={{ y: -12, opacity: 0, rotate: 45 }}
-          transition={{ duration: 0.2 }}
-        >
-          {isDark ? <Moon className="size-4" /> : <Sun className="size-4" />}
-        </motion.span>
-      </AnimatePresence>
+      {isDark ? <Moon className="size-4" /> : <Sun className="size-4" />}
     </button>
   )
 }
 
 // ── Brand ────────────────────────────────────────────────────────────────────
 
-/** Idea Atlas wordmark: a signal-colored square mark + name. */
-export function Logo({ className }) {
+/** Idea Atlas wordmark: a signal-colored NeoPOP square + name. */
+export function Logo({ compact = false, className }) {
   return (
     <span className={cn('inline-flex items-center gap-2.5', className)}>
-      <span className="relative grid size-7 place-items-center bg-accent text-accent-foreground">
+      <span className="relative mr-[3px] mb-[3px] grid size-7 shrink-0 place-items-center bg-accent text-accent-foreground">
         <span className="font-mono text-[11px] font-bold">IA</span>
-        <span className="absolute -right-[3px] top-0 h-full w-[3px] origin-top-left skew-y-[45deg] bg-[var(--pop-right)]" />
+        <span className="absolute top-0 -right-[3px] h-full w-[3px] origin-top-left skew-y-[45deg] bg-[var(--pop-right)]" />
         <span className="absolute -bottom-[3px] left-0 h-[3px] w-full origin-top-left skew-x-[45deg] bg-[var(--pop-bottom)]" />
       </span>
-      <span className="text-sm font-semibold tracking-tight">
-        Idea <span className="font-serif text-base font-normal italic">Atlas</span>
-      </span>
+      {!compact && (
+        <span className="text-sm font-semibold tracking-tight whitespace-nowrap">
+          Idea <span className="font-serif text-base font-normal italic">Atlas</span>
+        </span>
+      )}
     </span>
   )
 }
 
-// ── Navbar ───────────────────────────────────────────────────────────────────
+// ── Sidebar ──────────────────────────────────────────────────────────────────
 
 const NAV = [
-  { label: 'Projects', to: '/' },
-  { label: 'Explore topics', to: '/explore' },
+  { label: 'Dashboard', to: '/', icon: LayoutDashboard, end: true },
+  { label: 'Analyses', to: '/analyses', icon: ListChecks },
+  { label: 'Documents', to: '/documents', icon: Files },
+  { label: 'Settings', to: '/settings', icon: Settings },
 ]
 
-/** Floating pill navbar that gains a blurred background once the page scrolls. */
-export function Navbar() {
-  const [scrolled, setScrolled] = useState(false)
-  const [open, setOpen] = useState(false)
-  const location = useLocation()
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24)
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-  useEffect(() => setOpen(false), [location.pathname])
-
+/** Navigation list used by both the desktop sidebar and the mobile drawer. */
+function SidebarNav({ collapsed, onNavigate }) {
+  const navigate = useNavigate()
   return (
-    <header className="fixed inset-x-0 top-0 z-50 px-4 pt-4">
-      <nav className={cn(
-        'mx-auto flex max-w-6xl items-center justify-between rounded-pill border px-5 py-3 transition-all duration-500',
-        scrolled || open
-          ? 'border-border bg-background/75 shadow-lg shadow-black/5 backdrop-blur-xl dark:shadow-black/30'
-          : 'border-transparent bg-transparent',
-      )}>
-        <Link to="/" aria-label="Idea Atlas — projects"><Logo /></Link>
+    <div className="flex h-full flex-col">
+      <div className={cn('flex h-14 items-center border-b border-border', collapsed ? 'justify-center' : 'px-4')}>
+        <Link to="/" onClick={onNavigate} aria-label="Idea Atlas — dashboard"><Logo compact={collapsed} /></Link>
+      </div>
 
-        <ul className="hidden items-center gap-1 md:flex">
-          {NAV.map((item) => (
-            <li key={item.to}>
-              <NavLink
-                to={item.to}
-                end={item.to === '/'}
-                className={({ isActive }) => cn(
-                  'rounded-pill px-4 py-2 text-sm transition-colors hover:bg-fill-strong hover:text-foreground',
-                  isActive ? 'text-foreground' : 'text-muted',
-                )}
-              >
-                {item.label}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
+      <div className={cn('p-3', collapsed && 'px-2')}>
+        <Button
+          className={cn('w-full justify-center', collapsed && 'px-0')}
+          icon={Plus}
+          title="New analysis"
+          onClick={() => { onNavigate?.(); navigate('/analyses/new') }}
+        >
+          {!collapsed && 'New analysis'}
+        </Button>
+      </div>
 
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
-          <button
-            type="button"
-            aria-label={open ? 'Close menu' : 'Open menu'}
-            aria-expanded={open}
-            onClick={() => setOpen((o) => !o)}
-            className="grid size-9 place-items-center rounded-pill border border-border md:hidden"
+      <nav className="flex-1 space-y-0.5 px-3" aria-label="Main">
+        {NAV.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.end}
+            onClick={onNavigate}
+            title={collapsed ? item.label : undefined}
+            className={({ isActive }) => cn(
+              'flex items-center gap-3 border-l-2 px-3 py-2 text-sm transition-colors',
+              collapsed && 'justify-center px-0',
+              isActive ? 'border-secondary bg-fill-strong font-medium text-foreground' : 'border-transparent text-muted hover:bg-fill hover:text-foreground',
+            )}
           >
-            {open ? <X className="size-4" /> : <Menu className="size-4" />}
-          </button>
-        </div>
+            <item.icon className="size-4 shrink-0" />
+            {!collapsed && item.label}
+          </NavLink>
+        ))}
       </nav>
 
+      <div className={cn('border-t border-border p-3', collapsed && 'px-2')}>
+        <NavLink
+          to="/explore"
+          onClick={onNavigate}
+          title="Topic explorer (v1)"
+          className={({ isActive }) => cn(
+            'flex items-center gap-3 px-3 py-2 text-xs transition-colors',
+            collapsed && 'justify-center px-0',
+            isActive ? 'text-foreground' : 'text-muted hover:text-foreground',
+          )}
+        >
+          <Network className="size-4 shrink-0" />
+          {!collapsed && 'Topic explorer (v1)'}
+        </NavLink>
+      </div>
+    </div>
+  )
+}
+
+// ── Shell ────────────────────────────────────────────────────────────────────
+
+const COLLAPSE_KEY = 'atlas-sidebar-collapsed'
+
+/** Sidebar + topbar + scrollable main area. The sidebar collapses on desktop and becomes a drawer on mobile. */
+export function AppShell({ children }) {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return localStorage.getItem(COLLAPSE_KEY) === '1' } catch { return false }
+  })
+  useEffect(() => {
+    try { localStorage.setItem(COLLAPSE_KEY, collapsed ? '1' : '0') } catch { /* storage blocked */ }
+  }, [collapsed])
+  useEffect(() => setMobileOpen(false), [location.pathname])
+
+  return (
+    <div className="flex min-h-screen">
+      <aside className={cn(
+        'sticky top-0 hidden h-screen shrink-0 border-r border-border bg-surface transition-[width] duration-200 lg:block',
+        collapsed ? 'w-16' : 'w-60',
+      )}>
+        <SidebarNav collapsed={collapsed} />
+      </aside>
+
       <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.25 }}
-            className="mx-auto mt-2 max-w-6xl border border-border bg-background/90 p-3 backdrop-blur-xl md:hidden"
-          >
-            {NAV.map((item) => (
-              <Link key={item.to} to={item.to} className="block px-4 py-3 text-base hover:bg-fill-strong">{item.label}</Link>
-            ))}
-          </motion.div>
+        {mobileOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <motion.div className="absolute inset-0 bg-black/60" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setMobileOpen(false)} />
+            <motion.aside
+              className="absolute inset-y-0 left-0 w-64 border-r border-border bg-surface"
+              initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ duration: 0.2 }}
+            >
+              <SidebarNav onNavigate={() => setMobileOpen(false)} />
+            </motion.aside>
+          </div>
         )}
       </AnimatePresence>
-    </header>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-border bg-background/90 px-4 backdrop-blur sm:px-6">
+          <button type="button" className="grid size-9 place-items-center border border-border lg:hidden" aria-label="Open menu" onClick={() => setMobileOpen(true)}>
+            <Menu className="size-4" />
+          </button>
+          <button
+            type="button"
+            className="hidden size-9 cursor-pointer place-items-center text-muted hover:text-foreground lg:grid"
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            onClick={() => setCollapsed((c) => !c)}
+          >
+            {collapsed ? <PanelLeft className="size-4" /> : <PanelLeftClose className="size-4" />}
+          </button>
+          <span className="lg:hidden"><Logo compact /></span>
+          <div className="ml-auto flex items-center gap-2">
+            <ThemeToggle />
+            {location.pathname !== '/analyses/new' && (
+              <Button size="sm" icon={Plus} onClick={() => navigate('/analyses/new')} className="hidden sm:inline-flex">New analysis</Button>
+            )}
+          </div>
+        </header>
+        <main className="flex-1">{children}</main>
+      </div>
+    </div>
   )
 }
 
 // ── Page header ──────────────────────────────────────────────────────────────
 
-/** Top section of a page: breadcrumbs, glow + grid background, eyebrow, title, intro, actions. */
-export function PageHeader({ eyebrow, title, intro, crumbs, actions, children }) {
+/** Compact page header: breadcrumbs, eyebrow, title, description, actions. No hero, no decoration. */
+export function PageHeader({ eyebrow, title, description, crumbs, actions, children }) {
   return (
-    <section className="relative isolate overflow-hidden px-6 pt-32 pb-10">
-      <div aria-hidden className="absolute inset-0 -z-10">
-        <div className="absolute -top-40 left-1/4 size-[36rem] rounded-full bg-glow/10 blur-[120px] dark:bg-glow/[0.07]" />
-        <div className="absolute inset-0 bg-grid [mask-image:radial-gradient(ellipse_at_top,black_10%,transparent_65%)]" />
+    <div className="border-b border-border px-4 pt-6 pb-5 sm:px-8">
+      {crumbs && (
+        <nav aria-label="Breadcrumb" className="mb-3 flex flex-wrap items-center gap-1 text-xs text-muted">
+          {crumbs.map((c, i) => (
+            <span key={`${c.label}-${i}`} className="flex items-center gap-1">
+              {i > 0 && <ChevronRight className="size-3" />}
+              {c.to ? <Link to={c.to} className="hover:text-foreground">{c.label}</Link> : <span className="text-foreground">{c.label}</span>}
+            </span>
+          ))}
+        </nav>
+      )}
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
+          {eyebrow && <p className="text-[11px] font-medium tracking-[0.2em] text-secondary uppercase">{eyebrow}</p>}
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-balance sm:text-3xl">{title}</h1>
+          {description && <p className="mt-1.5 max-w-3xl text-sm text-pretty text-muted">{description}</p>}
+        </div>
+        {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
       </div>
-      <div className="mx-auto max-w-6xl">
-        {crumbs && (
-          <nav aria-label="Breadcrumb" className="mb-6 flex flex-wrap items-center gap-1 text-xs text-muted">
-            {crumbs.map((c, i) => (
-              <span key={c.label} className="flex items-center gap-1">
-                {i > 0 && <ChevronRight className="size-3" />}
-                {c.to ? <Link to={c.to} className="hover:text-foreground">{c.label}</Link> : <span>{c.label}</span>}
-              </span>
-            ))}
-          </nav>
-        )}
-        <Reveal>
-          <div className="flex flex-wrap items-end justify-between gap-6">
-            <div className="min-w-0">
-              {eyebrow && <p className="text-[11px] font-medium tracking-[0.2em] text-secondary uppercase">{eyebrow}</p>}
-              <h1 className="mt-3 max-w-4xl text-4xl leading-[1.05] font-semibold tracking-tighter text-balance sm:text-5xl">
-                {title}
-              </h1>
-              {intro && <p className="mt-4 max-w-2xl text-base text-pretty text-muted">{intro}</p>}
-            </div>
-            {actions && <div className="flex flex-wrap items-center gap-3">{actions}</div>}
-          </div>
-          {children}
-        </Reveal>
-      </div>
-    </section>
+      {children}
+    </div>
   )
+}
+
+/** Standard page body padding. */
+export function PageBody({ className, children }) {
+  return <div className={cn('px-4 py-6 sm:px-8', className)}>{children}</div>
 }

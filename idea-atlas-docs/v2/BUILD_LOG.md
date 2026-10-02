@@ -438,3 +438,45 @@ with inline (eager) jobs the extract request returns after extraction finished, 
 global Documents and Settings pages, analysis tabs (Findings / Evidence / Documents / Map), and a
 light, purple-accent, low-animation style — which differs from the WebTriggers style requested
 in chat. Direction to be confirmed before the next UI iteration.
+
+---
+
+## UI iteration 2 — UI spec layout + WebTriggers look (decision: 2026-10-02)
+
+`Idea_Atlas_V2_UI_Spec.md` asked for a different layout and a light/purple style; the chat
+asked for the WebTriggers 2.0 look. Decision (user): **spec layout + WebTriggers look**, with
+animations toned down per the spec.
+
+**Built**
+- App shell: left sidebar (Dashboard · Analyses · Documents · Settings, "+ New analysis",
+  Topic explorer v1), slim topbar, collapsible sidebar, mobile drawer. No hero/glow/reveal animations.
+- Dashboard (spec messaging, recent analyses with status counts, empty state), Analyses list.
+- New Analysis flow: type → "What should exist?" / "What currently exists?" uploads with real
+  per-file processing state and partial-failure messages → Start analysis.
+- Analysis page: header with counts (icon + number + label) and "Analyse again";
+  **real processing stages** derived from backend state (no fake percentages); tabs
+  Findings · Evidence · Requirements · Documents · Map; URL keeps tab/filter/document/chunk.
+- Finding cards per status (covered/partial show the verified quote + source path; missing says
+  "No supporting evidence was found…"; conflict shows reference vs existing source).
+  Source text vs **AI assessment** are visually distinct everywhere.
+- Evidence drawer → "Open in document" → document viewer scrolled to the chunk with **all cited
+  quotes highlighted**. Evidence tab groups quotes by document + a document search panel.
+- Map tab: coverage map (analysis → sections → requirements colored by status); click → evidence.
+- Global Documents page and Settings (theme, providers/models, limits — no keys).
+- Backend: finding counts + last analysed on projects, requirement source on findings,
+  `GET /api/v1/documents`, `GET /api/v1/settings` (97 tests pass).
+
+**Deliberate deviation from the spec:** the requirements review step stays between extraction
+and analysis ("Approve all & analyse" makes it one click) — it's the human check that makes the
+numbers trustworthy.
+
+**Verified in the browser** (local API on the test DB, inline jobs) with a real PDF resume vs a job
+description: create → upload via the real file input → honest processing states → Start analysis →
+automatic extraction (15 requirements) → approve all & analyse → 8 covered · 3 partial · 4 missing →
+evidence drawer → open in document (15 quotes highlighted) → map node → evidence → Documents →
+Settings → Explore (v1). Not verified: narrow/mobile widths (the automation window could not be
+resized) — the responsive rules are in place but untested on a phone.
+
+Fixed during verification: Tailwind v4 cascade layers (custom `.pop` margin beat utilities → moved
+into `@layer components`); stray scrollbar on the tab bar; map zoom unreadable on fit (min zoom +
+scroll-to-pan + legend); Settings showed Ollama as "configured" just because it needs no key.

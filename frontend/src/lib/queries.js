@@ -20,6 +20,8 @@ export const keys = {
   runs: (id) => ['runs', id],
   findings: (runId) => ['findings', runId],
   chunks: (docId) => ['chunks', docId],
+  allDocuments: (search) => ['all-documents', search || ''],
+  settings: ['settings'],
 }
 
 export const useProjects = () => useQuery({ queryKey: keys.projects, queryFn: api.listProjects })
@@ -54,6 +56,11 @@ export const useRuns = (projectId) =>
 
 export const useFindings = (runId, enabled = true) =>
   useQuery({ queryKey: keys.findings(runId), queryFn: () => api.listFindings(runId), enabled: Boolean(runId) && enabled })
+
+export const useAllDocuments = (search) =>
+  useQuery({ queryKey: keys.allDocuments(search), queryFn: () => api.listAllDocuments(search) })
+
+export const useSettings = () => useQuery({ queryKey: keys.settings, queryFn: api.getSettings, staleTime: 60_000 })
 
 export const useChunks = (documentId) =>
   useQuery({ queryKey: keys.chunks(documentId), queryFn: () => api.listChunks(documentId), enabled: Boolean(documentId) })

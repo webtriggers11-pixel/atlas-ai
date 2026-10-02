@@ -79,6 +79,10 @@ export const api = {
   getRun: (runId) => request('GET', `/runs/${runId}`),
   listFindings: (runId) => request('GET', `/runs/${runId}/findings`),
 
+  // Global
+  listAllDocuments: (search) => request('GET', `/documents${search ? `?search=${encodeURIComponent(search)}` : ''}`),
+  getSettings: () => request('GET', '/settings'),
+
   // Retrieval debugging
   search: (projectId, query, role, mode) =>
     request('POST', `/projects/${projectId}/search`, { json: { query, role: role || null, k: 8, mode: mode || null } }),

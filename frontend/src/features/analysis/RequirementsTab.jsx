@@ -1,11 +1,11 @@
 /**
- * Step 2 — the human review step: AI extracts draft requirements, the user edits,
+ * Requirements — the human review step: AI extracts draft requirements, the user edits,
  * merges, rejects or approves them. Only approved requirements are analysed.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
-import { AlertTriangle, ArrowRight, Check, ClipboardList, Merge, Plus, Sparkles, X } from 'lucide-react'
+import { AlertTriangle, Check, ClipboardList, Merge, Plus, Sparkles, X } from 'lucide-react'
 import { api } from '@/lib/api'
 import { keys, useAction, useRequirements } from '@/lib/queries'
 import { cn } from '@/lib/utils'
@@ -109,7 +109,7 @@ function AddRequirementModal({ projectId, open, onClose }) {
   )
 }
 
-export default function RequirementsStep({ project, documentsReady, onNext }) {
+export default function RequirementsTab({ project, documentsReady }) {
   const projectId = project.id
   const { data: requirements, isLoading } = useRequirements(projectId)
   const [filter, setFilter] = useState('all')
@@ -210,10 +210,7 @@ export default function RequirementsStep({ project, documentsReady, onNext }) {
         )}
       </AnimatePresence>
 
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted">{project.approved_requirements} approved — only approved requirements are analysed.</p>
-        <Button icon={ArrowRight} disabled={!project.approved_requirements} onClick={onNext}>Next: analysis</Button>
-      </div>
+      <p className="text-sm text-muted">{project.approved_requirements} approved — only approved requirements are analysed.</p>
 
       <AddRequirementModal projectId={projectId} open={adding} onClose={() => setAdding(false)} />
     </div>
