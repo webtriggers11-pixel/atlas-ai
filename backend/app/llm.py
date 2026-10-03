@@ -154,10 +154,15 @@ class BadGeneration(ProviderUnavailable):
 class RateLimited(ProviderUnavailable):
     """Provider returned 429/503. retry_after = seconds the provider asked us to wait (if it said)."""
 
-    def __init__(self, message: str, retry_after: float | None = None):
-        """Store the provider's requested wait time alongside the message."""
+    def __init__(self, message: str, retry_after: float | None = None, daily: bool = False):
+        """Store the provider's requested wait time, and whether a daily quota (not a per-minute one) ran out."""
         super().__init__(message)
         self.retry_after = retry_after
+        self.daily = daily
+
+
+# Gemini: quotaId "...PerDay...", Groq: "tokens per day (TPD)" / "requests per day (RPD)"
+_DAILY_QUOTA = re.compile(r"PerDay|per day|\((?:TPD|RPD)\)", re.IGNORECASE)
 
 
 def _retry_after_seconds(resp: httpx.Response) -> float | None:
@@ -179,7 +184,9 @@ def _post(provider: str, url: str, timeout: float, **kwargs) -> httpx.Response:
     except (httpx.TimeoutException, httpx.ConnectError, httpx.RemoteProtocolError) as exc:
         raise ProviderUnavailable(f"{provider}: {type(exc).__name__}")
     if resp.status_code in (429, 503):
-        raise RateLimited(f"{provider} unavailable ({resp.status_code}): {resp.text[:200]}", _retry_after_seconds(resp))
+        daily = resp.status_code == 429 and bool(_DAILY_QUOTA.search(resp.text))
+        raise RateLimited(f"{provider} unavailable ({resp.status_code}): {resp.text[:200]}",
+                          _retry_after_seconds(resp), daily=daily)
     if resp.status_code >= 500:
         raise ProviderUnavailable(f"{provider} server error {resp.status_code}: {resp.text[:200]}")
     if resp.status_code == 400 and "json_validate_failed" in resp.text:
@@ -464,6 +471,7 @@ def _call_llm_result(
         options["tools"] = tools
     last_error: Exception | None = None
     bad_output: set[str] = set()   # providers that produced unusable output during THIS call
+    daily_exhausted: set[str] = set()   # providers whose daily free quota ran out during THIS call
 
     for attempt in range(1, settings.LLM_MAX_ATTEMPTS + 1):
         now = time.monotonic()
@@ -483,10 +491,15 @@ def _call_llm_result(
         try:
             result = _PROVIDERS.get(name, _call_ollama)(messages, **options)
         except RateLimited as exc:
-            wait = min(exc.retry_after or settings.LLM_DEFAULT_BACKOFF_S * attempt, settings.LLM_MAX_BACKOFF_S)
+            if exc.daily:   # retrying in a minute is pointless; skip this provider so the other one is used
+                wait = settings.LLM_DAILY_QUOTA_COOLDOWN_S
+                daily_exhausted.add(name)
+            else:
+                wait = min(exc.retry_after or settings.LLM_DEFAULT_BACKOFF_S * attempt, settings.LLM_MAX_BACKOFF_S)
             _cooldown_until[name] = time.monotonic() + wait
             _log_llm_call(name, task_type, "rate_limited", int((time.perf_counter() - start) * 1000), attempt=attempt, error=str(exc))
-            logger.warning("%s rate limited (cooldown %.0fs) on attempt %d", name, wait, attempt)
+            logger.warning("%s %s (cooldown %.0fs) on attempt %d", name,
+                           "daily quota used up" if exc.daily else "rate limited", wait, attempt)
             last_error = exc
             continue
         except ProviderUnavailable as exc:
@@ -504,6 +517,13 @@ def _call_llm_result(
         return result
 
     if isinstance(last_error, RateLimited):
+        exhausted = sorted(p for p in candidates if p in daily_exhausted or
+                           _cooldown_until.get(p, 0.0) - time.monotonic() > settings.LLM_MAX_BACKOFF_S)
+        if exhausted:
+            others = [p for p in candidates if p not in exhausted]
+            tail = f"; {', '.join(others)} is busy — try again in a minute" if others else " — try again later or tomorrow"
+            raise HTTPException(status_code=429,
+                                detail=f"Daily free AI quota used up for {', '.join(exhausted)}{tail}.")
         raise HTTPException(status_code=429, detail=f"AI providers are rate limited — try again in a minute. ({last_error})")
     raise HTTPException(status_code=503, detail=f"AI providers are unavailable — try again shortly. ({last_error})")
 

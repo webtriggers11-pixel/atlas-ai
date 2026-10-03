@@ -79,6 +79,38 @@ def test_cooldown_skips_provider_on_next_call():
     assert text == "groq answer" and fake.calls == ["groq"]
 
 
+GEMINI_DAILY = ('{"error": {"code": 429, "message": "You exceeded your current quota", "details": [{"violations": '
+                '[{"quotaId": "GenerateRequestsPerDayPerProjectPerModel-FreeTier"}]}, {"retryDelay": "20s"}]}}')
+
+
+def test_daily_quota_cools_down_for_an_hour_not_a_minute():
+    """Gemini's DAILY quota → long cooldown (not its 20s retryDelay), so later calls go straight to Groq."""
+    fake = FakeHTTP(gemini=[(429, GEMINI_DAILY, None)], groq=[(200, GROQ_OK, None), (200, GROQ_OK, None)])
+    text, sleeps, _ = _run(fake)
+    assert text == "groq answer" and sleeps == []
+    assert llm._cooldown_until["gemini"] > llm.time.monotonic() + 3000
+    _run(fake)                                         # next call: Gemini isn't even tried
+    assert fake.calls == ["gemini", "groq", "groq"]
+
+
+def test_daily_quota_plus_busy_provider_fails_fast_with_clear_message():
+    """Gemini out for the day and Groq per-minute limited → fail without long waits and say why."""
+    fake = FakeHTTP(gemini=[(429, GEMINI_DAILY, None)], groq=[(429, "Rate limit reached for tokens per minute (TPM)",
+                                                                   {"retry-after": "50"})])
+    with pytest.raises(HTTPException) as err:
+        _run(fake, budget=20)
+    assert err.value.status_code == 429
+    assert "Daily free AI quota used up for gemini" in err.value.detail and "groq is busy" in err.value.detail
+
+
+def test_groq_daily_token_limit_detected():
+    """Groq's 'tokens per day (TPD)' 429 counts as a daily quota."""
+    fake = FakeHTTP(gemini=[(200, GEMINI_OK, None)],
+                    groq=[(429, "Rate limit reached for model on tokens per day (TPD): Limit 200000", None)])
+    text, _, _ = _run(fake, provider="groq")
+    assert text == "gemini answer" and llm._cooldown_until["groq"] > llm.time.monotonic() + 3000
+
+
 def test_both_rate_limited_waits_then_succeeds():
     """Both providers 429 with short retry-after → one bounded wait, then success."""
     fake = FakeHTTP(

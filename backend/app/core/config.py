@@ -45,6 +45,7 @@ class Settings(BaseSettings):
     LLM_BACKGROUND_RETRY_BUDGET_S: float = 150  # same, for background jobs (extraction, analysis)
     LLM_DEFAULT_BACKOFF_S: float = 5          # cooldown when a provider doesn't say how long to wait
     LLM_MAX_BACKOFF_S: float = 60
+    LLM_DAILY_QUOTA_COOLDOWN_S: float = 3600  # a used-up DAILY free quota won't recover in a minute
     CLASSIFY_PROMPT: str = "classify-v2"      # classify-v1 | classify-v2 (kept for evaluation comparisons)
 
     # ── Gap analysis ──
