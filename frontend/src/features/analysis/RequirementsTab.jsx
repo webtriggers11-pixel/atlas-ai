@@ -17,7 +17,7 @@ const FILTERS = ['all', 'draft', 'approved', 'rejected']
 function EditableText({ requirement, projectId }) {
   const [editing, setEditing] = useState(false)
   const [value, setValue] = useState(requirement.text)
-  useEffect(() => setValue(requirement.text), [requirement.text])
+  useEffect(() => { setValue(requirement.text) }, [requirement.text])
   const save = useAction((text) => api.updateRequirement(requirement.id, { text }), { invalidate: [keys.requirements(projectId)] })
 
   const commit = () => {

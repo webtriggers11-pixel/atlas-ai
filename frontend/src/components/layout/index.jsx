@@ -19,7 +19,7 @@ const ThemeContext = createContext({ mode: 'dark', toggle: () => {} })
 /** Holds light/dark mode and writes it to <html data-theme>. */
 export function ThemeProvider({ children }) {
   const [mode, setMode] = useState(initialMode)
-  useEffect(() => applyMode(mode), [mode])
+  useEffect(() => { applyMode(mode) }, [mode])
   const toggle = useCallback(() => setMode((m) => (m === 'dark' ? 'light' : 'dark')), [])
   return <ThemeContext.Provider value={{ mode, toggle, setMode }}>{children}</ThemeContext.Provider>
 }
@@ -167,7 +167,7 @@ export function AppShell({ children }) {
   useEffect(() => {
     try { localStorage.setItem(COLLAPSE_KEY, collapsed ? '1' : '0') } catch { /* storage blocked */ }
   }, [collapsed])
-  useEffect(() => setMobileOpen(false), [location.pathname])
+  useEffect(() => { setMobileOpen(false) }, [location.pathname])
 
   return (
     <div className="flex min-h-screen">

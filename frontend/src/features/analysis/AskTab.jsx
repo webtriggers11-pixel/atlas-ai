@@ -114,7 +114,7 @@ export default function AskTab({ project, findings, onOpenChunk, onOpenFinding }
     onSuccess: (data) => setMessages((m) => [...m, { role: 'assistant', content: data.answer, steps: data.steps, sources: data.sources }]),
     onError: (err) => setMessages((m) => [...m, { role: 'assistant', content: `Sorry — ${err.message}`, steps: [], sources: [] }]),
   })
-  useEffect(() => endRef.current?.scrollIntoView({ block: 'end' }), [messages, ask.isPending])
+  useEffect(() => { endRef.current?.scrollIntoView({ block: 'end' }) }, [messages, ask.isPending])
 
   const send = (text) => {
     const message = (text ?? input).trim()
