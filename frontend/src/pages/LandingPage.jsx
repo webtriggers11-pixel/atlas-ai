@@ -1,20 +1,27 @@
 /**
- * Public landing page ("/") — what Idea Atlas is, who it's for, how it works, and its honest limits.
+ * Public landing page ("/") — what Atlas AI (a Web Triggers product) is, who it's for, how it works,
+ * and its honest limits. First-time visitors get a short "Get started" dialog.
  * The app itself lives at /app. No API calls here, so it loads instantly and works even when
  * the backend or the AI providers are down.
  */
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   ArrowRight, Briefcase, Building2, Code2, Download, FileSearch, FileText, GitCompareArrows,
   HardHat, Lock, MessageSquareText, Quote, Scale, ShieldCheck, Sparkles, Upload,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Button, STATUS_ICONS } from '@/components/kit'
+import { Button, Modal, STATUS_ICONS } from '@/components/kit'
 import { Logo, ThemeToggle } from '@/components/layout'
 
-const REPO = 'https://github.com/webtriggers11-pixel/atlas-ai'
+// Source link hidden for now:
+// const REPO = 'https://github.com/webtriggers11-pixel/atlas-ai'
+const WEBTRIGGERS = 'https://www.webtriggers.online'
+const WELCOME_KEY = 'atlas-welcome-seen'
+
+// Vercel / Next.js signature gradient (blue → cyan), used once for emphasis
+const GRADIENT_TEXT = 'bg-gradient-to-r from-[#007cf0] to-[#00dfd8] bg-clip-text text-transparent'
 
 // ── Content ──────────────────────────────────────────────────────────────────
 
@@ -261,15 +268,74 @@ function UseCases() {
   )
 }
 
+/** Ways to start, each opening "New analysis" with the right type already chosen. */
+const STARTS = [
+  { icon: Scale, title: 'Check a contract or policy', text: 'Against your review checklist, term sheet or legal requirements.', type: 'spec_coverage' },
+  { icon: Briefcase, title: 'Match a resume to a job', text: 'See which job requirements the resume proves, and which are missing.', type: 'resume_jd' },
+  { icon: Code2, title: 'Compare requirements with documentation', text: 'SRS vs design docs, specification vs submittals, tender vs bid.', type: 'spec_coverage' },
+]
+
+/** First-visit "Get started" dialog: pick what to check and go straight to the right setup. */
+function WelcomeDialog({ open, onClose }) {
+  const navigate = useNavigate()
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Welcome to Atlas AI"
+      description="What would you like to check? Pick one — you can upload your files on the next screen."
+      footer={<Button variant="ghost" onClick={onClose}>Just look around</Button>}
+    >
+      <div className="space-y-2">
+        {STARTS.map((s) => (
+          <button
+            key={s.title}
+            type="button"
+            onClick={() => { onClose(); navigate(`/analyses/new?type=${s.type}`) }}
+            className="group flex w-full cursor-pointer items-start gap-3 border border-border bg-background p-4 text-left transition-colors hover:border-accent hover:bg-accent/5"
+          >
+            <span className="grid size-9 shrink-0 place-items-center bg-accent/10 text-accent"><s.icon className="size-4" aria-hidden /></span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-medium">{s.title}</span>
+              <span className="mt-0.5 block text-sm text-muted">{s.text}</span>
+            </span>
+            <ArrowRight className="mt-2 size-4 shrink-0 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-accent" aria-hidden />
+          </button>
+        ))}
+      </div>
+      <p className="mt-4 text-xs text-muted">Tip: on the free version, use sample or redacted documents — not confidential files.</p>
+    </Modal>
+  )
+}
+
+/** Whether this browser has already seen (and closed) the welcome dialog. */
+function welcomeSeen() {
+  try { return localStorage.getItem(WELCOME_KEY) === '1' } catch { return false }
+}
+
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
+  const [welcomeOpen, setWelcomeOpen] = useState(false)
+
+  // First visit: open "Get started" after a moment, once the visitor has seen the headline
+  useEffect(() => {
+    if (welcomeSeen()) return undefined
+    const timer = setTimeout(() => setWelcomeOpen(true), 1200)
+    return () => clearTimeout(timer)
+  }, [])
+
+  const closeWelcome = () => {
+    setWelcomeOpen(false)
+    try { localStorage.setItem(WELCOME_KEY, '1') } catch { /* storage blocked: it may show again next visit */ }
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Nav */}
       <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-4 sm:px-6">
-          <Link to="/" aria-label="Idea Atlas — home"><Logo /></Link>
+          <Link to="/" aria-label="Atlas AI by Web Triggers — home"><Logo byline /></Link>
           <nav className="hidden items-center gap-6 text-sm text-muted md:flex" aria-label="Sections">
             <a href="#how" className="hover:text-foreground">How it works</a>
             <a href="#uses" className="hover:text-foreground">Who it’s for</a>
@@ -278,7 +344,8 @@ export default function LandingPage() {
           </nav>
           <div className="ml-auto flex items-center gap-2">
             <ThemeToggle />
-            <Link to="/app"><Button size="sm">Open the app</Button></Link>
+            <Link to="/app" className="hidden text-sm text-muted hover:text-foreground sm:inline">My analyses</Link>
+            <Button size="sm" onClick={() => setWelcomeOpen(true)}>Get started</Button>
           </div>
         </div>
       </header>
@@ -287,13 +354,14 @@ export default function LandingPage() {
         {/* Hero */}
         <section className="relative overflow-hidden">
           <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-40 mx-auto h-96 max-w-4xl rounded-full bg-glow/25 blur-3xl" />
+          <div aria-hidden className="pointer-events-none absolute top-10 right-0 h-72 w-72 rounded-full bg-[#00dfd8]/10 blur-3xl" />
           <div className="relative mx-auto grid max-w-6xl gap-12 px-4 pt-16 pb-20 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:pt-24">
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
               <p className="inline-flex items-center gap-2 rounded-pill border border-border bg-surface px-3 py-1 text-xs font-medium text-muted">
                 <span className="size-1.5 rounded-full bg-accent" /> Document gap analysis
               </p>
               <h1 className="mt-6 font-serif text-5xl leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
-                Check any document against what it <em className="text-accent">should</em> contain.
+                Check any document against what it <em className={GRADIENT_TEXT}>should</em> contain.
               </h1>
               <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
                 Give Atlas your checklist and your document. It goes point by point and shows what is covered,
@@ -437,14 +505,20 @@ export default function LandingPage() {
 
       <footer className="border-t border-border">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <Logo />
+          <div>
+            <Logo />
+            <p className="mt-2 text-xs">A product by <a href={WEBTRIGGERS} target="_blank" rel="noreferrer" className="font-medium text-foreground hover:underline">Web Triggers</a>.</p>
+          </div>
           <p>Findings are a first review, not professional advice. Always verify the quoted evidence.</p>
           <div className="flex gap-5">
-            <Link to="/app" className="hover:text-foreground">Open the app</Link>
-            <a href={REPO} target="_blank" rel="noreferrer" className="hover:text-foreground">GitHub</a>
+            <Link to="/app" className="hover:text-foreground">My analyses</Link>
+            <a href={WEBTRIGGERS} target="_blank" rel="noreferrer" className="hover:text-foreground">Web Triggers</a>
+            {/* Hidden for now: <a href={REPO} target="_blank" rel="noreferrer" className="hover:text-foreground">GitHub</a> */}
           </div>
         </div>
       </footer>
+
+      <WelcomeDialog open={welcomeOpen} onClose={closeWelcome} />
     </div>
   )
 }

@@ -15,8 +15,9 @@
  *  status: covered/partial/missing/conflict/unclear — the five finding colors
  *
  * The NeoPOP palettes follow CRED's open-source NeoPOP design system
- * (github.com/CRED-CLUB/neopop-web, Apache-2.0). "electricBlue" is Idea Atlas's own brand;
- * "neopop" (black + signal yellow) is the WebTriggers brand, kept for reference.
+ * (github.com/CRED-CLUB/neopop-web, Apache-2.0). Atlas AI is a Web Triggers product: same NeoPOP
+ * structure as the Web Triggers site, its own signal colour. "atlas" (active) is a Vercel/Next.js-style
+ * monochrome with Vercel blue; "neopop" (black + signal yellow) is the Web Triggers site's own palette.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -43,6 +44,22 @@ const statusColors = {
 }
 
 export const palettes = {
+  // Atlas AI: pure black/white + neutral greys (Vercel/Next.js), Vercel blue as the only signal colour
+  atlas: {
+    label: 'Atlas (Vercel blue)',
+    light: {
+      background: '#fafafa', surface: '#ffffff', surface2: '#f2f2f2', foreground: '#0a0a0a',
+      muted: '#666666', border: '#eaeaea', primary: '#0a0a0a', onPrimary: '#ffffff', secondary: '#0070f3',
+      accent: '#0070f3', onAccent: '#ffffff', glow: '#79b8ff',
+      success: '#06a35f', warning: '#f08d32', danger: '#ee4d37',
+    },
+    dark: {
+      background: '#000000', surface: '#0a0a0a', surface2: '#111111', foreground: '#ededed',
+      muted: '#a1a1a1', border: 'rgb(255 255 255 / 0.12)', primary: '#ffffff', onPrimary: '#000000',
+      secondary: '#3291ff', accent: '#0070f3', onAccent: '#ffffff', glow: '#0070f3',
+      success: '#3bffad', warning: '#ff8744', danger: '#ff426f',
+    },
+  },
   // Idea Atlas brand: NeoPOP structure, electric-blue signal (blue is never a finding-status colour)
   electricBlue: {
     label: 'Electric Blue',
@@ -83,7 +100,7 @@ export const palettes = {
 }
 
 export const themeConfig = {
-  activePalette: 'electricBlue',
+  activePalette: 'atlas',
   defaultMode: 'dark',
   shape: 'sharp',
 }

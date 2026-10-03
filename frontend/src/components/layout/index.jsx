@@ -44,18 +44,19 @@ export function ThemeToggle({ className }) {
 
 // ── Brand ────────────────────────────────────────────────────────────────────
 
-/** Idea Atlas wordmark: a signal-colored NeoPOP square + name. */
-export function Logo({ compact = false, className }) {
+/** Atlas AI wordmark: a signal-colored NeoPOP square + name; `byline` adds "by Web Triggers". */
+export function Logo({ compact = false, byline = false, className }) {
   return (
     <span className={cn('inline-flex items-center gap-2.5', className)}>
       <span className="relative mr-[3px] mb-[3px] grid size-7 shrink-0 place-items-center bg-accent text-accent-foreground">
-        <span className="font-mono text-[11px] font-bold">IA</span>
+        <span className="font-mono text-[11px] font-bold">AI</span>
         <span className="absolute top-0 -right-[3px] h-full w-[3px] origin-top-left skew-y-[45deg] bg-[var(--pop-right)]" />
         <span className="absolute -bottom-[3px] left-0 h-[3px] w-full origin-top-left skew-x-[45deg] bg-[var(--pop-bottom)]" />
       </span>
       {!compact && (
         <span className="text-sm font-semibold tracking-tight whitespace-nowrap">
-          Idea <span className="font-serif text-base font-normal italic">Atlas</span>
+          Atlas <span className="font-serif text-base font-normal italic">AI</span>
+          {byline && <span className="ml-2 hidden text-[11px] font-normal text-muted sm:inline">by Web Triggers</span>}
         </span>
       )}
     </span>
@@ -77,7 +78,7 @@ function SidebarNav({ collapsed, onNavigate }) {
   return (
     <div className="flex h-full flex-col">
       <div className={cn('flex h-14 items-center border-b border-border', collapsed ? 'justify-center' : 'px-4')}>
-        <Link to="/app" onClick={onNavigate} aria-label="Idea Atlas — dashboard"><Logo compact={collapsed} /></Link>
+        <Link to="/app" onClick={onNavigate} aria-label="Atlas AI — dashboard"><Logo compact={collapsed} /></Link>
       </div>
 
       <div className={cn('p-3', collapsed && 'px-2')}>
