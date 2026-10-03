@@ -63,6 +63,9 @@ export const useFindings = (runId, enabled = true) =>
 export const useAllDocuments = (search) =>
   useQuery({ queryKey: keys.allDocuments(search), queryFn: () => api.listAllDocuments(search) })
 
+export const useAuthStatus = () =>
+  useQuery({ queryKey: ['auth-status'], queryFn: api.authStatus, staleTime: Infinity, retry: 2 })
+
 export const useSettings = () => useQuery({ queryKey: keys.settings, queryFn: api.getSettings, staleTime: 60_000 })
 
 export const useTraces = (findingId) =>

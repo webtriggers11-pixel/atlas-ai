@@ -178,7 +178,17 @@ def test_invalid_output_twice_falls_back_to_other_provider():
         result = llm.extract_requirements("<section>Errors must be logged.</section>")
     assert result[0].text == "The system must log errors."
     assert used == ["gemini", "gemini", "groq"]
-    assert len(logged) == 2 and all("raw:" in e for e in logged)    # both invalid outputs kept for diagnosis
+    assert len(logged) == 2 and all("raw output not stored" in e for e in logged)   # document text not logged by default
+
+
+def test_invalid_output_raw_text_logged_only_when_enabled(monkeypatch):
+    """LOG_LLM_RAW_OUTPUT=true keeps the raw invalid output for debugging."""
+    monkeypatch.setattr(llm.settings, "LOG_LLM_RAW_OUTPUT", True)
+    replies = ['{"results": "nope"}', '{"requirements":[{"text":"The system must log errors.","section":null}]}']
+    logged = []
+    with patch("app.llm._call_llm", side_effect=lambda *a, **k: replies.pop(0)),          patch("app.llm.pick_provider", return_value="gemini"),          patch("app.llm._log_llm_call", side_effect=lambda *a, **k: logged.append(k.get("error", ""))):
+        llm.extract_requirements("<section>Errors must be logged.</section>")
+    assert len(logged) == 1 and 'raw: {"results": "nope"}' in logged[0]
 
 
 def test_groq_json_validate_failed_is_retried_elsewhere():

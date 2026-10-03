@@ -52,6 +52,17 @@ class Settings(BaseSettings):
     ANALYSIS_BATCH_SIZE: int = 4        # requirements classified per LLM call
     MISSING_GUARD_SCORE: float = 0.55   # "missing" with retrieval similarity above this becomes "unclear"
 
+    # ── Security (Phase 12) ──
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_LLM_PER_MINUTE: int = 20        # extract / analyse / chat / investigate, per client
+    RATE_LIMIT_UPLOADS_PER_MINUTE: int = 30
+    TRUST_PROXY_HEADERS: bool = False          # trust X-Forwarded-For from any peer (only behind your own proxy)
+    AUTH_ENABLED: bool = False                 # optional login; off = single-user self-hosted mode
+    AUTH_ALLOW_REGISTRATION: bool = True
+    JWT_SECRET: str = "change-me"              # required (32+ chars) when AUTH_ENABLED=true
+    JWT_EXPIRE_HOURS: int = 24
+    LOG_LLM_RAW_OUTPUT: bool = False           # store raw invalid model output (may contain document text)
+
     # ── Background jobs (Celery + Redis) ──
     CELERY_TASK_ALWAYS_EAGER: bool = False   # true = run tasks inline (tests / no Redis available)
 

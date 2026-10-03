@@ -28,6 +28,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
 from app import llm
+from app.core.security import ensure_owner
 from app.models import AgentTrace, DocChunk, Evidence, Finding, LlmCall, ProjectDocument
 from app.services.chat_service import build_tools
 from app.services.evidence_verifier import verify_quote
@@ -50,6 +51,7 @@ def get_finding_or_404(finding_id: UUID, db: Session) -> Finding:
     finding = db.get(Finding, finding_id)
     if finding is None:
         raise HTTPException(status_code=404, detail=f"Finding {finding_id} not found.")
+    ensure_owner(finding.run.project.owner_id)
     return finding
 
 

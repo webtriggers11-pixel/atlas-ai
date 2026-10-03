@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.schemas.project import RunResponse, FindingResponse, FindingStatus, TraceResponse, InvestigateRunResponse
+from app.core.security import llm_limit
 from app.services import findings_service, investigator, report_service
 
 router = APIRouter(tags=["analysis"])
@@ -39,7 +40,8 @@ def get_finding(finding_id: UUID, db: Session = Depends(get_db)):
 # POST /api/v1/findings/{finding_id}/investigate
 # Example response: 202 {"id": "<trace id>", "status": "queued", "previous_status": "missing", "tool_calls": 0, ...}
 #   → poll GET /api/v1/findings/{finding_id}/traces until status is completed/failed
-@router.post("/findings/{finding_id}/investigate", response_model=TraceResponse, status_code=http_status.HTTP_202_ACCEPTED)
+@router.post("/findings/{finding_id}/investigate", response_model=TraceResponse, status_code=http_status.HTTP_202_ACCEPTED,
+             dependencies=[Depends(llm_limit)])
 def investigate_finding(finding_id: UUID, db: Session = Depends(get_db)):
     """Ask the investigator agent to re-check one finding with deeper, multi-step searching."""
     return investigator.start_investigation(finding_id, db)
@@ -56,7 +58,8 @@ def list_traces(finding_id: UUID, db: Session = Depends(get_db)):
 
 # POST /api/v1/runs/{run_id}/investigate
 # Example response: 202 {"queued": 4, "trace_ids": ["...", "..."]}
-@router.post("/runs/{run_id}/investigate", response_model=InvestigateRunResponse, status_code=http_status.HTTP_202_ACCEPTED)
+@router.post("/runs/{run_id}/investigate", response_model=InvestigateRunResponse, status_code=http_status.HTTP_202_ACCEPTED,
+             dependencies=[Depends(llm_limit)])
 def investigate_run(run_id: UUID, db: Session = Depends(get_db)):
     """Re-check every uncertain finding (missing, unclear, conflict, low confidence) not yet investigated."""
     traces = investigator.start_run_investigation(run_id, db)

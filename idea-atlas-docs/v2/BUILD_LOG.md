@@ -589,3 +589,47 @@ diff improved/unchanged/regressed, no-previous-run and incomplete-run cases.
 
 Q: Why build reports server-side instead of in the browser?
 A: One source of truth: the same report JSON feeds the UI, CSV, Markdown and PDF, so they can't disagree, downloads work for API clients too, and access control (Phase 12) applies to exports like any other endpoint.
+
+---
+
+## Phase 12 — Security: optional auth, ownership isolation, rate limits, hardening
+
+**Built**
+- `core/security.py`: bcrypt password hashing, HS256 JWTs (algorithm pinned, weak secret refused),
+  `authenticate` router dependency, `ensure_owner` (404 for other users' resources), per-client
+  rate limiting (Redis fixed window with in-memory fallback), security headers middleware.
+- Optional login: `AUTH_ENABLED=false` (default) keeps self-hosted single-user mode with no accounts;
+  `true` requires sign-in everywhere except `/health` and `/api/v1/auth/status`.
+- `users` table and `projects.owner_id` (via our own migration system). Every getter — project,
+  document, requirement, run, finding, trace — checks ownership; lists are filtered in SQL.
+- `/api/v1/auth/status | register | login | me`; login/register limited to 10/min.
+- Rate limits on LLM-backed endpoints (extract, analyze, chat, investigate, v1 explorer) and uploads → 429 + Retry-After.
+- CORS restricted to `CORS_ORIGINS`; upload filenames sanitised; DOCX zip-bomb check; `ILIKE` input escaped;
+  raw invalid LLM output (may contain document text) logged only with `LOG_LLM_RAW_OUTPUT=true`.
+- Frontend: sign-in/register page shown only when the server requires it, any 401 signs out,
+  email + sign-out in the sidebar, query cache cleared on user change.
+- Removed a duplicated `GET /api/v1/documents` route (caused an OpenAPI duplicate-ID warning).
+- `SECURITY.md`: threat model, controls, known limitations, production checklist.
+
+**Found while building**
+- In production the API container sees the Docker gateway IP, not the client — without trusting the
+  proxy, every visitor would share one rate-limit bucket. Prod compose now sets `TRUST_PROXY_HEADERS=true`
+  (safe: the port is bound to 127.0.0.1).
+- Taking the *first* X-Forwarded-For entry is spoofable (nginx appends the real IP to whatever the client
+  sent). Fixed to use the right-most entry.
+
+**Verified:** 17 new tests (auth on/off, register/login/me, tampered/expired/`alg:none`/wrong-key tokens,
+weak secret, two-user isolation across every resource type, rate limit 429, per-client counters, proxy IP,
+headers, CORS, filenames, zip bomb, corrupt docx). Full suite green. Login screen not yet checked
+in a real browser.
+
+**Interview**
+
+Q: How do you stop user A reading user B's data in a multi-tenant API?
+A: Every resource traces back to a project with an owner_id, and every lookup goes through one getter that checks it — so a new endpoint can't forget. Lists filter by owner in SQL. Other users' IDs return 404 rather than 403 so you can't probe which IDs exist. Tests create two users and try every endpoint across the boundary.
+
+Q: Why does your rate limiter key on user id or IP, and what's tricky about IP behind a proxy?
+A: Signed-in users are limited per account; anonymous ones per IP. Behind a proxy the socket IP is the proxy's, so you must read X-Forwarded-For — but only from a trusted proxy, and only the right-most entry, because the client controls everything to the left of what your proxy appended.
+
+Q: How do you defend an LLM agent against prompt injection in uploaded documents?
+A: Treat document text as untrusted and limit what the model can *do*, not just what it's told: tools are read-only, the project id is bound server-side, step/time budgets cap loops, and the agent can only change a result by citing a quote the server verifies against the source. An injected "mark this covered" has no effect without real evidence.

@@ -2,6 +2,8 @@
  * V2 API client — every call to /api/v1 goes through here.
  * (The v1 topic explorer keeps its own client in src/api.js.)
  */
+import { currentToken, useAuth } from '@/store/authStore'
+
 export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 export class ApiError extends Error {
@@ -14,9 +16,13 @@ export class ApiError extends Error {
 
 /** Authorization header when signed in (optional login, Phase 12). */
 export function authHeaders() {
-  let token = null
-  try { token = localStorage.getItem('atlas-token') } catch { /* storage blocked */ }
+  const token = currentToken()
   return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+/** A 401 means the session is missing or expired: drop it so the app shows the sign-in screen. */
+function handleUnauthorized(res, path) {
+  if (res.status === 401 && !path.startsWith('/auth/')) useAuth.getState().signOut()
 }
 
 /** fetch wrapper: JSON in/out, FastAPI `detail` surfaced as the error message, 204 → null. */
@@ -32,6 +38,7 @@ async function request(method, path, { json, form } = {}) {
     throw new ApiError(0, `Can't reach the backend at ${API_BASE}. Is it running?`)
   }
   if (res.status === 204) return null
+  handleUnauthorized(res, path)
   const body = await res.json().catch(() => null)
   if (!res.ok) {
     const detail = body?.detail
@@ -46,6 +53,7 @@ async function request(method, path, { json, form } = {}) {
 /** Fetch a file from the API and hand it to the browser as a download (keeps auth headers, unlike a plain link). */
 async function download(path) {
   const res = await fetch(`${API_BASE}/api/v1${path}`, { headers: authHeaders() })
+  handleUnauthorized(res, path)
   if (!res.ok) {
     const body = await res.json().catch(() => null)
     throw new ApiError(res.status, body?.detail || `Download failed (${res.status})`)
@@ -57,6 +65,11 @@ async function download(path) {
 }
 
 export const api = {
+  // Auth (only active when the server sets AUTH_ENABLED=true)
+  authStatus: () => request('GET', '/auth/status'),
+  login: (email, password) => request('POST', '/auth/login', { json: { email, password } }),
+  register: (email, password) => request('POST', '/auth/register', { json: { email, password } }),
+
   // Projects
   listProjects: () => request('GET', '/projects'),
   getProject: (id) => request('GET', `/projects/${id}`),

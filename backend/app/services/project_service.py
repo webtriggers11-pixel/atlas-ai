@@ -7,6 +7,8 @@ from fastapi import HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
+from app.core.security import current_user_id, ensure_owner
 from app.models import Project, ProjectDocument, Requirement, AnalysisRun, DocChunk
 from app.schemas.project import ProjectCreate, ProjectResponse
 
@@ -16,6 +18,7 @@ def get_project_or_404(project_id: UUID, db: Session) -> Project:
     project = db.get(Project, project_id)
     if project is None:
         raise HTTPException(status_code=404, detail=f"Project {project_id} not found.")
+    ensure_owner(project.owner_id)
     return project
 
 
@@ -68,7 +71,7 @@ def _to_response(project: Project, db: Session) -> ProjectResponse:
 
 def create_project(body: ProjectCreate, db: Session) -> ProjectResponse:
     """Insert a new project and return it."""
-    project = Project(name=body.name, preset=body.preset)
+    project = Project(name=body.name, preset=body.preset, owner_id=current_user_id.get())
     db.add(project)
     db.commit()
     db.refresh(project)
@@ -77,7 +80,10 @@ def create_project(body: ProjectCreate, db: Session) -> ProjectResponse:
 
 def list_projects(db: Session) -> list[ProjectResponse]:
     """Return all projects, most recently updated first."""
-    projects = db.execute(select(Project).order_by(Project.updated_at.desc())).scalars().all()
+    query = select(Project).order_by(Project.updated_at.desc())
+    if settings.AUTH_ENABLED:
+        query = query.where(Project.owner_id == current_user_id.get())
+    projects = db.execute(query).scalars().all()
     return [_to_response(p, db) for p in projects]
 
 
@@ -123,6 +129,7 @@ def get_document_or_404(document_id: UUID, db: Session) -> ProjectDocument:
     document = db.get(ProjectDocument, document_id)
     if document is None:
         raise HTTPException(status_code=404, detail=f"Document {document_id} not found.")
+    ensure_owner(document.project.owner_id)
     return document
 
 
@@ -156,7 +163,10 @@ def list_all_documents(search: str | None, db: Session):
         .order_by(ProjectDocument.created_at.desc())
     )
     if search:
-        query = query.where(ProjectDocument.filename.ilike(f"%{search}%"))
+        escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")   # user text is literal, not a pattern
+        query = query.where(ProjectDocument.filename.ilike(f"%{escaped}%", escape="\\"))
+    if settings.AUTH_ENABLED:
+        query = query.where(Project.owner_id == current_user_id.get())
     return [
         DocumentListItem(**DocumentResponse.model_validate(doc).model_dump(), project_name=name)
         for doc, name in db.execute(query).all()

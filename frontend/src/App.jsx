@@ -2,7 +2,10 @@
 import { lazy, Suspense } from 'react'
 import { Link, Navigate, Route, Routes, useParams } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { Button, Skeleton } from '@/components/kit'
+import { Button, ErrorState, Skeleton } from '@/components/kit'
+import { useAuthStatus } from '@/lib/queries'
+import { useAuth } from '@/store/authStore'
+import LoginPage from '@/pages/LoginPage'
 import { AppShell, PageBody } from '@/components/layout'
 import DashboardPage from '@/pages/DashboardPage'
 import AnalysesPage from '@/pages/AnalysesPage'
@@ -31,7 +34,18 @@ function NotFound() {
   )
 }
 
+/** Show the sign-in page first when the server requires login (AUTH_ENABLED=true); otherwise go straight in. */
 export default function App() {
+  const status = useAuthStatus()
+  const token = useAuth((s) => s.token)
+  if (status.isPending) return <div className="p-6"><Skeleton className="h-96" /></div>
+  if (status.isError) return <div className="p-6"><ErrorState error={status.error} onRetry={status.refetch} /></div>
+  if (status.data.enabled && !token) return <LoginPage registration={status.data.registration} />
+  return <Shell />
+}
+
+/** The signed-in app: sidebar shell + routes + toaster. */
+function Shell() {
   return (
     <AppShell>
       <Suspense fallback={<PageBody><Skeleton className="h-96" /></PageBody>}>

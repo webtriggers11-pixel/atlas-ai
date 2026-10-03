@@ -7,6 +7,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from app.core.security import ensure_owner
 from app.models import AnalysisRun, Finding, Evidence, DocChunk, Requirement
 from app.schemas.project import FindingResponse, EvidenceResponse, RequirementRef
 from app.services.project_service import get_project_or_404
@@ -17,6 +18,7 @@ def get_run_or_404(run_id: UUID, db: Session) -> AnalysisRun:
     run = db.get(AnalysisRun, run_id)
     if run is None:
         raise HTTPException(status_code=404, detail=f"Analysis run {run_id} not found.")
+    ensure_owner(run.project.owner_id)
     return run
 
 
@@ -88,4 +90,5 @@ def get_finding_or_404(finding_id: UUID, db: Session) -> Finding:
     finding = db.execute(_finding_query().where(Finding.id == finding_id)).scalar_one_or_none()
     if finding is None:
         raise HTTPException(status_code=404, detail=f"Finding {finding_id} not found.")
+    ensure_owner(finding.run.project.owner_id)
     return finding

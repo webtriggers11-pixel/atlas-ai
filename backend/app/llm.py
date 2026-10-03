@@ -732,7 +732,9 @@ def _parse(raw: str, model_cls: type[BaseModel]) -> BaseModel:
 def _log_invalid(provider: str, task_type: str, attempt: int, raw: str, error: str) -> None:
     """Keep the raw invalid output (truncated) so structured-output failures can be diagnosed later."""
     logger.warning("%s returned invalid %s output (attempt %d): %s", provider, task_type, attempt, error)
-    _log_llm_call(provider, task_type, "invalid_output", 0, attempt=attempt, error=f"{error} | raw: {raw[:1500]}")
+    # The raw output can contain document text, so it is stored only when explicitly enabled
+    detail = f"{error} | raw: {raw[:1500]}" if settings.LOG_LLM_RAW_OUTPUT else f"{error} | raw output not stored (LOG_LLM_RAW_OUTPUT=false)"
+    _log_llm_call(provider, task_type, "invalid_output", 0, attempt=attempt, error=detail)
 
 
 def _structured_call(
