@@ -1,6 +1,7 @@
 /**
- * Settings (UI spec §23) — theme, plus a read-only view of the server's AI and storage
- * configuration. Provider keys live in backend environment variables and are never shown.
+ * Settings (UI spec §23) — theme, plus a read-only view of the server's storage limits.
+ * (The AI provider section is hidden for now; it is commented out below.)
+ * Provider keys live in backend environment variables and are never shown.
  */
 import { CheckCircle2, CircleAlert, ExternalLink, Moon, Sun } from 'lucide-react'
 import { API_BASE } from '@/lib/api'
@@ -9,6 +10,7 @@ import { useSettings } from '@/lib/queries'
 import { ErrorState, Panel, Skeleton, Tag } from '@/components/kit'
 import { PageBody, PageHeader, useThemeMode } from '@/components/layout'
 
+// eslint-disable-next-line no-unused-vars -- GitHub link hidden for now (see About section)
 const REPO = 'https://github.com/webtriggers11-pixel/atlas-ai'
 
 /** Titled settings block. */
@@ -53,12 +55,13 @@ export default function SettingsPage() {
 
         {error ? <ErrorState error={error} onRetry={refetch} /> : isLoading ? <Skeleton className="h-64" /> : (
           <>
+            {/* Hidden for now — server AI configuration (providers, models, prompt versions)
             <Section title="AI" description="Configured on the server through environment variables. Keys are never sent to the browser.">
               <div className="space-y-2">
                 {s.providers.map((p) => (
                   <div key={p.name} className="flex flex-wrap items-center justify-between gap-2 border border-border px-3 py-2.5">
                     <span className="flex items-center gap-2 text-sm font-medium capitalize">
-                      {p.name === 'ollama' ? <CircleAlert className="size-4 text-muted" />   /* can't tell if the local server is running */
+                      {p.name === 'ollama' ? <CircleAlert className="size-4 text-muted" />
                         : p.configured ? <CheckCircle2 className="size-4 text-success" /> : <CircleAlert className="size-4 text-muted" />}
                       {p.name}
                       {p.name === s.default_provider && <Tag>default</Tag>}
@@ -76,6 +79,7 @@ export default function SettingsPage() {
                 {Object.entries(s.prompt_versions).map(([task, v]) => <Row key={task} label={`Prompt · ${task.replaceAll('_', ' ')}`}>{v}</Row>)}
               </div>
             </Section>
+            */}
 
             <Section title="Storage" description="Upload limits enforced by the server.">
               <Row label="Max file size">{s.max_upload_mb} MB</Row>
@@ -85,11 +89,13 @@ export default function SettingsPage() {
 
             <Section title="About">
               <Row label="Version">{s.version}</Row>
-              <Row label="API">{API_BASE}</Row>
+              {/* <Row label="API">{API_BASE}</Row> */}
+              {/* Hidden for now — source code link
               <Row label="Source code">
                 <a href={REPO} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 hover:underline">GitHub <ExternalLink className="size-3" /></a>
               </Row>
-              <Row label="License">not yet chosen</Row>
+              */}
+              <Row label="License">in progress</Row>
             </Section>
           </>
         )}

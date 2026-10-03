@@ -36,7 +36,9 @@ function Steps({ current }) {
 
 /** Step 1 — choose the analysis type and name it. */
 function TypeStep({ onCreated }) {
-  const [preset, setPreset] = useState(null)   // no default: the type decides how the AI reads the documents
+  const [params] = useSearchParams()
+  // No silent default: the type decides how the AI reads the documents. Only an explicit ?type= preselects.
+  const [preset, setPreset] = useState(() => (ANALYSIS_TYPES[params.get('type')] ? params.get('type') : null))
   const [name, setName] = useState('')
   const create = useAction(() => api.createProject(name.trim(), preset), {
     invalidate: [keys.projects],

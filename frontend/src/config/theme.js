@@ -14,8 +14,12 @@
  *  popRight/popBottom    3D "plunk" edge colors for primary buttons (NeoPOP)
  *  status: covered/partial/missing/conflict/unclear — the five finding colors
  *
- * The "neopop" palette follows CRED's open-source NeoPOP design system
- * (github.com/CRED-CLUB/neopop-web, Apache-2.0).
+ * The NeoPOP palettes follow CRED's open-source NeoPOP design system
+ * (github.com/CRED-CLUB/neopop-web, Apache-2.0). Atlas AI is a Web Triggers product: same NeoPOP
+ * structure as the Web Triggers site, its own colours. "atlas" (active) is Vercel/Next.js (Geist) monochrome
+ * plus one signal green, used the way the Web Triggers site uses its yellow (logo, labels, highlights, glow).
+ * The signal is a yellow-leaning green so it never reads as the bluish "covered" status green.
+ * "neopop" (black + signal yellow) is the Web Triggers site's own palette.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -42,6 +46,38 @@ const statusColors = {
 }
 
 export const palettes = {
+  // Atlas AI: Vercel / Next.js (Geist) monochrome + a signal green accent (the Web Triggers yellow, in green)
+  atlas: {
+    label: 'Atlas (monochrome + signal green)',
+    light: {
+      background: '#fafafa', surface: '#ffffff', surface2: '#f2f2f2', foreground: '#171717',
+      muted: '#666666', border: '#ebebeb', primary: '#171717', onPrimary: '#ffffff', secondary: '#171717',
+      accent: '#5bd12a', onAccent: '#0a0a0a', glow: '#9be67a',
+      success: '#06a35f', warning: '#f08d32', danger: '#ee4d37',
+    },
+    dark: {
+      background: '#000000', surface: '#0a0a0a', surface2: '#111111', foreground: '#ededed',
+      muted: '#a1a1a1', border: 'rgb(255 255 255 / 0.14)', primary: '#ededed', onPrimary: '#0a0a0a',
+      secondary: '#73f84b', accent: '#73f84b', onAccent: '#0a0a0a', glow: '#73f84b',
+      success: '#3bffad', warning: '#ff8744', danger: '#ff426f',
+    },
+  },
+  // Idea Atlas brand: NeoPOP structure, electric-blue signal (blue is never a finding-status colour)
+  electricBlue: {
+    label: 'Electric Blue',
+    light: {
+      background: '#f6f8fc', surface: '#ffffff', surface2: '#edf1f8', foreground: '#07090f',
+      muted: '#566070', border: '#dfe4ee', primary: '#07090f', onPrimary: '#ffffff', secondary: '#1f5bff',
+      accent: '#1f5bff', onAccent: '#ffffff', glow: '#9fbcff',
+      success: '#06c270', warning: '#f08d32', danger: '#ee4d37',
+    },
+    dark: {
+      background: '#07090f', surface: '#0d1119', surface2: '#131824', foreground: '#ebeef5',
+      muted: '#9aa3b5', border: 'rgb(255 255 255 / 0.1)', primary: '#ffffff', onPrimary: '#07090f',
+      secondary: '#5b8fff', accent: '#3d7bff', onAccent: '#ffffff', glow: '#3d7bff',
+      success: '#3bffad', warning: '#ff8744', danger: '#ff426f',
+    },
+  },
   // Web Triggers brand: Ink #0D0D0D, Signal #EAFD66 (dark) / #CDE52B (light), Paper #F8F8F8
   neopop: {
     label: 'NeoPOP',
@@ -66,7 +102,7 @@ export const palettes = {
 }
 
 export const themeConfig = {
-  activePalette: 'neopop',
+  activePalette: 'atlas',
   defaultMode: 'dark',
   shape: 'sharp',
 }
