@@ -6,7 +6,7 @@
 
 /*
  * Color values live in src/config/theme.js and are injected as CSS variables
- * for [data-theme=light] and [data-theme=dark] (design system ported from WebTriggers 2.0).
+ * for [data-theme=light] and [data-theme=dark].
  */
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
@@ -91,43 +91,6 @@ body {
 /* Light mode: white cards on a light page need a soft shadow to separate them */
 [data-theme="light"] .bg-surface {
   box-shadow: 0 1px 2px rgb(12 19 34 / 0.04), 0 8px 24px -12px rgb(12 19 34 / 0.12);
-}
-
-/*
- * NeoPOP "plunk" button (after CRED's open-source NeoPOP, Apache-2.0):
- * a 3px right and bottom edge skewed 45° makes the button look raised;
- * pressing pushes the face into the edges.
- * Inside @layer components so Tailwind utilities (e.g. mt-6) can still override margins.
- */
-@layer components {
-.pop, .pop-outline {
-  position: relative;
-  margin: 0 3px 3px 0;
-  transition: transform 0.12s ease-in-out;
-}
-.pop::before, .pop::after, .pop-outline::before, .pop-outline::after {
-  content: "";
-  position: absolute;
-  transform-origin: 0 0;
-  transition: opacity 0.12s ease-in-out;
-  pointer-events: none;
-}
-.pop::after, .pop-outline::after {
-  top: 0; right: -3px; width: 3px; height: 100%;
-  transform: skewY(45deg);
-  background: var(--pop-right);
-}
-.pop::before, .pop-outline::before {
-  left: 0; bottom: -3px; width: 100%; height: 3px;
-  transform: skewX(45deg);
-  background: var(--pop-bottom);
-}
-.pop-outline::after { background: var(--pop-right-2); }
-.pop-outline::before { background: var(--pop-bottom-2); }
-.pop:active:not(:disabled), .pop-outline:active:not(:disabled) { transform: translate(3px, 3px); }
-.pop:active:not(:disabled)::before, .pop:active:not(:disabled)::after,
-.pop-outline:active:not(:disabled)::before, .pop-outline:active:not(:disabled)::after { opacity: 0; }
-.pop:disabled, .pop-outline:disabled { opacity: 0.45; cursor: not-allowed; }
 }
 
 ::selection { background: color-mix(in oklab, var(--primary) 35%, transparent); }

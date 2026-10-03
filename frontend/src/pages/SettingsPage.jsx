@@ -41,7 +41,7 @@ export default function SettingsPage() {
       <PageHeader title="Settings" />
       <PageBody className="max-w-5xl space-y-4">
         <Section title="General" description="Saved in this browser.">
-          <div className="flex gap-px border border-border bg-border">
+          <div className="overflow-hidden rounded-xl flex gap-px border border-border bg-border">
             {[['dark', Moon], ['light', Sun]].map(([m, Icon]) => (
               <button key={m} type="button" onClick={() => setMode(m)} aria-pressed={mode === m}
                 className={cn('flex flex-1 cursor-pointer items-center justify-center gap-2 py-2.5 text-sm capitalize', mode === m ? 'bg-surface font-semibold' : 'bg-background text-muted hover:text-foreground')}>
@@ -56,7 +56,7 @@ export default function SettingsPage() {
             <Section title="AI" description="Configured on the server through environment variables. Keys are never sent to the browser.">
               <div className="space-y-2">
                 {s.providers.map((p) => (
-                  <div key={p.name} className="flex flex-wrap items-center justify-between gap-2 border border-border px-3 py-2.5">
+                  <div key={p.name} className="rounded-lg flex flex-wrap items-center justify-between gap-2 border border-border px-3 py-2.5">
                     <span className="flex items-center gap-2 text-sm font-medium capitalize">
                       {p.name === 'ollama' ? <CircleAlert className="size-4 text-muted" />   /* can't tell if the local server is running */
                         : p.configured ? <CheckCircle2 className="size-4 text-success" /> : <CircleAlert className="size-4 text-muted" />}

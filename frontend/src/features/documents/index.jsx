@@ -44,7 +44,7 @@ export function DocumentUploader({ projectId, role, label }) {
 
   if (pasting) {
     return (
-      <div className="space-y-3 border border-border bg-background p-4">
+      <div className="rounded-lg space-y-3 border border-border bg-background p-4">
         <Field label="Title"><Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Job description" /></Field>
         <Field label="Text"><Textarea value={text} onChange={(e) => setText(e.target.value)} className="min-h-40" placeholder="Paste the document text here…" /></Field>
         <div className="flex justify-end gap-2">

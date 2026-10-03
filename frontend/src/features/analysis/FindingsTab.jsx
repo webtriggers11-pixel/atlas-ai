@@ -40,11 +40,11 @@ function FindingCard({ finding, onView }) {
         {finding.status === 'conflict' && (
           <>
             <div className="grid gap-2 text-xs sm:grid-cols-2">
-              <div className="border border-border px-3 py-2">
+              <div className="rounded-lg border border-border px-3 py-2">
                 <p className="text-muted">Reference source</p>
                 <p className="mt-0.5 font-medium">{finding.requirement.source_document || 'Reference documents'}{finding.requirement.source_page ? ` · p.${finding.requirement.source_page}` : ''}</p>
               </div>
-              <div className="border border-conflict/40 px-3 py-2">
+              <div className="rounded-lg border border-conflict/40 px-3 py-2">
                 <p className="text-muted">Existing source</p>
                 <p className="mt-0.5 font-medium">{first ? sourceLabel(first) : '—'}</p>
               </div>
@@ -87,7 +87,7 @@ export default function FindingsTab({ findings, filter, onFilter, onView, runId,
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-px border border-border bg-border" role="group" aria-label="Filter by status">
+        <div className="overflow-hidden rounded-xl flex flex-wrap gap-px border border-border bg-border" role="group" aria-label="Filter by status">
           {[null, ...FINDING_STATUSES].map((s) => (
             <button key={s || 'all'} type="button" onClick={() => onFilter(s)} aria-pressed={filter === s}
               className={cn('cursor-pointer px-3 py-1.5 text-xs capitalize transition-colors', filter === s ? 'bg-surface font-semibold' : 'bg-background text-muted hover:text-foreground')}

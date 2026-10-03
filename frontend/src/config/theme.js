@@ -1,21 +1,21 @@
 /**
  * ─── COLORS & SHAPE ──────────────────────────────────────────────────────────
- * The single place to change the app's look (ported from the WebTriggers 2.0 site).
+ * The single place to change the app's look.
  *
  *  1. Pick a palette:        set `activePalette` to a key of `palettes`
  *  2. Pick the default mode: `defaultMode` = "system" | "light" | "dark"
- *  3. Pick the shape:        `shape` = "sharp" (NeoPOP, square edges) | "rounded"
+ *  3. Pick the shape:        `shape` = "sharp" (square edges) | "rounded"
  *
  * Roles
  *  primary / onPrimary   main buttons, active states
  *  secondary             labels, eyebrows, icons
  *  accent / onAccent     loud highlight fills (badges, markers) — use sparingly
  *  glow                  soft background glows and button shadows
- *  popRight/popBottom    3D "plunk" edge colors for primary buttons (NeoPOP)
  *  status: covered/partial/missing/conflict/unclear — the five finding colors
  *
- * The "neopop" palette follows CRED's open-source NeoPOP design system
- * (github.com/CRED-CLUB/neopop-web, Apache-2.0).
+ * Brand: "Ink & Cobalt". Blue is deliberately the only brand hue — green, amber, red and
+ * purple are reserved for finding statuses, so the brand never reads as a result.
+ * The old "neopop" palette (WebTriggers' black/yellow) is kept for reference only.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -37,11 +37,30 @@ const neutrals = {
 
 // Finding-status colors, tuned per mode for contrast on the surfaces above
 const statusColors = {
-  light: { covered: '#06a35f', partial: '#c77700', missing: '#e0402b', conflict: '#b4237a', unclear: '#6b6b6b' },
-  dark:  { covered: '#3bffad', partial: '#ffb444', missing: '#ff5a4a', conflict: '#ff6fcf', unclear: '#a0a0a0' },
+  light: { covered: '#138a5b', partial: '#b26b00', missing: '#d03b2a', conflict: '#9b2fae', unclear: '#64748b' },
+  dark:  { covered: '#4ade9b', partial: '#fbbf4a', missing: '#ff6b5b', conflict: '#e07cf0', unclear: '#9aa6bc' },
 }
 
 export const palettes = {
+  // Idea Atlas brand: Ink #0F1B2D, Cobalt #2F5BEA, Paper #F7F6F2 — calm, trustworthy, evidence-first
+  inkCobalt: {
+    label: 'Ink & Cobalt',
+    light: {
+      background: '#f7f6f2', surface: '#ffffff', surface2: '#efede6', foreground: '#0f1b2d',
+      muted: '#5a6474', border: '#e3e0d8', fill: 'rgb(15 27 45 / 0.04)', fillStrong: 'rgb(15 27 45 / 0.07)',
+      primary: '#2f5bea', onPrimary: '#ffffff', secondary: '#2f5bea',
+      accent: '#2f5bea', onAccent: '#ffffff', glow: '#9db2f5',
+      success: '#138a5b', warning: '#b26b00', danger: '#d03b2a',
+    },
+    dark: {
+      background: '#0b1220', surface: '#111a2e', surface2: '#17223a', foreground: '#e8ecf4',
+      muted: '#9aa6bc', border: 'rgb(255 255 255 / 0.09)', fill: 'rgb(255 255 255 / 0.04)',
+      fillStrong: 'rgb(255 255 255 / 0.08)',
+      primary: '#6e8dff', onPrimary: '#0b1220', secondary: '#8fa8ff',
+      accent: '#6e8dff', onAccent: '#0b1220', glow: '#3b5bdb',
+      success: '#4ade9b', warning: '#fbbf4a', danger: '#ff6b5b',
+    },
+  },
   // Web Triggers brand: Ink #0D0D0D, Signal #EAFD66 (dark) / #CDE52B (light), Paper #F8F8F8
   neopop: {
     label: 'NeoPOP',
@@ -66,9 +85,9 @@ export const palettes = {
 }
 
 export const themeConfig = {
-  activePalette: 'neopop',
-  defaultMode: 'dark',
-  shape: 'sharp',
+  activePalette: 'inkCobalt',
+  defaultMode: 'light',
+  shape: 'rounded',
 }
 
 /** Resolved colors for one mode (neutrals overridden by the active palette). */

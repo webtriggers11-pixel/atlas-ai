@@ -20,7 +20,7 @@ export default function DashboardPage() {
 
   return (
     <PageBody className="space-y-8">
-      <section className="border border-border bg-surface p-6 sm:p-8">
+      <section className="rounded-lg border border-border bg-surface p-6 sm:p-8">
         <p className="text-[11px] font-medium tracking-[0.2em] text-secondary uppercase">Document intelligence</p>
         <h1 className="mt-2 max-w-3xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
           Find gaps between what <span className="font-serif font-normal italic">should</span> exist and what currently exists.
@@ -52,7 +52,7 @@ export default function DashboardPage() {
 
       <section>
         <h2 className="mb-4 text-lg font-semibold tracking-tight">How it works</h2>
-        <div className="grid gap-px border border-border bg-border sm:grid-cols-2 xl:grid-cols-4">
+        <div className="overflow-hidden rounded-xl grid gap-px border border-border bg-border sm:grid-cols-2 xl:grid-cols-4">
           {HOW.map((s, i) => (
             <Panel key={s.title} className="border-0 p-5">
               <span className="font-mono text-xs text-muted">0{i + 1}</span>
