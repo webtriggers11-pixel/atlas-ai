@@ -78,7 +78,7 @@ function SidebarNav({ collapsed, onNavigate }) {
   return (
     <div className="flex h-full flex-col">
       <div className={cn('flex h-14 items-center border-b border-border', collapsed ? 'justify-center' : 'px-4')}>
-        <Link to="/app" onClick={onNavigate} aria-label="Atlas AI — dashboard"><Logo compact={collapsed} /></Link>
+        <Link to="/" onClick={onNavigate} aria-label="Atlas AI — home"><Logo compact={collapsed} /></Link>
       </div>
 
       <div className={cn('p-3', collapsed && 'px-2')}>
