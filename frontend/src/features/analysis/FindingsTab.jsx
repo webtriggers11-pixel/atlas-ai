@@ -5,22 +5,12 @@
  */
 import { useMemo, useState } from 'react'
 import { Download, Search, ScanSearch } from 'lucide-react'
+import toast from 'react-hot-toast'
+import { api } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import { Button, Empty, FINDING_STATUSES, Input, Panel, StatusPill, Tag } from '@/components/kit'
 import { AiText, SourceQuote, sourceLabel } from '@/features/analysis/EvidenceDrawer'
-
-/** Build and download a CSV traceability matrix of the given findings. */
-function exportCsv(findings, name) {
-  const escape = (v) => `"${String(v ?? '').replaceAll('"', '""')}"`
-  const rows = [['Code', 'Requirement', 'Section', 'Status', 'Confidence', 'AI assessment', 'Missing / different', 'Suggested action', 'Evidence']]
-  for (const f of findings) {
-    rows.push([f.requirement.code, f.requirement.text, f.requirement.section, f.status, f.confidence, f.explanation,
-      f.missing_detail, f.suggested_action, f.evidence.map((e) => `${sourceLabel(e)}: "${e.quote}"`).join(' | ')])
-  }
-  const url = URL.createObjectURL(new Blob([rows.map((r) => r.map(escape).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' }))
-  Object.assign(document.createElement('a'), { href: url, download: `${name.replace(/\W+/g, '-')}-findings.csv` }).click()
-  URL.revokeObjectURL(url)
-}
+import { InvestigateRunButton } from '@/features/analysis/Investigation'
 
 /** One finding, readable without opening the drawer. */
 function FindingCard({ finding, onView }) {
@@ -31,6 +21,7 @@ function FindingCard({ finding, onView }) {
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-mono text-xs text-muted">{finding.requirement.code}</span>
           {finding.requirement.section && <Tag>{finding.requirement.section}</Tag>}
+          {finding.source === 'agent' && <Tag>re-checked by agent</Tag>}
         </div>
         <StatusPill status={finding.status} />
       </div>
@@ -82,7 +73,7 @@ function FindingCard({ finding, onView }) {
   )
 }
 
-export default function FindingsTab({ findings, filter, onFilter, onView, analysisName }) {
+export default function FindingsTab({ findings, filter, onFilter, onView, runId, projectId }) {
   const [query, setQuery] = useState('')
   const counts = useMemo(() => FINDING_STATUSES.reduce((a, s) => ({ ...a, [s]: findings.filter((f) => f.status === s).length }), {}), [findings])
   const visible = findings.filter((f) =>
@@ -110,7 +101,9 @@ export default function FindingsTab({ findings, filter, onFilter, onView, analys
             <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" />
             <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search findings…" className="h-9 pl-9" />
           </div>
-          <Button variant="outline" size="sm" icon={Download} onClick={() => exportCsv(visible, analysisName)}>Export CSV</Button>
+          <InvestigateRunButton runId={runId} projectId={projectId} findings={findings} />
+          <Button variant="outline" size="sm" icon={Download}
+            onClick={() => api.downloadExport(runId, 'csv').catch((e) => toast.error(e.message))}>Export CSV</Button>
         </div>
       </div>
       {visible.length

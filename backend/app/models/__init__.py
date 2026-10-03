@@ -14,8 +14,9 @@ from app.models.analysis_run import AnalysisRun
 from app.models.finding import Finding
 from app.models.evidence import Evidence
 from app.models.llm_call import LlmCall
+from app.models.agent_trace import AgentTrace
 
 __all__ = [
     "Map", "Node", "NodeExplanation", "Edge", "LlmLog", "Document", "DocumentChunk", "NodeGap",
-    "Project", "ProjectDocument", "DocChunk", "Requirement", "AnalysisRun", "Finding", "Evidence", "LlmCall",
+    "Project", "ProjectDocument", "DocChunk", "Requirement", "AnalysisRun", "Finding", "Evidence", "LlmCall", "AgentTrace",
 ]

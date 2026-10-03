@@ -270,3 +270,37 @@ class ChatResponse(BaseModel):
     stopped_by_budget: bool
     duration_s: float
     model: str
+
+
+# ── Investigator agent ────────────────────────────────────────────────────────
+
+class TraceStep(BaseModel):
+    tool: str
+    arguments: dict
+    ok: bool
+    summary: str
+
+
+class TraceResponse(BaseModel):
+    id: UUID
+    finding_id: UUID
+    status: Literal["queued", "running", "completed", "failed"]
+    previous_status: str
+    new_status: Optional[str] = None
+    outcome: Optional[Literal["changed", "confirmed", "rejected", "kept", "no_verdict", "error"]] = None
+    explanation: Optional[str] = None
+    steps: Optional[list[TraceStep]] = None
+    tool_calls: int
+    prompt_tokens: Optional[int] = None
+    completion_tokens: Optional[int] = None
+    duration_s: Optional[float] = None
+    error: Optional[str] = None
+    created_at: datetime
+    finished_at: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}
+
+
+class InvestigateRunResponse(BaseModel):
+    queued: int
+    trace_ids: list[UUID]

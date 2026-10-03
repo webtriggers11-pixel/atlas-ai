@@ -53,3 +53,12 @@ def run_analysis(run_id: str) -> None:
 
     with session_scope() as db:
         analysis_service.run_analysis(run_id, db)
+
+
+@celery_app.task(name="atlas.investigate_finding", **_RETRY)
+def investigate_finding(trace_id: str) -> None:
+    """Run the investigator agent for one queued trace."""
+    from app.services import investigator
+
+    with session_scope() as db:
+        investigator.run_investigation(trace_id, db)

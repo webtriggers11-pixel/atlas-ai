@@ -29,6 +29,8 @@ class Finding(Base):
     requirement = relationship("Requirement")
     evidence = relationship("Evidence", back_populates="finding", cascade="all, delete-orphan",
                             order_by="Evidence.score.desc()")
+    traces = relationship("AgentTrace", back_populates="finding", cascade="all, delete-orphan",
+                          order_by="AgentTrace.created_at.desc()")
 
     __table_args__ = (
         CheckConstraint("status IN ('covered', 'partial', 'missing', 'conflict', 'unclear')", name="ck_finding_status"),

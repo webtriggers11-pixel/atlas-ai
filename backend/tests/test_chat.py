@@ -157,3 +157,15 @@ def test_provider_message_conversion_for_tools():
     assert system == {"parts": [{"text": "sys"}]}
     assert contents[1] == {"role": "model", "parts": [{"functionCall": {"name": "search_documents", "args": {"query": "tokens"}}}]}
     assert contents[2]["parts"][0]["functionResponse"]["name"] == "search_documents"
+
+
+def test_older_tool_results_are_trimmed():
+    """Context management: only the last N tool results stay full; older ones are shortened."""
+    from app.services.tool_loop import _trim_old_results, OLD_RESULT_CHARS
+
+    msgs = [{"role": "user", "content": "q"}] + [
+        {"role": "tool", "tool_call_id": str(i), "name": "search_documents", "content": "x" * 3000} for i in range(4)]
+    trimmed = _trim_old_results(msgs, keep_full=2)
+    sizes = [len(m["content"]) for m in trimmed if m["role"] == "tool"]
+    assert sizes[:2] == [OLD_RESULT_CHARS + len(" …[trimmed: older result]")] * 2 and sizes[2:] == [3000, 3000]
+    assert len(msgs[1]["content"]) == 3000   # original list not mutated

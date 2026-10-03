@@ -22,6 +22,9 @@ export const keys = {
   chunks: (docId) => ['chunks', docId],
   allDocuments: (search) => ['all-documents', search || ''],
   settings: ['settings'],
+  traces: (findingId) => ['traces', findingId],
+  report: (runId) => ['report', runId],
+  diff: (runId) => ['diff', runId],
 }
 
 export const useProjects = () => useQuery({ queryKey: keys.projects, queryFn: api.listProjects })
@@ -61,6 +64,18 @@ export const useAllDocuments = (search) =>
   useQuery({ queryKey: keys.allDocuments(search), queryFn: () => api.listAllDocuments(search) })
 
 export const useSettings = () => useQuery({ queryKey: keys.settings, queryFn: api.getSettings, staleTime: 60_000 })
+
+export const useTraces = (findingId) =>
+  useQuery({
+    queryKey: keys.traces(findingId),
+    queryFn: () => api.listTraces(findingId),
+    enabled: Boolean(findingId),
+    refetchInterval: (q) => (q.state.data?.some((t) => t.status === 'queued' || t.status === 'running') ? POLL_MS : false),
+  })
+
+export const useReport = (runId) => useQuery({ queryKey: keys.report(runId), queryFn: () => api.getReport(runId), enabled: Boolean(runId) })
+
+export const useDiff = (runId) => useQuery({ queryKey: keys.diff(runId), queryFn: () => api.getDiff(runId), enabled: Boolean(runId) })
 
 export const useChunks = (documentId) =>
   useQuery({ queryKey: keys.chunks(documentId), queryFn: () => api.listChunks(documentId), enabled: Boolean(documentId) })

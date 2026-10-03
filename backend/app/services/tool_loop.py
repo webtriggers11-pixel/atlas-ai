@@ -21,7 +21,8 @@ from app import llm
 
 logger = logging.getLogger(__name__)
 
-MAX_RESULT_CHARS = 6000   # one tool result sent back to the model is truncated to this
+MAX_RESULT_CHARS = 6000   # default cap for one tool result sent back to the model
+OLD_RESULT_CHARS = 400    # older tool results are shrunk to this (context management)
 
 
 @dataclass
@@ -104,6 +105,23 @@ def _flatten(messages: list[dict]) -> list[dict]:
     return flat
 
 
+def _trim_old_results(messages: list[dict], keep_full: int) -> list[dict]:
+    """Shrink all but the last `keep_full` tool results.
+
+    Every model turn re-sends the whole conversation, so without this the prompt grows with each
+    step (and free tiers with per-minute token limits fail). Recent results stay intact; older ones
+    keep their first few hundred characters so the model still knows what it already looked at.
+    """
+    tool_idx = [i for i, m in enumerate(messages) if m["role"] == "tool"]
+    old = set(tool_idx[:-keep_full]) if keep_full else set(tool_idx)
+    out = []
+    for i, m in enumerate(messages):
+        if i in old and len(m["content"]) > OLD_RESULT_CHARS:
+            m = {**m, "content": m["content"][:OLD_RESULT_CHARS] + " …[trimmed: older result]"}
+        out.append(m)
+    return out
+
+
 def run_tool_loop(
     messages: list[dict],
     tools: list[Tool],
@@ -111,6 +129,8 @@ def run_tool_loop(
     max_tool_calls: int = 6,
     finish_tool: Tool | None = None,
     retry_budget_s: float | None = None,
+    max_result_chars: int = MAX_RESULT_CHARS,
+    keep_full_results: int = 2,
 ) -> LoopResult:
     """Run the model with tools until it answers (or calls finish_tool). Never exceeds max_tool_calls."""
     started = time.perf_counter()
@@ -123,9 +143,11 @@ def run_tool_loop(
     while True:
         budget_left = max_tool_calls - len(steps)
         if budget_left > 0:
-            result = llm.chat_with_tools(messages, specs, task_type, retry_budget_s=retry_budget_s)
+            result = llm.chat_with_tools(_trim_old_results(messages, keep_full_results), specs, task_type,
+                                         retry_budget_s=retry_budget_s)
         else:   # final answer: no tools offered, so send the transcript as plain text (works on every provider)
-            result = llm.chat_with_tools(_flatten(messages), None, task_type, retry_budget_s=retry_budget_s)
+            result = llm.chat_with_tools(_flatten(_trim_old_results(messages, keep_full_results)), None, task_type,
+                                         retry_budget_s=retry_budget_s)
         if not result.tool_calls or budget_left <= 0:
             return LoopResult(answer=result.text.strip(), steps=steps, stopped_by_budget=budget_left <= 0,
                               duration_s=round(time.perf_counter() - started, 1))
@@ -158,7 +180,7 @@ def run_tool_loop(
                     data = {"error": f"tool failed: {type(exc).__name__}"}
             steps.append(Step(call.name, call.arguments, "error" not in (data if isinstance(data, dict) else {}),
                               _summarize(data), data))
-            content = json.dumps(data, default=str)[:MAX_RESULT_CHARS]
+            content = json.dumps(data, default=str, separators=(",", ":"), ensure_ascii=False)[:max_result_chars]
             messages.append({"role": "tool", "tool_call_id": call.id, "name": call.name, "content": content})
 
         if len(steps) >= max_tool_calls:

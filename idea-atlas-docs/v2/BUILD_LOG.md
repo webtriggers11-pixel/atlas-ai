@@ -517,3 +517,75 @@ A: OpenAI-style APIs (Groq, Ollama) take `tools` and return `tool_calls` with JS
 
 Q: What happens if the model keeps calling tools forever?
 A: The loop has a hard budget (6 calls). When it's used up the model gets one last call with no tools and the transcript flattened to text, plus an instruction to answer with what it has — so latency and cost are bounded.
+
+---
+
+## Phase 10 — Investigator agent (built, measured, and deliberately restricted)
+
+**Built**
+- `services/investigator.py` + `agent_traces` table: re-checks ONE finding with a bounded tool loop
+  (read-only `search_documents` / `get_chunk`, analysis-scoped) and a validated `submit_verdict`
+  finish tool. Eligible: missing, unclear, conflict, or confidence < 0.6.
+- Guardrails: quotes verified against the cited chunk (which must belong to this analysis and be an
+  existing document); unverifiable → outcome `rejected`, finding kept. Every step, token count and
+  duration stored in the trace.
+- Endpoints: `POST /findings/{id}/investigate`, `GET /findings/{id}/traces`, `POST /runs/{id}/investigate`.
+  UI: "Re-check with agent" in the evidence drawer with a live step-by-step trace; "Re-check uncertain (N)".
+- Eval: `python -m eval.run_eval --investigate` scores before/after the agent on the same run.
+
+**What measurement showed (honest)**
+1. The first full agent eval failed on **free-tier limits**: Groq gpt-oss-20b allows 8,000 tokens/min
+   and the Gemini daily quota ran out. Each agent step re-sends the growing conversation (up to 6,000
+   characters per tool result), so steps hit the limit and retries ran out of time. Fixes: compact
+   tool results for the agent (3 passages × ~450 chars, compact JSON), **context trimming** (only the
+   last two tool results stay full), max steps 8 → 6. A 4-step investigation now costs ~5.6k tokens / ~5 s.
+2. Live check on 3 known cases (Groq only — Gemini quota exhausted):
+   P04 partial→**missing (made it worse)**, P07 missing→missing (not fixed), P10 ran out of steps.
+   Even with an explicit "did any passage discuss the same topic?" self-check (investigate-v2), the
+   small model treated "the specific value is absent" as "missing".
+3. **Decision — asymmetric authority:** the agent may only change a finding when it brings verified
+   evidence (→ covered/partial/conflict). An absence claim can't be verified, so a downgrade to
+   missing/unclear is recorded (outcome `kept`) but not applied. That removes the regression risk;
+   the agent stays useful as an auditable "search harder for evidence" tool.
+4. Full before/after eval with the agent is **pending** (needs the Gemini daily quota to reset or a
+   paid tier). No accuracy-improvement claim is made until it is measured.
+
+**Verified:** 119 passed (fixes a false-missing with a verified quote; invented quote rejected; evidence
+from another analysis ignored; confirmed / kept / no_verdict outcomes; step budget enforced; run-level
+re-check only once per uncertain finding; trace ordering).
+
+**Interview**
+
+Q: When is an agent the right tool, and when is a pipeline better?
+A: A pipeline when the steps are known in advance — here, retrieve-then-classify for every requirement. An agent only where the next step depends on what was just found: re-searching a "missing" requirement with new phrasings. So the agent runs on the few uncertain findings, with a step budget, read-only tools and a structured final answer.
+
+Q: Your agent made a result worse — what did you do?
+A: I measured it on known cases and it downgraded a correct "partial" to "missing". The insight: evidence claims are verifiable (we check the quote in the source), absence claims aren't. So I gave the agent asymmetric authority — it can only change a finding by bringing verified evidence; absence verdicts are logged, not applied. Safer, and still useful.
+
+Q: Why did the agent hit rate limits when single calls didn't?
+A: Each agent step re-sends the whole conversation, so prompt size grows with every tool result. With a per-minute token limit, that compounds. I compacted tool outputs and trimmed older results (context management), cutting a typical investigation to ~5–6k tokens.
+
+---
+
+## Phase 11 — Reports, exports and run diff
+
+**Built**
+- `services/report_service.py` (deterministic, no LLM): one structured report per completed run —
+  executive summary headline, counts and coverage %, sections (missing, conflicts, partial,
+  needs-decision, covered) with AI assessment vs verified source quotes, recommended actions.
+- Exports: `GET /runs/{id}/export?format=csv|md|pdf` — CSV traceability matrix, Markdown report,
+  PDF (fpdf2 core fonts; Unicode punctuation mapped to Latin-1). Safe download filenames.
+- Diff: `GET /runs/{id}/diff[?against=]` — per requirement improved / regressed / unchanged / new /
+  removed against the previous completed run (ordering covered > partial > unclear > conflict > missing).
+- UI: **Report** tab (spec "Read view") with downloads and a "Changes since previous run" panel;
+  the Findings CSV now uses the server export. Downloads go through `fetch` so auth headers work.
+- Found while building: a nested f-string that reused its quote character is valid on Python 3.12+
+  but a SyntaxError on the production image's Python 3.11 — fixed, and the whole backend scanned.
+
+**Verified:** report structure and headline, all three export formats (PDF with Unicode quotes),
+diff improved/unchanged/regressed, no-previous-run and incomplete-run cases.
+
+**Interview**
+
+Q: Why build reports server-side instead of in the browser?
+A: One source of truth: the same report JSON feeds the UI, CSV, Markdown and PDF, so they can't disagree, downloads work for API clients too, and access control (Phase 12) applies to exports like any other endpoint.

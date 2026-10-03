@@ -59,16 +59,21 @@ def _latest_completed_run(project_id: UUID, db: Session) -> AnalysisRun | None:
     ).scalar_one_or_none()
 
 
-def build_tools(project_id: UUID, db: Session) -> list[Tool]:
-    """The read-only tool set for one analysis. project_id is captured here, never taken from the model."""
+def build_tools(project_id: UUID, db: Session, compact: bool = False) -> list[Tool]:
+    """The read-only tool set for one analysis. project_id is captured here, never taken from the model.
+
+    compact=True (the investigator) returns fewer, shorter passages to keep each step's prompt small.
+    """
+    text_limit = 450 if compact else TEXT_LIMIT
+    max_hits = 3 if compact else 8
 
     def search_documents(args: SearchArgs):
         """Semantic search over the analysis's documents."""
-        hits = retrieval.search(project_id, args.query, db, role=args.role, k=args.k)
+        hits = retrieval.search(project_id, args.query, db, role=args.role, k=min(args.k, max_hits))
         return {"results": [{
             "chunk_id": str(h.chunk.id), "document_id": str(h.document.id), "document": h.document.filename, "role": h.document.role,
             "section": h.chunk.section, "page": h.chunk.page_start, "similarity": round(h.score, 3),
-            "text": h.chunk.content[:TEXT_LIMIT],
+            "text": h.chunk.content[:text_limit],
         } for h in hits]}
 
     def list_findings(args: ListFindingsArgs):
@@ -127,7 +132,7 @@ def build_tools(project_id: UUID, db: Session) -> list[Tool]:
         return {
             "chunk_id": str(chunk.id), "document_id": str(chunk.document_id), "document": chunk.document.filename, "section": chunk.section,
             "page": chunk.page_start, "text": chunk.content,
-            "neighbours": [{"chunk_id": str(n.id), "section": n.section, "text": n.content[:TEXT_LIMIT]} for n in neighbours],
+            "neighbours": [{"chunk_id": str(n.id), "section": n.section, "text": n.content[:text_limit // 2]} for n in neighbours],
         }
 
     def get_overview(_: NoArgs):
