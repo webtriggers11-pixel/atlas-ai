@@ -30,7 +30,7 @@ function DocumentSearch({ projectId }) {
         <div className="space-y-4 border-t border-border p-5">
           <form className="flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); if (query.trim()) search.mutate() }}>
             <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. how long do access tokens last?" className="min-w-56 flex-1" />
-            <select value={role} onChange={(e) => setRole(e.target.value)} className="rounded-lg h-10 border border-border bg-background px-2 text-sm">
+            <select value={role} onChange={(e) => setRole(e.target.value)} className="h-10 border border-border bg-background px-2 text-sm">
               <option value="existing">Existing documents</option>
               <option value="reference">Reference documents</option>
               <option value="">Both</option>
@@ -41,7 +41,7 @@ function DocumentSearch({ projectId }) {
           {search.data && (search.data.length ? (
             <ol className="space-y-2">
               {search.data.map((r) => (
-                <li key={r.chunk_id} className="rounded-lg border border-border p-3">
+                <li key={r.chunk_id} className="border border-border p-3">
                   <div className="mb-1.5 flex flex-wrap items-center gap-2 text-xs text-muted">
                     <span className="font-mono">#{r.rank}</span>
                     <span className="font-medium text-foreground">{r.document_filename}</span>

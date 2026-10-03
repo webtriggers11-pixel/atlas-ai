@@ -77,7 +77,7 @@ function Shell() {
         toastOptions={{
           style: {
             background: 'var(--surface)', color: 'var(--foreground)', border: '1px solid var(--border)',
-            borderRadius: '10px', fontSize: '14px', fontFamily: 'var(--font-sans)',
+            borderRadius: 0, fontSize: '14px', fontFamily: 'var(--font-sans)',
           },
         }}
       />

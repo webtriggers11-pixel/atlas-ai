@@ -1,6 +1,6 @@
 /**
- * UI kit for the V2 app — Ink & Cobalt look: rounded hairline panels, calm sentence-case
- * buttons, small uppercase micro-labels, and the five status colors.
+ * UI kit for the V2 app — NeoPOP look ported from the WebTriggers 2.0 site:
+ * plunk buttons, sharp hairline panels, uppercase micro-labels, status colors.
  */
 import { forwardRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
@@ -11,20 +11,20 @@ import { cn } from '@/lib/utils'
 // ── Buttons ───────────────────────────────────────────────────────────────────
 
 const buttonVariants = {
-  primary: 'bg-primary text-primary-foreground shadow-sm hover:brightness-110 active:brightness-95',
-  outline: 'border border-border bg-surface text-foreground hover:bg-surface-2',
-  accent: 'bg-accent text-accent-foreground shadow-sm hover:brightness-110 active:brightness-95',
+  primary: 'pop bg-primary text-primary-foreground hover:brightness-95',
+  outline: 'pop-outline border border-border bg-surface text-foreground hover:bg-surface-2',
+  accent: 'pop bg-accent text-accent-foreground hover:brightness-95',
   ghost: 'text-muted hover:bg-fill-strong hover:text-foreground',
   danger: 'border border-danger/40 text-danger hover:bg-danger/10',
 }
 const buttonSizes = {
-  sm: 'h-8 px-3 text-xs',
-  md: 'h-10 px-4 text-sm',
-  lg: 'h-12 px-6 text-base',
+  sm: 'h-8 px-3 text-[11px]',
+  md: 'h-10 px-4 text-xs',
+  lg: 'h-12 px-6 text-sm',
   icon: 'size-9 justify-center',
 }
 
-/** Button. `loading` swaps the icon for a spinner and disables the button. */
+/** NeoPOP button. `loading` swaps the icon for a spinner and disables the button. */
 export const Button = forwardRef(function Button(
   { variant = 'primary', size = 'md', loading = false, icon: Icon, className, children, disabled, ...props }, ref,
 ) {
@@ -34,7 +34,7 @@ export const Button = forwardRef(function Button(
       type="button"
       disabled={disabled || loading}
       className={cn(
-        'inline-flex shrink-0 cursor-pointer items-center gap-2 rounded-lg font-medium transition-[background-color,filter,color]',
+        'inline-flex shrink-0 cursor-pointer items-center gap-2 rounded-pill font-semibold tracking-wide uppercase transition-colors',
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary disabled:cursor-not-allowed disabled:opacity-45',
         buttonVariants[variant], buttonSizes[size], className,
       )}
@@ -50,10 +50,10 @@ export const Button = forwardRef(function Button(
 
 /** Hairline-bordered surface — the basic card. */
 export function Panel({ className, children, ...props }) {
-  return <div className={cn('rounded-xl border border-border bg-surface', className)} {...props}>{children}</div>
+  return <div className={cn('border border-border bg-surface', className)} {...props}>{children}</div>
 }
 
-/** Small uppercase label used above titles ("eyebrow"). */
+/** Small uppercase label used above titles (WebTriggers "eyebrow"). */
 export function Eyebrow({ className, children }) {
   return <p className={cn('text-[11px] font-medium tracking-[0.2em] text-secondary uppercase', className)}>{children}</p>
 }
@@ -61,7 +61,7 @@ export function Eyebrow({ className, children }) {
 /** Neutral tag — presets, sections, origins. */
 export function Tag({ className, children }) {
   return (
-    <span className={cn('inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 font-mono text-[10px] tracking-wide text-muted uppercase', className)}>
+    <span className={cn('inline-flex items-center gap-1 border border-border px-2 py-0.5 font-mono text-[10px] tracking-wide text-muted uppercase', className)}>
       {children}
     </span>
   )
@@ -102,7 +102,7 @@ export function StatusPill({ status, className, children }) {
   const Icon = STATUS_ICONS[status]
   return (
     <span className={cn(
-      'inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-mono text-[10px] font-medium tracking-wider whitespace-nowrap uppercase',
+      'inline-flex items-center gap-1.5 border px-2 py-0.5 font-mono text-[10px] font-medium tracking-wider whitespace-nowrap uppercase',
       STATUS_STYLES[status] || STATUS_STYLES.unclear, className,
     )}>
       {Icon
@@ -126,8 +126,8 @@ export const STATUS_HELP = {
 // ── Form fields ───────────────────────────────────────────────────────────────
 
 const fieldClass =
-  'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted/70 ' +
-  'focus:border-primary/60 focus:ring-2 focus:ring-primary/15 focus:outline-none disabled:opacity-60'
+  'w-full border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted/70 ' +
+  'focus:border-foreground/40 focus:outline-none disabled:opacity-60'
 
 export const Input = forwardRef(function Input({ className, ...props }, ref) {
   return <input ref={ref} className={cn(fieldClass, 'h-10', className)} {...props} />
@@ -262,7 +262,7 @@ export function Modal({ open, onClose, title, description, children, footer, cla
             onClick={onClose}
           />
           <motion.div
-            className={cn('relative w-full max-w-lg rounded-xl border border-border bg-surface p-6 shadow-xl', className)}
+            className={cn('relative w-full max-w-lg border border-border bg-surface p-6', className)}
             initial={{ opacity: 0, y: 16, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.98 }} transition={{ duration: 0.2 }}
           >

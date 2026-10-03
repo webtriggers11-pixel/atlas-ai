@@ -78,7 +78,7 @@ function Steps({ steps }) {
 /** One exchange: the user's question and the assistant's answer with steps and sources. */
 function Message({ message, onOpenChunk, onOpenRequirement }) {
   if (message.role === 'user') {
-    return <div className="rounded-lg ml-auto max-w-[85%] border border-border bg-surface-2 px-4 py-2.5 text-sm">{message.content}</div>
+    return <div className="ml-auto max-w-[85%] border border-border bg-surface-2 px-4 py-2.5 text-sm">{message.content}</div>
   }
   return (
     <Panel className="max-w-[92%] p-4">
@@ -90,7 +90,7 @@ function Message({ message, onOpenChunk, onOpenRequirement }) {
             <button
               key={s.id} type="button"
               onClick={() => (s.kind === 'chunk' ? onOpenChunk(s) : onOpenRequirement(s.id))}
-              className="rounded-lg inline-flex cursor-pointer items-center gap-1 border border-border px-2 py-0.5 text-[11px] text-muted hover:border-secondary hover:text-foreground"
+              className="inline-flex cursor-pointer items-center gap-1 border border-border px-2 py-0.5 text-[11px] text-muted hover:border-secondary hover:text-foreground"
               title={s.kind === 'chunk' ? 'Open this passage in the document' : 'Open this finding'}
             >
               {s.kind === 'chunk'
@@ -142,7 +142,7 @@ export default function AskTab({ project, findings, onOpenChunk, onOpenFinding }
             <div className="mt-3 flex flex-col gap-2">
               {(SUGGESTIONS[project.preset] || SUGGESTIONS.spec_coverage).map((q) => (
                 <button key={q} type="button" onClick={() => send(q)}
-                  className="rounded-lg cursor-pointer border border-border px-3 py-2 text-left text-sm text-foreground hover:border-secondary">
+                  className="cursor-pointer border border-border px-3 py-2 text-left text-sm text-foreground hover:border-secondary">
                   {q}
                 </button>
               ))}
@@ -157,7 +157,7 @@ export default function AskTab({ project, findings, onOpenChunk, onOpenFinding }
         <div ref={endRef} />
       </div>
 
-      <form className="rounded-lg sticky bottom-4 flex items-end gap-2 border border-border bg-background p-2" onSubmit={(e) => { e.preventDefault(); send() }}>
+      <form className="sticky bottom-4 flex items-end gap-2 border border-border bg-background p-2" onSubmit={(e) => { e.preventDefault(); send() }}>
         <Textarea
           value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask about requirements, gaps or evidence…"
           className="min-h-10 flex-1 resize-none border-0 bg-transparent" rows={1} maxLength={2000}

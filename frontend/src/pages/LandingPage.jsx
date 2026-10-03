@@ -125,7 +125,7 @@ const STATUS_TEXT = {
 function Badge({ status, children }) {
   const Icon = STATUS_ICONS[status]
   return (
-    <span className={cn('inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium whitespace-nowrap', STATUS_TEXT[status])}>
+    <span className={cn('inline-flex items-center gap-1.5 rounded-pill border px-2.5 py-0.5 text-xs font-medium whitespace-nowrap', STATUS_TEXT[status])}>
       <Icon className="size-3.5" aria-hidden />
       {children}
     </span>
@@ -168,7 +168,7 @@ function HeroDemo() {
     ['Professional indemnity insurance', 'missing', 'Missing'],
   ]
   return (
-    <div className="rounded-2xl border border-border bg-surface p-2 shadow-[0_24px_60px_-24px_rgb(15_27_45/0.35)]">
+    <div className="rounded-2xl border border-border bg-surface p-2 shadow-[0_24px_60px_-24px_var(--glow)]">
       <div className="flex items-center justify-between rounded-t-xl border-b border-border px-4 py-3">
         <div className="flex items-center gap-2 text-sm font-medium">
           <Scale className="size-4 text-secondary" aria-hidden />
@@ -220,7 +220,7 @@ function UseCases() {
             aria-selected={u.key === active}
             onClick={() => setActive(u.key)}
             className={cn(
-              'inline-flex cursor-pointer items-center gap-2 rounded-full border px-4 py-2 text-sm transition-colors',
+              'inline-flex cursor-pointer items-center gap-2 rounded-pill border px-4 py-2 text-sm transition-colors',
               u.key === active ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-surface text-muted hover:text-foreground',
             )}
           >
@@ -289,11 +289,11 @@ export default function LandingPage() {
           <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-40 mx-auto h-96 max-w-4xl rounded-full bg-glow/25 blur-3xl" />
           <div className="relative mx-auto grid max-w-6xl gap-12 px-4 pt-16 pb-20 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:pt-24">
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-              <p className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-muted">
-                <span className="size-1.5 rounded-full bg-primary" /> Document gap analysis
+              <p className="inline-flex items-center gap-2 rounded-pill border border-border bg-surface px-3 py-1 text-xs font-medium text-muted">
+                <span className="size-1.5 rounded-full bg-accent" /> Document gap analysis
               </p>
               <h1 className="mt-6 font-serif text-5xl leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
-                Check any document against what it <em className="text-primary">should</em> contain.
+                Check any document against what it <em className="text-accent">should</em> contain.
               </h1>
               <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
                 Give Atlas your checklist and your document. It goes point by point and shows what is covered,
@@ -336,7 +336,7 @@ export default function LandingPage() {
             {STEPS.map((s, i) => (
               <li key={s.title} className="rounded-2xl border border-border bg-surface p-6">
                 <div className="flex items-center justify-between">
-                  <span className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary"><s.icon className="size-5" aria-hidden /></span>
+                  <span className="grid size-10 place-items-center rounded-xl bg-accent/10 text-accent"><s.icon className="size-5" aria-hidden /></span>
                   <span className="font-serif text-3xl text-muted/50">{i + 1}</span>
                 </div>
                 <h3 className="mt-5 text-lg font-semibold">{s.title}</h3>
@@ -369,7 +369,7 @@ export default function LandingPage() {
           <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f) => (
               <div key={f.title} className="rounded-2xl border border-border bg-surface p-6">
-                <f.icon className="size-5 text-primary" aria-hidden />
+                <f.icon className="size-5 text-accent" aria-hidden />
                 <h3 className="mt-4 font-semibold">{f.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted">{f.text}</p>
               </div>
@@ -379,11 +379,11 @@ export default function LandingPage() {
 
         {/* Trust */}
         <Section id="trust" className="py-20">
-          <div className="grid gap-10 rounded-3xl bg-[#0f1b2d] p-8 text-[#e8ecf4] sm:p-12 lg:grid-cols-2">
+          <div className="grid gap-10 rounded-3xl bg-foreground p-8 text-background sm:p-12 lg:grid-cols-2">
             <div>
-              <p className="text-xs font-semibold tracking-[0.18em] text-[#8fa8ff] uppercase">Trust &amp; privacy</p>
+              <p className="text-xs font-semibold tracking-[0.18em] text-accent uppercase">Trust &amp; privacy</p>
               <h2 className="mt-3 font-serif text-4xl leading-tight sm:text-5xl">An assistant that shows its work.</h2>
-              <p className="mt-4 text-lg leading-relaxed text-[#b6c0d4]">
+              <p className="mt-4 text-lg leading-relaxed opacity-75">
                 Atlas is built to be checked, not blindly trusted. It tells you where it looked and what it found —
                 and it says plainly what it can’t do.
               </p>
@@ -396,10 +396,10 @@ export default function LandingPage() {
                 ['Your work stays yours', 'With sign-in on, each person sees only their own analyses. Nothing is shared between accounts.'],
               ].map(([title, text]) => (
                 <li key={title} className="flex gap-3">
-                  <ShieldCheck className="mt-0.5 size-5 shrink-0 text-[#8fa8ff]" aria-hidden />
+                  <ShieldCheck className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
                   <div>
                     <p className="font-semibold">{title}</p>
-                    <p className="mt-1 text-sm leading-relaxed text-[#b6c0d4]">{text}</p>
+                    <p className="mt-1 text-sm leading-relaxed opacity-75">{text}</p>
                   </div>
                 </li>
               ))}

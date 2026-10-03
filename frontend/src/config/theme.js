@@ -1,21 +1,22 @@
 /**
  * ─── COLORS & SHAPE ──────────────────────────────────────────────────────────
- * The single place to change the app's look.
+ * The single place to change the app's look (ported from the WebTriggers 2.0 site).
  *
  *  1. Pick a palette:        set `activePalette` to a key of `palettes`
  *  2. Pick the default mode: `defaultMode` = "system" | "light" | "dark"
- *  3. Pick the shape:        `shape` = "sharp" (square edges) | "rounded"
+ *  3. Pick the shape:        `shape` = "sharp" (NeoPOP, square edges) | "rounded"
  *
  * Roles
  *  primary / onPrimary   main buttons, active states
  *  secondary             labels, eyebrows, icons
  *  accent / onAccent     loud highlight fills (badges, markers) — use sparingly
  *  glow                  soft background glows and button shadows
+ *  popRight/popBottom    3D "plunk" edge colors for primary buttons (NeoPOP)
  *  status: covered/partial/missing/conflict/unclear — the five finding colors
  *
- * Brand: "Ink & Cobalt". Blue is deliberately the only brand hue — green, amber, red and
- * purple are reserved for finding statuses, so the brand never reads as a result.
- * The old "neopop" palette (WebTriggers' black/yellow) is kept for reference only.
+ * The NeoPOP palettes follow CRED's open-source NeoPOP design system
+ * (github.com/CRED-CLUB/neopop-web, Apache-2.0). "electricBlue" is Idea Atlas's own brand;
+ * "neopop" (black + signal yellow) is the WebTriggers brand, kept for reference.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -37,28 +38,25 @@ const neutrals = {
 
 // Finding-status colors, tuned per mode for contrast on the surfaces above
 const statusColors = {
-  light: { covered: '#138a5b', partial: '#b26b00', missing: '#d03b2a', conflict: '#9b2fae', unclear: '#64748b' },
-  dark:  { covered: '#4ade9b', partial: '#fbbf4a', missing: '#ff6b5b', conflict: '#e07cf0', unclear: '#9aa6bc' },
+  light: { covered: '#06a35f', partial: '#c77700', missing: '#e0402b', conflict: '#b4237a', unclear: '#6b6b6b' },
+  dark:  { covered: '#3bffad', partial: '#ffb444', missing: '#ff5a4a', conflict: '#ff6fcf', unclear: '#a0a0a0' },
 }
 
 export const palettes = {
-  // Idea Atlas brand: Ink #0F1B2D, Cobalt #2F5BEA, Paper #F7F6F2 — calm, trustworthy, evidence-first
-  inkCobalt: {
-    label: 'Ink & Cobalt',
+  // Idea Atlas brand: NeoPOP structure, electric-blue signal (blue is never a finding-status colour)
+  electricBlue: {
+    label: 'Electric Blue',
     light: {
-      background: '#f7f6f2', surface: '#ffffff', surface2: '#efede6', foreground: '#0f1b2d',
-      muted: '#5a6474', border: '#e3e0d8', fill: 'rgb(15 27 45 / 0.04)', fillStrong: 'rgb(15 27 45 / 0.07)',
-      primary: '#2f5bea', onPrimary: '#ffffff', secondary: '#2f5bea',
-      accent: '#2f5bea', onAccent: '#ffffff', glow: '#9db2f5',
-      success: '#138a5b', warning: '#b26b00', danger: '#d03b2a',
+      background: '#f6f8fc', surface: '#ffffff', surface2: '#edf1f8', foreground: '#07090f',
+      muted: '#566070', border: '#dfe4ee', primary: '#07090f', onPrimary: '#ffffff', secondary: '#1f5bff',
+      accent: '#1f5bff', onAccent: '#ffffff', glow: '#9fbcff',
+      success: '#06c270', warning: '#f08d32', danger: '#ee4d37',
     },
     dark: {
-      background: '#0b1220', surface: '#111a2e', surface2: '#17223a', foreground: '#e8ecf4',
-      muted: '#9aa6bc', border: 'rgb(255 255 255 / 0.09)', fill: 'rgb(255 255 255 / 0.04)',
-      fillStrong: 'rgb(255 255 255 / 0.08)',
-      primary: '#6e8dff', onPrimary: '#0b1220', secondary: '#8fa8ff',
-      accent: '#6e8dff', onAccent: '#0b1220', glow: '#3b5bdb',
-      success: '#4ade9b', warning: '#fbbf4a', danger: '#ff6b5b',
+      background: '#07090f', surface: '#0d1119', surface2: '#131824', foreground: '#ebeef5',
+      muted: '#9aa3b5', border: 'rgb(255 255 255 / 0.1)', primary: '#ffffff', onPrimary: '#07090f',
+      secondary: '#5b8fff', accent: '#3d7bff', onAccent: '#ffffff', glow: '#3d7bff',
+      success: '#3bffad', warning: '#ff8744', danger: '#ff426f',
     },
   },
   // Web Triggers brand: Ink #0D0D0D, Signal #EAFD66 (dark) / #CDE52B (light), Paper #F8F8F8
@@ -85,9 +83,9 @@ export const palettes = {
 }
 
 export const themeConfig = {
-  activePalette: 'inkCobalt',
-  defaultMode: 'light',
-  shape: 'rounded',
+  activePalette: 'electricBlue',
+  defaultMode: 'dark',
+  shape: 'sharp',
 }
 
 /** Resolved colors for one mode (neutrals overridden by the active palette). */

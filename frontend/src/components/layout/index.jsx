@@ -1,13 +1,13 @@
 /**
- * App chrome — layout per the V2 UI spec (left sidebar + slim topbar), in the
- * Ink & Cobalt brand theme (src/config/theme.js).
+ * App chrome — layout per the V2 UI spec (left sidebar + slim topbar), styled with the
+ * WebTriggers 2.0 design language (NeoPOP palette, sharp edges, plunk buttons).
  */
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/store/authStore'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronRight, FileCheck2, Files, LayoutDashboard, ListChecks, LogOut, Menu, Moon, Network, PanelLeftClose, PanelLeft, Plus, Settings, Sun } from 'lucide-react'
+import { ChevronRight, Files, LayoutDashboard, ListChecks, LogOut, Menu, Moon, Network, PanelLeftClose, PanelLeft, Plus, Settings, Sun } from 'lucide-react'
 import { applyMode, initialMode } from '@/config/theme'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/kit'
@@ -35,7 +35,7 @@ export function ThemeToggle({ className }) {
       type="button"
       onClick={toggle}
       aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
-      className={cn('grid size-9 rounded-lg cursor-pointer place-items-center border border-border text-muted transition-colors hover:bg-fill-strong hover:text-foreground', className)}
+      className={cn('grid size-9 cursor-pointer place-items-center border border-border text-muted transition-colors hover:bg-fill-strong hover:text-foreground', className)}
     >
       {isDark ? <Moon className="size-4" /> : <Sun className="size-4" />}
     </button>
@@ -44,12 +44,14 @@ export function ThemeToggle({ className }) {
 
 // ── Brand ────────────────────────────────────────────────────────────────────
 
-/** Idea Atlas wordmark: a cobalt "checked document" mark + name. */
+/** Idea Atlas wordmark: a signal-colored NeoPOP square + name. */
 export function Logo({ compact = false, className }) {
   return (
     <span className={cn('inline-flex items-center gap-2.5', className)}>
-      <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground">
-        <FileCheck2 className="size-4" aria-hidden />
+      <span className="relative mr-[3px] mb-[3px] grid size-7 shrink-0 place-items-center bg-accent text-accent-foreground">
+        <span className="font-mono text-[11px] font-bold">IA</span>
+        <span className="absolute top-0 -right-[3px] h-full w-[3px] origin-top-left skew-y-[45deg] bg-[var(--pop-right)]" />
+        <span className="absolute -bottom-[3px] left-0 h-[3px] w-full origin-top-left skew-x-[45deg] bg-[var(--pop-bottom)]" />
       </span>
       {!compact && (
         <span className="text-sm font-semibold tracking-tight whitespace-nowrap">
@@ -192,7 +194,7 @@ export function AppShell({ children }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-border bg-background/90 px-4 backdrop-blur sm:px-6">
-          <button type="button" className="rounded-lg grid size-9 place-items-center border border-border lg:hidden" aria-label="Open menu" onClick={() => setMobileOpen(true)}>
+          <button type="button" className="grid size-9 place-items-center border border-border lg:hidden" aria-label="Open menu" onClick={() => setMobileOpen(true)}>
             <Menu className="size-4" />
           </button>
           <button

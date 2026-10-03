@@ -84,7 +84,7 @@ function Section({ status, title, rows }) {
       {open && (
         <ol className="mt-3 space-y-3">
           {rows.map((r) => (
-            <li key={r.code} className="rounded-lg border border-border p-4">
+            <li key={r.code} className="border border-border p-4">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <p className="text-sm font-medium"><span className="mr-2 font-mono text-xs text-muted">{r.code}</span>{r.requirement}</p>
                 <StatusPill status={status} />

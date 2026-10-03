@@ -164,7 +164,7 @@ export default function RequirementsTab({ project, documentsReady }) {
       </Panel>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="overflow-hidden rounded-xl flex gap-px border border-border bg-border">
+        <div className="flex gap-px border border-border bg-border">
           {FILTERS.map((f) => (
             <button key={f} type="button" onClick={() => setFilter(f)}
               className={cn('cursor-pointer px-3 py-1.5 text-xs capitalize transition-colors', filter === f ? 'bg-surface font-semibold' : 'bg-background text-muted hover:text-foreground')}
@@ -201,7 +201,7 @@ export default function RequirementsTab({ project, documentsReady }) {
         {selected.size > 0 && (
           <motion.div
             initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }}
-            className="rounded-lg sticky bottom-6 z-20 mx-auto flex w-fit items-center gap-3 border border-border bg-surface px-4 py-3 shadow-2xl shadow-black/30"
+            className="sticky bottom-6 z-20 mx-auto flex w-fit items-center gap-3 border border-border bg-surface px-4 py-3 shadow-2xl shadow-black/30"
           >
             <span className="text-sm">{selected.size} selected</span>
             <Button size="sm" icon={Merge} disabled={selected.size < 2} loading={merge.isPending} onClick={() => merge.mutate()}>Merge</Button>

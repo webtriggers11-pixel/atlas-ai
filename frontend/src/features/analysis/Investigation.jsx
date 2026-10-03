@@ -29,7 +29,7 @@ function Trace({ trace }) {
   const busy = trace.status === 'queued' || trace.status === 'running'
   const outcome = OUTCOME[trace.outcome]
   return (
-    <div className="rounded-lg border border-border p-4">
+    <div className="border border-border p-4">
       <div className="flex flex-wrap items-center gap-2 text-sm">
         {busy ? (
           <span className="inline-flex items-center gap-2 text-secondary"><Loader2 className="size-4 animate-spin" /> Investigating…</span>

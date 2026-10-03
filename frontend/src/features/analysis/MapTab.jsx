@@ -31,7 +31,7 @@ const hidden = { opacity: 0, width: 1, height: 1, border: 0 }
 /** Root node: the analysis itself. */
 function RootNode({ data }) {
   return (
-    <div className="rounded-lg flex h-14 w-60 items-center border border-secondary bg-surface px-4 text-sm font-semibold">
+    <div className="flex h-14 w-60 items-center border border-secondary bg-surface px-4 text-sm font-semibold">
       <span className="truncate">{data.label}</span>
       <Handle type="source" position={Position.Right} style={hidden} />
     </div>
@@ -41,7 +41,7 @@ function RootNode({ data }) {
 /** Section node with a covered/total counter. */
 function SectionNode({ data }) {
   return (
-    <div className="rounded-lg flex h-12 w-[200px] items-center justify-between gap-2 border border-border bg-surface px-3 text-xs">
+    <div className="flex h-12 w-[200px] items-center justify-between gap-2 border border-border bg-surface px-3 text-xs">
       <Handle type="target" position={Position.Left} style={hidden} />
       <span className="truncate font-medium">{data.label}</span>
       <span className="font-mono text-muted">{data.covered}/{data.total}</span>
@@ -55,7 +55,7 @@ function RequirementNode({ data }) {
   const Icon = data.status ? STATUS_ICONS[data.status] : null
   const color = data.status ? `var(--${data.status})` : 'var(--border)'
   return (
-    <div className="rounded-lg h-[76px] w-[260px] cursor-pointer border bg-surface px-3 py-2 text-xs transition-colors hover:bg-surface-2" style={{ borderColor: color, borderLeftWidth: 3 }}>
+    <div className="h-[76px] w-[260px] cursor-pointer border bg-surface px-3 py-2 text-xs transition-colors hover:bg-surface-2" style={{ borderColor: color, borderLeftWidth: 3 }}>
       <Handle type="target" position={Position.Left} style={hidden} />
       <div className="flex items-center justify-between gap-2">
         <span className="font-mono text-muted">{data.code}</span>
@@ -100,7 +100,7 @@ export default function MapTab({ project, requirements, findings, onView }) {
   }
 
   return (
-    <div className="rounded-lg flex h-[75vh] min-h-[480px] flex-col border border-border">
+    <div className="flex h-[75vh] min-h-[480px] flex-col border border-border">
       <ReactFlowProvider>
         <div className="min-h-0 flex-1">
         <ReactFlow
