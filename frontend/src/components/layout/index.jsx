@@ -4,8 +4,10 @@
  */
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
+import { useAuth } from '@/store/authStore'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronRight, Files, LayoutDashboard, ListChecks, Menu, Moon, Network, PanelLeftClose, PanelLeft, Plus, Settings, Sun } from 'lucide-react'
+import { ChevronRight, Files, LayoutDashboard, ListChecks, LogOut, Menu, Moon, Network, PanelLeftClose, PanelLeft, Plus, Settings, Sun } from 'lucide-react'
 import { applyMode, initialMode } from '@/config/theme'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/kit'
@@ -17,7 +19,7 @@ const ThemeContext = createContext({ mode: 'dark', toggle: () => {} })
 /** Holds light/dark mode and writes it to <html data-theme>. */
 export function ThemeProvider({ children }) {
   const [mode, setMode] = useState(initialMode)
-  useEffect(() => applyMode(mode), [mode])
+  useEffect(() => { applyMode(mode) }, [mode])
   const toggle = useCallback(() => setMode((m) => (m === 'dark' ? 'light' : 'dark')), [])
   return <ThemeContext.Provider value={{ mode, toggle, setMode }}>{children}</ThemeContext.Provider>
 }
@@ -110,6 +112,7 @@ function SidebarNav({ collapsed, onNavigate }) {
       </nav>
 
       <div className={cn('border-t border-border p-3', collapsed && 'px-2')}>
+        <SignedInAs collapsed={collapsed} />
         <NavLink
           to="/explore"
           onClick={onNavigate}
@@ -124,6 +127,27 @@ function SidebarNav({ collapsed, onNavigate }) {
           {!collapsed && 'Topic explorer (v1)'}
         </NavLink>
       </div>
+    </div>
+  )
+}
+
+/** Signed-in email + sign-out, shown only when the server requires login. */
+function SignedInAs({ collapsed }) {
+  const { email, token, signOut } = useAuth()
+  const queryClient = useQueryClient()
+  if (!token) return null
+  return (
+    <div className={cn('mb-2 flex items-center gap-2 px-3 py-1 text-xs text-muted', collapsed && 'justify-center px-0')}>
+      {!collapsed && <span className="min-w-0 flex-1 truncate" title={email}>{email}</span>}
+      <button
+        type="button"
+        title="Sign out"
+        aria-label="Sign out"
+        className="grid size-7 cursor-pointer place-items-center hover:text-foreground"
+        onClick={() => { signOut(); queryClient.clear() }}
+      >
+        <LogOut className="size-3.5" />
+      </button>
     </div>
   )
 }
@@ -143,7 +167,7 @@ export function AppShell({ children }) {
   useEffect(() => {
     try { localStorage.setItem(COLLAPSE_KEY, collapsed ? '1' : '0') } catch { /* storage blocked */ }
   }, [collapsed])
-  useEffect(() => setMobileOpen(false), [location.pathname])
+  useEffect(() => { setMobileOpen(false) }, [location.pathname])
 
   return (
     <div className="flex min-h-screen">

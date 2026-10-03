@@ -45,12 +45,24 @@ class Settings(BaseSettings):
     LLM_BACKGROUND_RETRY_BUDGET_S: float = 150  # same, for background jobs (extraction, analysis)
     LLM_DEFAULT_BACKOFF_S: float = 5          # cooldown when a provider doesn't say how long to wait
     LLM_MAX_BACKOFF_S: float = 60
+    LLM_DAILY_QUOTA_COOLDOWN_S: float = 3600  # a used-up DAILY free quota won't recover in a minute
     CLASSIFY_PROMPT: str = "classify-v2"      # classify-v1 | classify-v2 (kept for evaluation comparisons)
 
     # ── Gap analysis ──
     EVIDENCE_K: int = 4                 # evidence chunks retrieved per requirement
     ANALYSIS_BATCH_SIZE: int = 4        # requirements classified per LLM call
     MISSING_GUARD_SCORE: float = 0.55   # "missing" with retrieval similarity above this becomes "unclear"
+
+    # ── Security (Phase 12) ──
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_LLM_PER_MINUTE: int = 20        # extract / analyse / chat / investigate, per client
+    RATE_LIMIT_UPLOADS_PER_MINUTE: int = 30
+    TRUST_PROXY_HEADERS: bool = False          # trust X-Forwarded-For from any peer (only behind your own proxy)
+    AUTH_ENABLED: bool = False                 # optional login; off = single-user self-hosted mode
+    AUTH_ALLOW_REGISTRATION: bool = True
+    JWT_SECRET: str = "change-me"              # required (32+ chars) when AUTH_ENABLED=true
+    JWT_EXPIRE_HOURS: int = 24
+    LOG_LLM_RAW_OUTPUT: bool = False           # store raw invalid model output (may contain document text)
 
     # ── Background jobs (Celery + Redis) ──
     CELERY_TASK_ALWAYS_EAGER: bool = False   # true = run tasks inline (tests / no Redis available)

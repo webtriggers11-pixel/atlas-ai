@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 from app.models import ProjectDocument, DocChunk
 from app.services import retrieval, storage
 from app.services.chunking import chunk_pages
-from app.services.extraction import DocumentError, detect_file_type, extract_pages
+from app.services.extraction import DocumentError, detect_file_type, extract_pages, safe_filename
 from app.services.project_service import get_project_or_404, get_document_or_404
 
 logger = logging.getLogger(__name__)
@@ -46,6 +46,7 @@ def upload_document(project_id: UUID, role: str, filename: str, data: bytes, db:
     (created=False) instead of storing and processing a duplicate.
     """
     get_project_or_404(project_id, db)
+    filename = safe_filename(filename)
     try:
         file_type = detect_file_type(filename, data)
     except DocumentError as exc:

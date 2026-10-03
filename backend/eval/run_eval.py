@@ -57,9 +57,9 @@ from sqlalchemy import select  # noqa: E402
 from app import llm  # noqa: E402
 from app.core.config import settings  # noqa: E402
 from app.db.session import SessionLocal  # noqa: E402
-from app.models import Finding, Requirement  # noqa: E402
+from app.models import AgentTrace, Finding, Requirement  # noqa: E402
 from app.schemas.project import ProjectCreate  # noqa: E402
-from app.services import analysis_service, ingestion_service, project_service  # noqa: E402
+from app.services import analysis_service, ingestion_service, investigator, project_service  # noqa: E402
 from app.services.requirement_service import requirement_hash  # noqa: E402
 
 DATASETS = Path(__file__).parent / "datasets"
@@ -79,7 +79,7 @@ def _contains(chunk_text: str, expected: str) -> bool:
     return _norm(expected) in _norm(chunk_text)
 
 
-def evaluate_dataset(name: str, retrieval_only: bool) -> dict:
+def evaluate_dataset(name: str, retrieval_only: bool, investigate: bool = False) -> dict:
     """Ingest one dataset into a temporary project, run retrieval (+ analysis) and score it."""
     labels = json.loads((DATASETS / name / "labels.json").read_text(encoding="utf-8"))
     db = SessionLocal()
@@ -116,6 +116,25 @@ def evaluate_dataset(name: str, retrieval_only: bool) -> dict:
             run = analysis_service.start_analysis(project_id, db)
             db.refresh(run)
             run_stats = dict(run.stats or {}, status=run.status, error=run.error_message, model=run.model)
+            def _statuses():
+                """Current finding status per labelled requirement id."""
+                db.expire_all()
+                current = {f.requirement_id: f.status for f in db.execute(select(Finding).where(Finding.run_id == run.id)).scalars()}
+                return {row["id"]: current.get(reqs[row["id"]].id) for row in rows}
+
+            if investigate:
+                before = _statuses()
+                traces = investigator.start_run_investigation(run.id, db)   # inline (eager) — returns when done
+                db.expire_all()
+                done = [db.get(AgentTrace, t.id) for t in traces]
+                run_stats["agent"] = {
+                    "investigated": len(done),
+                    "outcomes": {o: sum(1 for t in done if t.outcome == o) for o in ("changed", "confirmed", "rejected", "no_verdict", "error")},
+                    "tool_calls": sum(t.tool_calls for t in done),
+                }
+                for row in rows:
+                    row["predicted_before_agent"] = before[row["id"]]
+
             findings = db.execute(select(Finding).where(Finding.run_id == run.id)).scalars().all()
             by_req = {f.requirement_id: f for f in findings}
             for row in rows:
@@ -167,6 +186,15 @@ def summarize(results: list[dict], k: int, retrieval_only: bool) -> dict:
         "seconds_per_requirement": sum(res["run"].get("duration_s", 0) for res in results) / len(rows),
         "model": results[0]["run"].get("model"),
     })
+    if any("predicted_before_agent" in r for r in scored):
+        m["status_accuracy_before_agent"] = sum(1 for r in scored if r.get("predicted_before_agent") == r["expected"]) / len(scored)
+        before_supported = [r for r in supported if r.get("predicted_before_agent")]
+        m["false_missing_before_agent"] = sum(1 for r in before_supported if r["predicted_before_agent"] == "missing") / max(1, len(before_supported))
+        agent = [res["run"].get("agent", {}) for res in results]
+        m["agent_investigated"] = sum(a.get("investigated", 0) for a in agent)
+        m["agent_changed"] = sum(a.get("outcomes", {}).get("changed", 0) for a in agent)
+        m["agent_rejected"] = sum(a.get("outcomes", {}).get("rejected", 0) for a in agent)
+        m["agent_tool_calls"] = sum(a.get("tool_calls", 0) for a in agent)
     confusion = {e: {p: 0 for p in STATUSES} for e in STATUSES}
     for r in scored:
         confusion[r["expected"]][r["predicted"]] += 1
@@ -232,6 +260,7 @@ def main():
     parser.add_argument("--datasets", nargs="*", default=sorted(p.name for p in DATASETS.iterdir() if p.is_dir()))
     parser.add_argument("--k", type=int, default=None, help="evidence chunks per requirement (default EVIDENCE_K)")
     parser.add_argument("--retrieval-only", action="store_true", help="skip LLM classification")
+    parser.add_argument("--investigate", action="store_true", help="run the investigator agent on uncertain findings and score before/after")
     args = parser.parse_args()
     k = args.k or settings.EVIDENCE_K
     settings.EVIDENCE_K = k
@@ -241,7 +270,7 @@ def main():
     results = []
     for name in args.datasets:
         t = time.perf_counter()
-        res = evaluate_dataset(name, args.retrieval_only)
+        res = evaluate_dataset(name, args.retrieval_only, args.investigate)
         results.append(res)
         print(f"  {name}: {len(res['rows'])} requirements in {time.perf_counter() - t:.0f}s "
               f"{'' if args.retrieval_only else '(run ' + str(res['run'].get('status')) + ')'}")
@@ -258,6 +287,13 @@ def main():
         print("  " + " ".join(f"{s[:8]:>9s}" for s in ["", *STATUSES]))
         for e, preds in metrics["confusion"].items():
             print("  " + f"{e[:8]:>9s} " + " ".join(f"{preds[p]:>9d}" for p in STATUSES))
+        if args.investigate:
+            print("\nAgent changes (expected · before → after):")
+            for res in results:
+                for r in res["rows"]:
+                    if r.get("predicted_before_agent") and r["predicted_before_agent"] != r.get("predicted"):
+                        mark = "fixed" if r["predicted"] == r["expected"] else ("broke" if r["predicted_before_agent"] == r["expected"] else "changed")
+                        print(f"  {r['id']}: {r['expected']} · {r['predicted_before_agent']} → {r['predicted']}  [{mark}]")
         print("\nMisclassified:")
         for res in results:
             for r in res["rows"]:

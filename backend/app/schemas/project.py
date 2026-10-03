@@ -230,3 +230,77 @@ class SettingsResponse(BaseModel):
     max_upload_mb: int
     max_pdf_pages: int
     background_jobs: Literal["worker", "inline"]
+
+
+# ── Ask your analysis (tool calling) ──────────────────────────────────────────
+
+class ChatTurn(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(max_length=8000)
+
+
+class ChatRequest(BaseModel):
+    message: str = Field(max_length=2000)
+    history: list[ChatTurn] = Field(default_factory=list, max_length=20)
+
+    _clean_message = field_validator("message")(_strip_non_empty)
+
+
+class ChatStep(BaseModel):
+    tool: str
+    arguments: dict
+    ok: bool
+    summary: str
+
+
+class ChatSource(BaseModel):
+    kind: Literal["chunk", "requirement"]
+    id: str
+    document_id: Optional[str] = None
+    document: Optional[str] = None
+    section: Optional[str] = None
+    page: Optional[int] = None
+    status: Optional[str] = None
+
+
+class ChatResponse(BaseModel):
+    answer: str
+    steps: list[ChatStep]
+    sources: list[ChatSource]
+    stopped_by_budget: bool
+    duration_s: float
+    model: str
+
+
+# ── Investigator agent ────────────────────────────────────────────────────────
+
+class TraceStep(BaseModel):
+    tool: str
+    arguments: dict
+    ok: bool
+    summary: str
+
+
+class TraceResponse(BaseModel):
+    id: UUID
+    finding_id: UUID
+    status: Literal["queued", "running", "completed", "failed"]
+    previous_status: str
+    new_status: Optional[str] = None
+    outcome: Optional[Literal["changed", "confirmed", "rejected", "kept", "no_verdict", "error"]] = None
+    explanation: Optional[str] = None
+    steps: Optional[list[TraceStep]] = None
+    tool_calls: int
+    prompt_tokens: Optional[int] = None
+    completion_tokens: Optional[int] = None
+    duration_s: Optional[float] = None
+    error: Optional[str] = None
+    created_at: datetime
+    finished_at: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}
+
+
+class InvestigateRunResponse(BaseModel):
+    queued: int
+    trace_ids: list[UUID]

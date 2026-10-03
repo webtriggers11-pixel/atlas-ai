@@ -5,6 +5,7 @@
  */
 import { BadgeCheck, FileText, Quote, Sparkles } from 'lucide-react'
 import { Button, Drawer, Eyebrow, Progress, STATUS_HELP, StatusPill, Tag } from '@/components/kit'
+import { InvestigationPanel } from '@/features/analysis/Investigation'
 
 /** "sdd.pdf › 4. Auth › p.7". */
 export const sourceLabel = (e) => [e.document_filename, e.section, e.page_start ? `p.${e.page_start}` : null].filter(Boolean).join(' › ')
@@ -48,7 +49,7 @@ export function SourceQuote({ evidence, onOpenDocument, compact = false }) {
   )
 }
 
-export default function EvidenceDrawer({ finding, onClose, onOpenDocument }) {
+export default function EvidenceDrawer({ finding, projectId, onClose, onOpenDocument }) {
   return (
     <Drawer open={Boolean(finding)} onClose={onClose} eyebrow={finding?.requirement.code} title="Evidence">
       {finding && (
@@ -74,6 +75,7 @@ export default function EvidenceDrawer({ finding, onClose, onOpenDocument }) {
               </span>
             )}
             {finding.source === 'cache' && <Tag>reused from previous run</Tag>}
+            {finding.source === 'agent' && <Tag>re-checked by agent</Tag>}
           </section>
 
           <section className="space-y-3">
@@ -88,6 +90,8 @@ export default function EvidenceDrawer({ finding, onClose, onOpenDocument }) {
             {finding.missing_detail && <AiText label="Missing or different">{finding.missing_detail}</AiText>}
             {finding.suggested_action && <AiText label="Suggested action">{finding.suggested_action}</AiText>}
           </section>
+
+          <InvestigationPanel finding={finding} projectId={projectId} />
 
           <Button variant="outline" size="sm" onClick={onClose}>Back to findings</Button>
         </div>

@@ -6,7 +6,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { Check, ClipboardList, FileText, ListChecks, Network, Pencil, Play, Quote, RotateCw, Sparkles } from 'lucide-react'
+import { BookOpen, Check, ClipboardList, FileText, ListChecks, MessageSquare, Network, Pencil, Play, Quote, RotateCw, Sparkles } from 'lucide-react'
 import { api } from '@/lib/api'
 import { analysisType } from '@/lib/analysisTypes'
 import { timeAgo } from '@/lib/format'
@@ -21,6 +21,8 @@ import EvidenceTab from '@/features/analysis/EvidenceTab'
 import RequirementsTab from '@/features/analysis/RequirementsTab'
 import DocumentsTab from '@/features/analysis/DocumentsTab'
 import MapTab from '@/features/analysis/MapTab'
+import AskTab from '@/features/analysis/AskTab'
+import ReportTab from '@/features/analysis/ReportTab'
 
 /** Analysis name that becomes an input on click. */
 function EditableName({ project }) {
@@ -162,13 +164,17 @@ export default function AnalysisPage() {
           tabs={[
             { id: 'findings', label: 'Findings', icon: ListChecks, count: findings.length || null },
             { id: 'evidence', label: 'Evidence', icon: Quote, count: findings.reduce((n, f) => n + f.evidence.length, 0) || null },
+            { id: 'report', label: 'Report', icon: BookOpen },
             { id: 'requirements', label: 'Requirements', icon: ClipboardList, count: requirements.length || null },
             { id: 'documents', label: 'Documents', icon: FileText, count: documents.length || null },
             { id: 'map', label: 'Map', icon: Network },
+            { id: 'ask', label: 'Ask', icon: MessageSquare },
           ]}
         />
 
-        {tab === 'findings' && <FindingsTab findings={findings} analysisName={p.name} filter={params.get('status')} onFilter={(s) => setParam({ status: s })} onView={setOpenFinding} />}
+        {tab === 'report' && <ReportTab runId={completed?.id} />}
+        {tab === 'findings' && <FindingsTab findings={findings} runId={completed?.id} projectId={id}
+          filter={params.get('status')} onFilter={(s) => setParam({ status: s })} onView={setOpenFinding} />}
         {tab === 'evidence' && <EvidenceTab findings={findings} projectId={id} onView={setOpenFinding} />}
         {tab === 'requirements' && <RequirementsTab project={p} documentsReady={docsReady} />}
         {tab === 'documents' && (
@@ -176,6 +182,10 @@ export default function AnalysisPage() {
             selectedDocId={params.get('doc')} focusChunkId={params.get('chunk')} onSelect={(docId) => setParam({ doc: docId, chunk: null })} />
         )}
         {tab === 'map' && <MapTab project={p} requirements={requirements} findings={findings} onView={setOpenFinding} />}
+        {tab === 'ask' && (
+          <AskTab project={p} findings={findings} onOpenFinding={setOpenFinding}
+            onOpenChunk={(source) => setParam({ tab: 'documents', doc: source.document_id, chunk: source.id })} />
+        )}
 
         <p className="pt-4 text-xs text-muted">
           <Tag>{type.short}</Tag>{' '}
@@ -183,7 +193,9 @@ export default function AnalysisPage() {
         </p>
       </PageBody>
 
-      <EvidenceDrawer finding={openFinding} onClose={() => setOpenFinding(null)} onOpenDocument={openDocument} />
+      <EvidenceDrawer
+        finding={openFinding && (findings.find((f) => f.id === openFinding.id) || openFinding)}   // fresh copy after the agent updates it
+        projectId={id} onClose={() => setOpenFinding(null)} onOpenDocument={openDocument} />
     </>
   )
 }

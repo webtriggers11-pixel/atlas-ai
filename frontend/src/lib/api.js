@@ -2,6 +2,8 @@
  * V2 API client — every call to /api/v1 goes through here.
  * (The v1 topic explorer keeps its own client in src/api.js.)
  */
+import { currentToken, useAuth } from '@/store/authStore'
+
 export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 export class ApiError extends Error {
@@ -12,19 +14,31 @@ export class ApiError extends Error {
   }
 }
 
+/** Authorization header when signed in (optional login, Phase 12). */
+export function authHeaders() {
+  const token = currentToken()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+/** A 401 means the session is missing or expired: drop it so the app shows the sign-in screen. */
+function handleUnauthorized(res, path) {
+  if (res.status === 401 && !path.startsWith('/auth/')) useAuth.getState().signOut()
+}
+
 /** fetch wrapper: JSON in/out, FastAPI `detail` surfaced as the error message, 204 → null. */
 async function request(method, path, { json, form } = {}) {
   let res
   try {
     res = await fetch(`${API_BASE}/api/v1${path}`, {
       method,
-      headers: json ? { 'Content-Type': 'application/json' } : undefined,
+      headers: { ...authHeaders(), ...(json ? { 'Content-Type': 'application/json' } : {}) },
       body: json ? JSON.stringify(json) : form,
     })
   } catch {
     throw new ApiError(0, `Can't reach the backend at ${API_BASE}. Is it running?`)
   }
   if (res.status === 204) return null
+  handleUnauthorized(res, path)
   const body = await res.json().catch(() => null)
   if (!res.ok) {
     const detail = body?.detail
@@ -36,7 +50,26 @@ async function request(method, path, { json, form } = {}) {
   return body
 }
 
+/** Fetch a file from the API and hand it to the browser as a download (keeps auth headers, unlike a plain link). */
+async function download(path) {
+  const res = await fetch(`${API_BASE}/api/v1${path}`, { headers: authHeaders() })
+  handleUnauthorized(res, path)
+  if (!res.ok) {
+    const body = await res.json().catch(() => null)
+    throw new ApiError(res.status, body?.detail || `Download failed (${res.status})`)
+  }
+  const name = /filename="([^"]+)"/.exec(res.headers.get('content-disposition') || '')?.[1] || 'report'
+  const url = URL.createObjectURL(await res.blob())
+  Object.assign(document.createElement('a'), { href: url, download: name }).click()
+  URL.revokeObjectURL(url)
+}
+
 export const api = {
+  // Auth (only active when the server sets AUTH_ENABLED=true)
+  authStatus: () => request('GET', '/auth/status'),
+  login: (email, password) => request('POST', '/auth/login', { json: { email, password } }),
+  register: (email, password) => request('POST', '/auth/register', { json: { email, password } }),
+
   // Projects
   listProjects: () => request('GET', '/projects'),
   getProject: (id) => request('GET', `/projects/${id}`),
@@ -78,6 +111,19 @@ export const api = {
   listRuns: (projectId) => request('GET', `/projects/${projectId}/runs`),
   getRun: (runId) => request('GET', `/runs/${runId}`),
   listFindings: (runId) => request('GET', `/runs/${runId}/findings`),
+
+  // Reports (Phase 11)
+  getReport: (runId) => request('GET', `/runs/${runId}/report`),
+  getDiff: (runId) => request('GET', `/runs/${runId}/diff`),
+  downloadExport: (runId, format) => download(`/runs/${runId}/export?format=${format}`),
+
+  // Investigator agent
+  investigateFinding: (findingId) => request('POST', `/findings/${findingId}/investigate`),
+  investigateRun: (runId) => request('POST', `/runs/${runId}/investigate`),
+  listTraces: (findingId) => request('GET', `/findings/${findingId}/traces`),
+
+  // Ask your analysis (tool calling)
+  chat: (projectId, message, history) => request('POST', `/projects/${projectId}/chat`, { json: { message, history } }),
 
   // Global
   listAllDocuments: (search) => request('GET', `/documents${search ? `?search=${encodeURIComponent(search)}` : ''}`),

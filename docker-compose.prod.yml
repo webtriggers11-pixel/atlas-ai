@@ -15,6 +15,9 @@ services:
       - ./backend/.env
     environment:
       - REDIS_URL=redis://redis:6379
+      # Only the host's reverse proxy can reach this port (bound to 127.0.0.1), so its
+      # X-Forwarded-For is trusted for per-client rate limits (the container sees the Docker gateway IP)
+      - TRUST_PROXY_HEADERS=true
     ports:
       - "127.0.0.1:8002:8000"
     volumes:

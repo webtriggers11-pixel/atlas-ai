@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.core.config import settings
@@ -7,6 +7,7 @@ from app.routers.maps import router as maps_router
 from app.routers.documents import router as documents_router
 from app.routers.gaps import router as gaps_router
 from app.api.v1 import api_router
+from app.core.security import SecurityHeadersMiddleware, authenticate, llm_limit
 
 
 def run_migrations():
@@ -49,18 +50,23 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Idea Atlas API", version="0.1.0", lifespan=lifespan)
 
+# Only the configured frontends may call the API from a browser (comma-separated CORS_ORIGINS)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],    # local single-user tool — no auth, open CORS is fine
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=[o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()],
+    allow_credentials=False,   # tokens travel in the Authorization header, not cookies
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+    expose_headers=["Content-Disposition", "Retry-After"],
 )
+app.add_middleware(SecurityHeadersMiddleware)
 
 
-app.include_router(maps_router)
-app.include_router(documents_router)
-app.include_router(gaps_router)
+# v1 topic explorer: same optional auth; its LLM-backed endpoints share the LLM rate limit
+v1_guard = [Depends(authenticate), Depends(llm_limit)]
+app.include_router(maps_router, dependencies=v1_guard)
+app.include_router(documents_router, dependencies=v1_guard)
+app.include_router(gaps_router, dependencies=v1_guard)
 app.include_router(api_router)   # V2 gap-analysis API under /api/v1
 
 

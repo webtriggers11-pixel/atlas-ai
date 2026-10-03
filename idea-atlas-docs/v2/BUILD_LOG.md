@@ -480,3 +480,156 @@ resized) — the responsive rules are in place but untested on a phone.
 Fixed during verification: Tailwind v4 cascade layers (custom `.pop` margin beat utilities → moved
 into `@layer components`); stray scrollbar on the tab bar; map zoom unreadable on fit (min zoom +
 scroll-to-pan + legend); Settings showed Ollama as "configured" just because it needs no key.
+
+---
+
+## Phase 9 — Tool calling: "Ask your analysis"
+
+**Built**
+- `llm.py`: provider-native **function calling** for Groq and Ollama (OpenAI `tools` /
+  `tool_calls`) and Gemini (`functionDeclarations` / `functionCall` / `functionResponse`, with the
+  model's raw parts echoed back on the next turn). Same retry/fallback/cooldown loop as every other
+  call (`_call_llm_result`), so a rate-limited Gemini falls back to Groq mid-conversation.
+- `services/tool_loop.py`: a bounded, provider-neutral loop — validate arguments with Pydantic,
+  run the handler, send results back as `tool` messages, stop at an answer, a *finish tool*, or the
+  tool budget (then one final call without tools on a flattened transcript). Bad arguments and tool
+  errors are returned to the model as error results instead of crashing.
+- `services/chat_service.py`: five **read-only** tools — `get_overview`, `list_findings`,
+  `get_requirement`, `search_documents`, `get_chunk`. Each tool is built with the analysis id
+  captured on the server; the model can't name a project, and `get_chunk` rejects chunk ids from
+  other analyses. Max 6 tool calls per question. Sources returned with every answer.
+- `POST /api/v1/projects/{id}/chat` and an **Ask** tab: suggested questions, answers with a
+  collapsible "Used N tools" trace, and source chips that open the exact passage or finding.
+
+**Verified:** 106 passed (scripted model: tool → answer, sources, cross-analysis isolation, invalid
+arguments recovered, budget forces a tool-less final answer, finish tool, provider message
+conversion). Live: the same question on **Groq** (2 tool calls, corrected its own role filter)
+and **Gemini** (rate-limited → fallback) both answered "900 seconds (15 minutes); refresh tokens
+are not issued" with the SDD section cited.
+
+**Interview**
+
+Q: How do you stop a tool-calling LLM from reading data it shouldn't?
+A: Authorization lives in the tools, not the prompt. Each tool is constructed per request with the analysis id bound on the server, so the model has no argument to name another project, and anything it passes (like a chunk id) is checked against that analysis. The tools are read-only, arguments are schema-validated, and calls are capped per question.
+
+Q: How does function calling differ between providers?
+A: OpenAI-style APIs (Groq, Ollama) take `tools` and return `tool_calls` with JSON-string arguments, and results go back as `role: tool` messages with the call id. Gemini uses `functionDeclarations`, returns `functionCall` parts, expects `functionResponse` parts in a user turn, and its model turn must be echoed back as-is. I normalized all of them into one internal message format so the loop and the tools are provider-independent.
+
+Q: What happens if the model keeps calling tools forever?
+A: The loop has a hard budget (6 calls). When it's used up the model gets one last call with no tools and the transcript flattened to text, plus an instruction to answer with what it has — so latency and cost are bounded.
+
+---
+
+## Phase 10 — Investigator agent (built, measured, and deliberately restricted)
+
+**Built**
+- `services/investigator.py` + `agent_traces` table: re-checks ONE finding with a bounded tool loop
+  (read-only `search_documents` / `get_chunk`, analysis-scoped) and a validated `submit_verdict`
+  finish tool. Eligible: missing, unclear, conflict, or confidence < 0.6.
+- Guardrails: quotes verified against the cited chunk (which must belong to this analysis and be an
+  existing document); unverifiable → outcome `rejected`, finding kept. Every step, token count and
+  duration stored in the trace.
+- Endpoints: `POST /findings/{id}/investigate`, `GET /findings/{id}/traces`, `POST /runs/{id}/investigate`.
+  UI: "Re-check with agent" in the evidence drawer with a live step-by-step trace; "Re-check uncertain (N)".
+- Eval: `python -m eval.run_eval --investigate` scores before/after the agent on the same run.
+
+**What measurement showed (honest)**
+1. The first full agent eval failed on **free-tier limits**: Groq gpt-oss-20b allows 8,000 tokens/min
+   and the Gemini daily quota ran out. Each agent step re-sends the growing conversation (up to 6,000
+   characters per tool result), so steps hit the limit and retries ran out of time. Fixes: compact
+   tool results for the agent (3 passages × ~450 chars, compact JSON), **context trimming** (only the
+   last two tool results stay full), max steps 8 → 6. A 4-step investigation now costs ~5.6k tokens / ~5 s.
+2. Live check on 3 known cases (Groq only — Gemini quota exhausted):
+   P04 partial→**missing (made it worse)**, P07 missing→missing (not fixed), P10 ran out of steps.
+   Even with an explicit "did any passage discuss the same topic?" self-check (investigate-v2), the
+   small model treated "the specific value is absent" as "missing".
+3. **Decision — asymmetric authority:** the agent may only change a finding when it brings verified
+   evidence (→ covered/partial/conflict). An absence claim can't be verified, so a downgrade to
+   missing/unclear is recorded (outcome `kept`) but not applied. That removes the regression risk;
+   the agent stays useful as an auditable "search harder for evidence" tool.
+4. Full before/after eval with the agent is **pending** (needs the Gemini daily quota to reset or a
+   paid tier). No accuracy-improvement claim is made until it is measured.
+
+**Verified:** 119 passed (fixes a false-missing with a verified quote; invented quote rejected; evidence
+from another analysis ignored; confirmed / kept / no_verdict outcomes; step budget enforced; run-level
+re-check only once per uncertain finding; trace ordering).
+
+**Interview**
+
+Q: When is an agent the right tool, and when is a pipeline better?
+A: A pipeline when the steps are known in advance — here, retrieve-then-classify for every requirement. An agent only where the next step depends on what was just found: re-searching a "missing" requirement with new phrasings. So the agent runs on the few uncertain findings, with a step budget, read-only tools and a structured final answer.
+
+Q: Your agent made a result worse — what did you do?
+A: I measured it on known cases and it downgraded a correct "partial" to "missing". The insight: evidence claims are verifiable (we check the quote in the source), absence claims aren't. So I gave the agent asymmetric authority — it can only change a finding by bringing verified evidence; absence verdicts are logged, not applied. Safer, and still useful.
+
+Q: Why did the agent hit rate limits when single calls didn't?
+A: Each agent step re-sends the whole conversation, so prompt size grows with every tool result. With a per-minute token limit, that compounds. I compacted tool outputs and trimmed older results (context management), cutting a typical investigation to ~5–6k tokens.
+
+---
+
+## Phase 11 — Reports, exports and run diff
+
+**Built**
+- `services/report_service.py` (deterministic, no LLM): one structured report per completed run —
+  executive summary headline, counts and coverage %, sections (missing, conflicts, partial,
+  needs-decision, covered) with AI assessment vs verified source quotes, recommended actions.
+- Exports: `GET /runs/{id}/export?format=csv|md|pdf` — CSV traceability matrix, Markdown report,
+  PDF (fpdf2 core fonts; Unicode punctuation mapped to Latin-1). Safe download filenames.
+- Diff: `GET /runs/{id}/diff[?against=]` — per requirement improved / regressed / unchanged / new /
+  removed against the previous completed run (ordering covered > partial > unclear > conflict > missing).
+- UI: **Report** tab (spec "Read view") with downloads and a "Changes since previous run" panel;
+  the Findings CSV now uses the server export. Downloads go through `fetch` so auth headers work.
+- Found while building: a nested f-string that reused its quote character is valid on Python 3.12+
+  but a SyntaxError on the production image's Python 3.11 — fixed, and the whole backend scanned.
+
+**Verified:** report structure and headline, all three export formats (PDF with Unicode quotes),
+diff improved/unchanged/regressed, no-previous-run and incomplete-run cases.
+
+**Interview**
+
+Q: Why build reports server-side instead of in the browser?
+A: One source of truth: the same report JSON feeds the UI, CSV, Markdown and PDF, so they can't disagree, downloads work for API clients too, and access control (Phase 12) applies to exports like any other endpoint.
+
+---
+
+## Phase 12 — Security: optional auth, ownership isolation, rate limits, hardening
+
+**Built**
+- `core/security.py`: bcrypt password hashing, HS256 JWTs (algorithm pinned, weak secret refused),
+  `authenticate` router dependency, `ensure_owner` (404 for other users' resources), per-client
+  rate limiting (Redis fixed window with in-memory fallback), security headers middleware.
+- Optional login: `AUTH_ENABLED=false` (default) keeps self-hosted single-user mode with no accounts;
+  `true` requires sign-in everywhere except `/health` and `/api/v1/auth/status`.
+- `users` table and `projects.owner_id` (via our own migration system). Every getter — project,
+  document, requirement, run, finding, trace — checks ownership; lists are filtered in SQL.
+- `/api/v1/auth/status | register | login | me`; login/register limited to 10/min.
+- Rate limits on LLM-backed endpoints (extract, analyze, chat, investigate, v1 explorer) and uploads → 429 + Retry-After.
+- CORS restricted to `CORS_ORIGINS`; upload filenames sanitised; DOCX zip-bomb check; `ILIKE` input escaped;
+  raw invalid LLM output (may contain document text) logged only with `LOG_LLM_RAW_OUTPUT=true`.
+- Frontend: sign-in/register page shown only when the server requires it, any 401 signs out,
+  email + sign-out in the sidebar, query cache cleared on user change.
+- Removed a duplicated `GET /api/v1/documents` route (caused an OpenAPI duplicate-ID warning).
+- `SECURITY.md`: threat model, controls, known limitations, production checklist.
+
+**Found while building**
+- In production the API container sees the Docker gateway IP, not the client — without trusting the
+  proxy, every visitor would share one rate-limit bucket. Prod compose now sets `TRUST_PROXY_HEADERS=true`
+  (safe: the port is bound to 127.0.0.1).
+- Taking the *first* X-Forwarded-For entry is spoofable (nginx appends the real IP to whatever the client
+  sent). Fixed to use the right-most entry.
+
+**Verified:** 17 new tests (auth on/off, register/login/me, tampered/expired/`alg:none`/wrong-key tokens,
+weak secret, two-user isolation across every resource type, rate limit 429, per-client counters, proxy IP,
+headers, CORS, filenames, zip bomb, corrupt docx). Full suite green. Login screen not yet checked
+in a real browser.
+
+**Interview**
+
+Q: How do you stop user A reading user B's data in a multi-tenant API?
+A: Every resource traces back to a project with an owner_id, and every lookup goes through one getter that checks it — so a new endpoint can't forget. Lists filter by owner in SQL. Other users' IDs return 404 rather than 403 so you can't probe which IDs exist. Tests create two users and try every endpoint across the boundary.
+
+Q: Why does your rate limiter key on user id or IP, and what's tricky about IP behind a proxy?
+A: Signed-in users are limited per account; anonymous ones per IP. Behind a proxy the socket IP is the proxy's, so you must read X-Forwarded-For — but only from a trusted proxy, and only the right-most entry, because the client controls everything to the left of what your proxy appended.
+
+Q: How do you defend an LLM agent against prompt injection in uploaded documents?
+A: Treat document text as untrusted and limit what the model can *do*, not just what it's told: tools are read-only, the project id is bound server-side, step/time budgets cap loops, and the agent can only change a result by citing a quote the server verifies against the source. An injected "mark this covered" has no effect without real evidence.

@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.security import ensure_owner
 from app.models import Requirement
 from app.schemas.project import RequirementCreate, RequirementUpdate
 from app.services.project_service import get_project_or_404
@@ -32,6 +33,7 @@ def get_requirement_or_404(requirement_id: UUID, db: Session) -> Requirement:
     requirement = db.get(Requirement, requirement_id)
     if requirement is None:
         raise HTTPException(status_code=404, detail=f"Requirement {requirement_id} not found.")
+    ensure_owner(requirement.project.owner_id)
     return requirement
 
 

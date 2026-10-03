@@ -9,12 +9,15 @@ tables are rendered as "cell | cell | cell" rows so their content is searchable
 import io
 import re
 import unicodedata
+import zipfile
 from collections import Counter
 from dataclasses import dataclass
 
 from app.core.config import settings
 
 ALLOWED_TYPES = ("pdf", "docx", "txt", "md")
+DOCX_MAX_UNCOMPRESSED_MB = 100    # a DOCX is a zip; refuse "zip bombs" that expand to gigabytes
+DOCX_MAX_ENTRIES = 2000
 
 
 class DocumentError(Exception):
@@ -28,6 +31,25 @@ class Page:
 
 
 # ── Validation ────────────────────────────────────────────────────────────────
+
+def safe_filename(filename: str) -> str:
+    """Display-safe filename: no directory parts, no control characters, max 255 chars."""
+    name = re.split(r"[\\/]", filename or "")[-1]
+    name = "".join(ch for ch in name if unicodedata.category(ch)[0] != "C").strip().lstrip(".")
+    return (name or "document")[:255]
+
+
+def _check_docx_archive(data: bytes) -> None:
+    """Reject corrupt or decompression-bomb DOCX files by reading the zip directory (no extraction)."""
+    try:
+        with zipfile.ZipFile(io.BytesIO(data)) as archive:
+            entries = archive.infolist()
+    except zipfile.BadZipFile:
+        raise DocumentError("The Word document is corrupt.")
+    if len(entries) > DOCX_MAX_ENTRIES:
+        raise DocumentError("The Word document has too many internal parts.")
+    if sum(e.file_size for e in entries) > DOCX_MAX_UNCOMPRESSED_MB * 1024 * 1024:
+        raise DocumentError(f"The Word document expands to more than {DOCX_MAX_UNCOMPRESSED_MB} MB.")
 
 def detect_file_type(filename: str, data: bytes) -> str:
     """Return pdf/docx/txt/md after checking BOTH the extension and the file's magic bytes."""
@@ -44,6 +66,8 @@ def detect_file_type(filename: str, data: bytes) -> str:
         raise DocumentError("File has a .pdf extension but is not a PDF.")
     if extension == "docx" and not data.startswith(b"PK\x03\x04"):
         raise DocumentError("File has a .docx extension but is not a Word document.")
+    if extension == "docx":
+        _check_docx_archive(data)
     if extension in ("txt", "md"):
         if b"\x00" in data[:4096]:
             raise DocumentError("Text file contains binary data.")

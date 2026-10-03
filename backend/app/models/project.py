@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, Text, DateTime, CheckConstraint, func
+from sqlalchemy import Column, Text, DateTime, CheckConstraint, ForeignKey, Index, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.db.base import Base
@@ -15,6 +15,8 @@ class Project(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(Text, nullable=False)
     preset = Column(Text, server_default="'spec_coverage'", nullable=False)
+    # Owner when AUTH_ENABLED=true; NULL in single-user (no-login) mode
+    owner_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
     # Requirement-extraction job state: idle | running | completed | failed (validated in code;
     # our migrator only creates CHECK constraints together with a new table)
     extraction_status = Column(Text, server_default="'idle'", nullable=False)
@@ -32,4 +34,5 @@ class Project(Base):
 
     __table_args__ = (
         CheckConstraint("preset IN ('spec_coverage', 'resume_jd')", name="ck_project_preset"),
+        Index("idx_projects_owner_id", "owner_id"),
     )

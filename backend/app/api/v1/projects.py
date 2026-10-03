@@ -7,10 +7,11 @@ from app.db import get_db
 from app.schemas.project import (
     ProjectCreate, ProjectUpdate, ProjectResponse, DocumentResponse, DocumentRole,
     RequirementCreate, RequirementResponse, RequirementStatus, RequirementMerge, ApproveAllResponse,
-    RunResponse, SearchRequest, SearchResult,
+    RunResponse, SearchRequest, SearchResult, ChatRequest, ChatResponse,
 )
 from app.core.config import settings
-from app.services import project_service, requirement_service, findings_service, ingestion_service, retrieval, extraction_job, analysis_service
+from app.core.security import llm_limit, upload_limit
+from app.services import project_service, requirement_service, findings_service, ingestion_service, retrieval, extraction_job, analysis_service, chat_service
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -70,7 +71,8 @@ def list_documents(project_id: UUID, role: Optional[DocumentRole] = None, db: Se
 # Example request:  role=reference, file=@srs.pdf          — or —   role=existing, text="pasted...", title="notes"
 # Example response: 201 {"id": "...", "role": "reference", "filename": "srs.pdf", "status": "uploaded", ...}
 #                   200 with the existing document if the same file was already uploaded to this project
-@router.post("/{project_id}/documents", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/{project_id}/documents", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(upload_limit)])
 def upload_document(
     project_id: UUID,
     response: Response,
@@ -120,7 +122,8 @@ def create_requirement(project_id: UUID, body: RequirementCreate, db: Session = 
 # Example response: 202 {"id": "...", "extraction_status": "running", ...}
 #   → poll GET /api/v1/projects/{id} until extraction_status is "completed" or "failed",
 #     then GET /api/v1/projects/{id}/requirements?status=draft to review
-@router.post("/{project_id}/requirements/extract", response_model=ProjectResponse, status_code=status.HTTP_202_ACCEPTED)
+@router.post("/{project_id}/requirements/extract", response_model=ProjectResponse, status_code=status.HTTP_202_ACCEPTED,
+             dependencies=[Depends(llm_limit)])
 def extract_requirements(project_id: UUID, db: Session = Depends(get_db)):
     """Start AI extraction of draft requirements from the indexed reference documents."""
     extraction_job.start_extraction(project_id, db)
@@ -147,7 +150,8 @@ def merge_requirements(project_id: UUID, body: RequirementMerge, db: Session = D
 # POST /api/v1/projects/{project_id}/analyze
 # Example response: 202 {"id": "<run id>", "status": "queued", "total": 24, "processed": 0, ...}
 #   → poll GET /api/v1/runs/{run_id} for progress, then GET /api/v1/runs/{run_id}/findings
-@router.post("/{project_id}/analyze", response_model=RunResponse, status_code=status.HTTP_202_ACCEPTED)
+@router.post("/{project_id}/analyze", response_model=RunResponse, status_code=status.HTTP_202_ACCEPTED,
+             dependencies=[Depends(llm_limit)])
 def analyze(project_id: UUID, db: Session = Depends(get_db)):
     """Start a gap analysis of all approved requirements against the existing documents."""
     return analysis_service.start_analysis(project_id, db)
@@ -178,3 +182,14 @@ def search(project_id: UUID, body: SearchRequest, db: Session = Depends(get_db))
         )
         for r in results
     ]
+
+
+# POST /api/v1/projects/{project_id}/chat
+# Example request:  {"message": "Which security requirements are missing?", "history": []}
+# Example response: {"answer": "Two are missing: [REQ-010] ... (sdd.pdf, \"5. Security\")",
+#                    "steps": [{"tool": "list_findings", "arguments": {"status": "missing"}, "ok": true, "summary": "3 result(s)"}],
+#                    "sources": [{"kind": "requirement", "id": "REQ-010", "status": "missing"}], ...}
+@router.post("/{project_id}/chat", response_model=ChatResponse, dependencies=[Depends(llm_limit)])
+def chat(project_id: UUID, body: ChatRequest, db: Session = Depends(get_db)):
+    """Ask a question about this analysis; the AI answers using read-only, analysis-scoped tools."""
+    return chat_service.ask(project_id, body.message, [t.model_dump() for t in body.history], db)
