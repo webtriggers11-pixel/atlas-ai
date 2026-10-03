@@ -16,8 +16,9 @@
  *
  * The NeoPOP palettes follow CRED's open-source NeoPOP design system
  * (github.com/CRED-CLUB/neopop-web, Apache-2.0). Atlas AI is a Web Triggers product: same NeoPOP
- * structure as the Web Triggers site, its own signal colour. "atlas" (active) is a Vercel/Next.js-style
- * monochrome with Vercel blue; "neopop" (black + signal yellow) is the Web Triggers site's own palette.
+ * structure as the Web Triggers site, its own colours. "atlas" (active) is Vercel/Next.js (Geist) monochrome:
+ * black, white and greys only, so the finding-status colours are the only colour on screen.
+ * "neopop" (black + signal yellow) is the Web Triggers site's own palette.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -44,19 +45,19 @@ const statusColors = {
 }
 
 export const palettes = {
-  // Atlas AI: pure black/white + neutral greys (Vercel/Next.js), Vercel blue as the only signal colour
+  // Atlas AI: Vercel / Next.js (Geist) monochrome — black, white and neutral greys, no brand hue
   atlas: {
-    label: 'Atlas (Vercel blue)',
+    label: 'Atlas (Vercel monochrome)',
     light: {
-      background: '#fafafa', surface: '#ffffff', surface2: '#f2f2f2', foreground: '#0a0a0a',
-      muted: '#666666', border: '#eaeaea', primary: '#0a0a0a', onPrimary: '#ffffff', secondary: '#0070f3',
-      accent: '#0070f3', onAccent: '#ffffff', glow: '#79b8ff',
+      background: '#fafafa', surface: '#ffffff', surface2: '#f2f2f2', foreground: '#171717',
+      muted: '#666666', border: '#ebebeb', primary: '#171717', onPrimary: '#ffffff', secondary: '#4d4d4d',
+      accent: '#171717', onAccent: '#ffffff', glow: '#a1a1a1',
       success: '#06a35f', warning: '#f08d32', danger: '#ee4d37',
     },
     dark: {
       background: '#000000', surface: '#0a0a0a', surface2: '#111111', foreground: '#ededed',
-      muted: '#a1a1a1', border: 'rgb(255 255 255 / 0.12)', primary: '#ffffff', onPrimary: '#000000',
-      secondary: '#3291ff', accent: '#0070f3', onAccent: '#ffffff', glow: '#0070f3',
+      muted: '#a1a1a1', border: 'rgb(255 255 255 / 0.14)', primary: '#ededed', onPrimary: '#0a0a0a',
+      secondary: '#a1a1a1', accent: '#ededed', onAccent: '#0a0a0a', glow: '#ffffff',
       success: '#3bffad', warning: '#ff8744', danger: '#ff426f',
     },
   },

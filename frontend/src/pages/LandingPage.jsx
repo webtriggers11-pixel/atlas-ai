@@ -20,8 +20,8 @@ import { Logo, ThemeToggle } from '@/components/layout'
 const WEBTRIGGERS = 'https://www.webtriggers.online'
 const WELCOME_KEY = 'atlas-welcome-seen'
 
-// Vercel / Next.js signature gradient (blue → cyan), used once for emphasis
-const GRADIENT_TEXT = 'bg-gradient-to-r from-[#007cf0] to-[#00dfd8] bg-clip-text text-transparent'
+// Vercel-style headline emphasis: text fades from full contrast to grey
+const GRADIENT_TEXT = 'bg-gradient-to-b from-foreground to-muted bg-clip-text pr-2 text-transparent'
 
 // ── Content ──────────────────────────────────────────────────────────────────
 
@@ -353,8 +353,7 @@ export default function LandingPage() {
       <main>
         {/* Hero */}
         <section className="relative overflow-hidden">
-          <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-40 mx-auto h-96 max-w-4xl rounded-full bg-glow/25 blur-3xl" />
-          <div aria-hidden className="pointer-events-none absolute top-10 right-0 h-72 w-72 rounded-full bg-[#00dfd8]/10 blur-3xl" />
+          <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-40 mx-auto h-96 max-w-4xl rounded-full bg-glow/10 blur-3xl" />
           <div className="relative mx-auto grid max-w-6xl gap-12 px-4 pt-16 pb-20 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:pt-24">
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
               <p className="inline-flex items-center gap-2 rounded-pill border border-border bg-surface px-3 py-1 text-xs font-medium text-muted">
