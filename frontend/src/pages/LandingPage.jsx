@@ -20,8 +20,8 @@ import { Logo, ThemeToggle } from '@/components/layout'
 const WEBTRIGGERS = 'https://www.webtriggers.online'
 const WELCOME_KEY = 'atlas-welcome-seen'
 
-// Vercel-style headline emphasis: text fades from full contrast to grey
-const GRADIENT_TEXT = 'bg-gradient-to-b from-foreground to-muted bg-clip-text pr-2 text-transparent'
+// Headline emphasis: text fades from full contrast into the signal green
+const GRADIENT_TEXT = 'bg-gradient-to-br from-foreground from-30% to-accent bg-clip-text pr-2 text-transparent'
 
 // ── Content ──────────────────────────────────────────────────────────────────
 

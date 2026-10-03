@@ -89,13 +89,13 @@ export default function SettingsPage() {
 
             <Section title="About">
               <Row label="Version">{s.version}</Row>
-              <Row label="API">{API_BASE}</Row>
+              {/* <Row label="API">{API_BASE}</Row> */}
               {/* Hidden for now — source code link
               <Row label="Source code">
                 <a href={REPO} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 hover:underline">GitHub <ExternalLink className="size-3" /></a>
               </Row>
               */}
-              <Row label="License">not yet chosen</Row>
+              <Row label="License">in progress</Row>
             </Section>
           </>
         )}

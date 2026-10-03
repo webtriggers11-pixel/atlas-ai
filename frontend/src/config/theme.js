@@ -16,8 +16,9 @@
  *
  * The NeoPOP palettes follow CRED's open-source NeoPOP design system
  * (github.com/CRED-CLUB/neopop-web, Apache-2.0). Atlas AI is a Web Triggers product: same NeoPOP
- * structure as the Web Triggers site, its own colours. "atlas" (active) is Vercel/Next.js (Geist) monochrome:
- * black, white and greys only, so the finding-status colours are the only colour on screen.
+ * structure as the Web Triggers site, its own colours. "atlas" (active) is Vercel/Next.js (Geist) monochrome
+ * plus one signal green, used the way the Web Triggers site uses its yellow (logo, labels, highlights, glow).
+ * The signal is a yellow-leaning green so it never reads as the bluish "covered" status green.
  * "neopop" (black + signal yellow) is the Web Triggers site's own palette.
  * ─────────────────────────────────────────────────────────────────────────────
  */
@@ -45,19 +46,19 @@ const statusColors = {
 }
 
 export const palettes = {
-  // Atlas AI: Vercel / Next.js (Geist) monochrome — black, white and neutral greys, no brand hue
+  // Atlas AI: Vercel / Next.js (Geist) monochrome + a signal green accent (the Web Triggers yellow, in green)
   atlas: {
-    label: 'Atlas (Vercel monochrome)',
+    label: 'Atlas (monochrome + signal green)',
     light: {
       background: '#fafafa', surface: '#ffffff', surface2: '#f2f2f2', foreground: '#171717',
-      muted: '#666666', border: '#ebebeb', primary: '#171717', onPrimary: '#ffffff', secondary: '#4d4d4d',
-      accent: '#171717', onAccent: '#ffffff', glow: '#a1a1a1',
+      muted: '#666666', border: '#ebebeb', primary: '#171717', onPrimary: '#ffffff', secondary: '#171717',
+      accent: '#5bd12a', onAccent: '#0a0a0a', glow: '#9be67a',
       success: '#06a35f', warning: '#f08d32', danger: '#ee4d37',
     },
     dark: {
       background: '#000000', surface: '#0a0a0a', surface2: '#111111', foreground: '#ededed',
       muted: '#a1a1a1', border: 'rgb(255 255 255 / 0.14)', primary: '#ededed', onPrimary: '#0a0a0a',
-      secondary: '#a1a1a1', accent: '#ededed', onAccent: '#0a0a0a', glow: '#ffffff',
+      secondary: '#73f84b', accent: '#73f84b', onAccent: '#0a0a0a', glow: '#73f84b',
       success: '#3bffad', warning: '#ff8744', danger: '#ff426f',
     },
   },
