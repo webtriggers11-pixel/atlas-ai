@@ -230,3 +230,43 @@ class SettingsResponse(BaseModel):
     max_upload_mb: int
     max_pdf_pages: int
     background_jobs: Literal["worker", "inline"]
+
+
+# ── Ask your analysis (tool calling) ──────────────────────────────────────────
+
+class ChatTurn(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(max_length=8000)
+
+
+class ChatRequest(BaseModel):
+    message: str = Field(max_length=2000)
+    history: list[ChatTurn] = Field(default_factory=list, max_length=20)
+
+    _clean_message = field_validator("message")(_strip_non_empty)
+
+
+class ChatStep(BaseModel):
+    tool: str
+    arguments: dict
+    ok: bool
+    summary: str
+
+
+class ChatSource(BaseModel):
+    kind: Literal["chunk", "requirement"]
+    id: str
+    document_id: Optional[str] = None
+    document: Optional[str] = None
+    section: Optional[str] = None
+    page: Optional[int] = None
+    status: Optional[str] = None
+
+
+class ChatResponse(BaseModel):
+    answer: str
+    steps: list[ChatStep]
+    sources: list[ChatSource]
+    stopped_by_budget: bool
+    duration_s: float
+    model: str

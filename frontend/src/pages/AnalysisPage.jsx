@@ -6,7 +6,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { Check, ClipboardList, FileText, ListChecks, Network, Pencil, Play, Quote, RotateCw, Sparkles } from 'lucide-react'
+import { Check, ClipboardList, FileText, ListChecks, MessageSquare, Network, Pencil, Play, Quote, RotateCw, Sparkles } from 'lucide-react'
 import { api } from '@/lib/api'
 import { analysisType } from '@/lib/analysisTypes'
 import { timeAgo } from '@/lib/format'
@@ -21,6 +21,7 @@ import EvidenceTab from '@/features/analysis/EvidenceTab'
 import RequirementsTab from '@/features/analysis/RequirementsTab'
 import DocumentsTab from '@/features/analysis/DocumentsTab'
 import MapTab from '@/features/analysis/MapTab'
+import AskTab from '@/features/analysis/AskTab'
 
 /** Analysis name that becomes an input on click. */
 function EditableName({ project }) {
@@ -165,6 +166,7 @@ export default function AnalysisPage() {
             { id: 'requirements', label: 'Requirements', icon: ClipboardList, count: requirements.length || null },
             { id: 'documents', label: 'Documents', icon: FileText, count: documents.length || null },
             { id: 'map', label: 'Map', icon: Network },
+            { id: 'ask', label: 'Ask', icon: MessageSquare },
           ]}
         />
 
@@ -176,6 +178,10 @@ export default function AnalysisPage() {
             selectedDocId={params.get('doc')} focusChunkId={params.get('chunk')} onSelect={(docId) => setParam({ doc: docId, chunk: null })} />
         )}
         {tab === 'map' && <MapTab project={p} requirements={requirements} findings={findings} onView={setOpenFinding} />}
+        {tab === 'ask' && (
+          <AskTab project={p} findings={findings} onOpenFinding={setOpenFinding}
+            onOpenChunk={(source) => setParam({ tab: 'documents', doc: source.document_id, chunk: source.id })} />
+        )}
 
         <p className="pt-4 text-xs text-muted">
           <Tag>{type.short}</Tag>{' '}

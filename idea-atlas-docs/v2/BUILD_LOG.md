@@ -480,3 +480,40 @@ resized) — the responsive rules are in place but untested on a phone.
 Fixed during verification: Tailwind v4 cascade layers (custom `.pop` margin beat utilities → moved
 into `@layer components`); stray scrollbar on the tab bar; map zoom unreadable on fit (min zoom +
 scroll-to-pan + legend); Settings showed Ollama as "configured" just because it needs no key.
+
+---
+
+## Phase 9 — Tool calling: "Ask your analysis"
+
+**Built**
+- `llm.py`: provider-native **function calling** for Groq and Ollama (OpenAI `tools` /
+  `tool_calls`) and Gemini (`functionDeclarations` / `functionCall` / `functionResponse`, with the
+  model's raw parts echoed back on the next turn). Same retry/fallback/cooldown loop as every other
+  call (`_call_llm_result`), so a rate-limited Gemini falls back to Groq mid-conversation.
+- `services/tool_loop.py`: a bounded, provider-neutral loop — validate arguments with Pydantic,
+  run the handler, send results back as `tool` messages, stop at an answer, a *finish tool*, or the
+  tool budget (then one final call without tools on a flattened transcript). Bad arguments and tool
+  errors are returned to the model as error results instead of crashing.
+- `services/chat_service.py`: five **read-only** tools — `get_overview`, `list_findings`,
+  `get_requirement`, `search_documents`, `get_chunk`. Each tool is built with the analysis id
+  captured on the server; the model can't name a project, and `get_chunk` rejects chunk ids from
+  other analyses. Max 6 tool calls per question. Sources returned with every answer.
+- `POST /api/v1/projects/{id}/chat` and an **Ask** tab: suggested questions, answers with a
+  collapsible "Used N tools" trace, and source chips that open the exact passage or finding.
+
+**Verified:** 106 passed (scripted model: tool → answer, sources, cross-analysis isolation, invalid
+arguments recovered, budget forces a tool-less final answer, finish tool, provider message
+conversion). Live: the same question on **Groq** (2 tool calls, corrected its own role filter)
+and **Gemini** (rate-limited → fallback) both answered "900 seconds (15 minutes); refresh tokens
+are not issued" with the SDD section cited.
+
+**Interview**
+
+Q: How do you stop a tool-calling LLM from reading data it shouldn't?
+A: Authorization lives in the tools, not the prompt. Each tool is constructed per request with the analysis id bound on the server, so the model has no argument to name another project, and anything it passes (like a chunk id) is checked against that analysis. The tools are read-only, arguments are schema-validated, and calls are capped per question.
+
+Q: How does function calling differ between providers?
+A: OpenAI-style APIs (Groq, Ollama) take `tools` and return `tool_calls` with JSON-string arguments, and results go back as `role: tool` messages with the call id. Gemini uses `functionDeclarations`, returns `functionCall` parts, expects `functionResponse` parts in a user turn, and its model turn must be echoed back as-is. I normalized all of them into one internal message format so the loop and the tools are provider-independent.
+
+Q: What happens if the model keeps calling tools forever?
+A: The loop has a hard budget (6 calls). When it's used up the model gets one last call with no tools and the transcript flattened to text, plus an instruction to answer with what it has — so latency and cost are bounded.

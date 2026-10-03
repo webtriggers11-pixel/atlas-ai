@@ -7,10 +7,10 @@ from app.db import get_db
 from app.schemas.project import (
     ProjectCreate, ProjectUpdate, ProjectResponse, DocumentResponse, DocumentRole,
     RequirementCreate, RequirementResponse, RequirementStatus, RequirementMerge, ApproveAllResponse,
-    RunResponse, SearchRequest, SearchResult,
+    RunResponse, SearchRequest, SearchResult, ChatRequest, ChatResponse,
 )
 from app.core.config import settings
-from app.services import project_service, requirement_service, findings_service, ingestion_service, retrieval, extraction_job, analysis_service
+from app.services import project_service, requirement_service, findings_service, ingestion_service, retrieval, extraction_job, analysis_service, chat_service
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -178,3 +178,14 @@ def search(project_id: UUID, body: SearchRequest, db: Session = Depends(get_db))
         )
         for r in results
     ]
+
+
+# POST /api/v1/projects/{project_id}/chat
+# Example request:  {"message": "Which security requirements are missing?", "history": []}
+# Example response: {"answer": "Two are missing: [REQ-010] ... (sdd.pdf, \"5. Security\")",
+#                    "steps": [{"tool": "list_findings", "arguments": {"status": "missing"}, "ok": true, "summary": "3 result(s)"}],
+#                    "sources": [{"kind": "requirement", "id": "REQ-010", "status": "missing"}], ...}
+@router.post("/{project_id}/chat", response_model=ChatResponse)
+def chat(project_id: UUID, body: ChatRequest, db: Session = Depends(get_db)):
+    """Ask a question about this analysis; the AI answers using read-only, analysis-scoped tools."""
+    return chat_service.ask(project_id, body.message, [t.model_dump() for t in body.history], db)

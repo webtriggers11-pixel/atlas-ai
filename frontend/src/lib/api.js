@@ -79,6 +79,9 @@ export const api = {
   getRun: (runId) => request('GET', `/runs/${runId}`),
   listFindings: (runId) => request('GET', `/runs/${runId}/findings`),
 
+  // Ask your analysis (tool calling)
+  chat: (projectId, message, history) => request('POST', `/projects/${projectId}/chat`, { json: { message, history } }),
+
   // Global
   listAllDocuments: (search) => request('GET', `/documents${search ? `?search=${encodeURIComponent(search)}` : ''}`),
   getSettings: () => request('GET', '/settings'),
